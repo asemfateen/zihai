@@ -23,7 +23,19 @@ const PORT = 3002
 const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+  origin: function(origin, callback) {
+    const allowed = [
+      'https://zihai.vercel.app',
+      /https:\/\/zihai-.*\.vercel\.app$/
+    ]
+    if (!origin || allowed.some(a =>
+      typeof a === 'string' ? a === origin : a.test(origin)
+    )) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
 }))
 app.use(cookieParser())
