@@ -30,6 +30,16 @@ app.use(cookieParser())
 app.use(express.json())
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS words (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character TEXT UNIQUE NOT NULL,
+    pinyin TEXT NOT NULL,
+    english_definition TEXT NOT NULL,
+    hsk_level INTEGER,
+    pinyin_search TEXT,
+    pinyin_normalized TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,

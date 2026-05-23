@@ -27,5 +27,4 @@ dist-ssr
 .env
 backend/.env
 
-# Database
-backend/zihai.db
+
