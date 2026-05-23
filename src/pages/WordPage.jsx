@@ -270,22 +270,22 @@ function WordPage() {
   }
 
 const fetchLists = async () => {
-     setListsLoading(true)
-     try {
-       const res = await fetchWithTimeout(`${API_BASE}/api/lists`, {
-         credentials: 'include',
-       })
-       if (res.ok) {
-         const data = await res.json()
-         setLists(data)
-       } else {
-         showToast('Failed to load lists')
-       }
-     } catch {
-       showToast('Failed to load lists')
-     }
-     setListsLoading(false)
-   }
+    setListsLoading(true)
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/lists`, {
+        credentials: 'include',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setLists(data)
+      } else {
+        showToast('Failed to load lists')
+      }
+    } catch {
+      showToast('Failed to load lists')
+    }
+    setListsLoading(false)
+  }
      } catch {
        showToast('Failed to load lists')
      }
