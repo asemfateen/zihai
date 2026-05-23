@@ -142,7 +142,7 @@ function WordPage() {
 
           newWriters[i] = writer
           newSupported[i] = true
-        } catch {
+        } catch (e) {
           newSupported[i] = false
         }
       }
@@ -214,7 +214,7 @@ function WordPage() {
         setIsFavorite(false)
         showToast('Not in favorites')
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to update favorites')
     } finally {
       setFavoriteLoading(false)
@@ -281,692 +281,692 @@ const fetchLists = async () => {
       } else {
         showToast('Failed to load lists')
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to load lists')
     }
     setListsLoading(false)
   }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-     } catch {
+     } catch (e) {
        showToast('Failed to load lists')
      }
      setListsLoading(false)
    }
-    } catch {
+    } catch (e) {
       showToast('Failed to load lists')
     }
     setListsLoading(false)
@@ -999,7 +999,7 @@ const fetchLists = async () => {
         setNewListName('')
         showToast(`List "${newList.name}" created`)
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to create list')
     }
   }
@@ -1020,7 +1020,7 @@ const fetchLists = async () => {
         const errData = await res.json().catch(() => ({}))
         showToast(errData.error || 'Failed to add word')
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to add word to list')
     }
     setAddingToList(false)
@@ -1051,7 +1051,7 @@ const fetchLists = async () => {
           showToast('Added to flashcard deck')
         }
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to add to deck')
     }
     setAddingToDeck(false)
@@ -1069,7 +1069,7 @@ const fetchLists = async () => {
         setInDeck(false)
         showToast('Removed from deck')
       }
-    } catch {
+    } catch (e) {
       showToast('Failed to remove from deck')
     }
     setAddingToDeck(false)
