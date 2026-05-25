@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import API_BASE, { fetchWithTimeout } from '../api'
+import Spinner from '../components/Spinner'
 
 const AuthContext = createContext(null)
 
@@ -9,20 +10,32 @@ export function AuthProvider({ children }) {
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     fetchWithTimeout(`${API_BASE}/api/me`, { credentials: 'include' })
       .then((res) => {
-        if (!res.ok) throw new Error('not authenticated')
+        if (cancelled) return
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            throw new Error('not authenticated')
+          }
+          throw new Error('server error')
+        }
         return res.json()
       })
       .then((data) => {
-        setUser({ id: data.id, email: data.email })
+        if (cancelled) return
+        if (data) setUser({ id: data.id, email: data.email })
       })
-      .catch(() => {
+      .catch((err) => {
+        if (cancelled) return
         setUser(null)
       })
       .finally(() => {
-        setInitialized(true)
+        if (!cancelled) setInitialized(true)
       })
+
+    return () => { cancelled = true }
   }, [])
 
   const login = (email, id = null) => {
@@ -31,23 +44,27 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' })
+      await fetchWithTimeout(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' })
     } catch {
       // ignore
     }
     setUser(null)
   }
 
+  const contextValue = useMemo(() => ({
+    user, initialized, login, logout
+  }), [user, initialized])
+
   if (!initialized) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #2a2a2a', borderTopColor: '#c0392b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Spinner size={40} />
       </div>
     )
   }
 
   return (
-    <AuthContext.Provider value={{ user, initialized, login, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

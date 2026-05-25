@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { ChevronLeftIcon, FileIcon, TrashIcon, XIcon, HeartIcon, FlashcardIcon, ClockIcon } from '../components/Icons'
 
 function ProfilePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [profile, setProfile] = useState(null)
   const [lists, setLists] = useState([])
   const [selectedList, setSelectedList] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -16,13 +18,26 @@ function ProfilePage() {
   const [newListName, setNewListName] = useState('')
   const [creatingList, setCreatingList] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [wordSearchQuery, setWordSearchQuery] = useState('')
+  const [wordSearchResults, setWordSearchResults] = useState([])
+  const [wordSearching, setWordSearching] = useState(false)
+  const [addingWord, setAddingWord] = useState(null)
+  const toastTimerRef = useRef(null)
 
   const showToast = (message) => {
     setToast(message)
-    setTimeout(() => setToast(null), 2500)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500)
   }
 
-  const fetchLists = async () => {
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [])
+
+  const fetchLists = useCallback(async () => {
+    setLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/lists`, {
         credentials: 'include',
@@ -33,19 +48,31 @@ function ProfilePage() {
       } else {
         showToast('Failed to load lists')
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to load lists:', err)
       showToast('Failed to load lists')
     }
     setLoading(false)
-  }
+  }, [])
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/profile`, {
+        credentials: 'include',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setProfile(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+    }
+  }, [])
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
     fetchLists()
-  }, [user, navigate])
+    fetchProfile()
+  }, [fetchLists, fetchProfile])
 
   const openList = async (list) => {
     try {
@@ -58,7 +85,8 @@ function ProfilePage() {
       } else {
         showToast('Failed to load list')
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to load list:', err)
       showToast('Failed to load list')
     }
   }
@@ -84,7 +112,8 @@ function ProfilePage() {
         setLists((prev) => prev.filter((l) => l.id !== listId))
         showToast('List deleted')
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete list:', err)
       showToast('Failed to delete list')
     }
     setDeleting(null)
@@ -110,7 +139,8 @@ function ProfilePage() {
         setNewListName('')
         showToast(`List "${newList.name}" created`)
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to create list:', err)
       showToast('Failed to create list')
     }
     setCreatingList(false)
@@ -139,11 +169,71 @@ function ProfilePage() {
           )
         )
         showToast('Word removed from list')
+      } else {
+        showToast('Failed to remove word')
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to remove word:', err)
       showToast('Failed to remove word')
     }
     setRemovingWord(null)
+  }
+
+  const searchForWords = async (query) => {
+    if (!query.trim()) {
+      setWordSearchResults([])
+      return
+    }
+    setWordSearching(true)
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(query.trim())}`, {
+        credentials: 'include',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const filtered = data.filter(
+          (w) => !selectedList?.words?.some((sw) => sw.id === w.id)
+        )
+        setWordSearchResults(filtered)
+      }
+    } catch (err) {
+      console.error('Failed to search words:', err)
+    }
+    setWordSearching(false)
+  }
+
+  const addWordToList = async (word) => {
+    if (!selectedList) return
+    setAddingWord(word.id)
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/lists/${selectedList.id}/words/${word.id}`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setSelectedList((prev) => ({
+          ...prev,
+          words: [...prev.words, word],
+        }))
+        setLists((prev) =>
+          prev.map((l) =>
+            l.id === selectedList.id
+              ? { ...l, word_count: (l.word_count || 0) + 1 }
+              : l
+          )
+        )
+        setWordSearchResults((prev) => prev.filter((w) => w.id !== word.id))
+        setWordSearchQuery('')
+        showToast(`"${word.character}" added to list`)
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        showToast(errData.error || 'Failed to add word')
+      }
+    } catch (err) {
+      console.error('Failed to add word:', err)
+      showToast('Failed to add word')
+    }
+    setAddingWord(null)
   }
 
   if (!user) return null
@@ -176,7 +266,7 @@ function ProfilePage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {toast && (
-          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[55] px-5 py-2.5 bg-card border border-border rounded-lg shadow-lg text-text-primary text-sm animate-fade-in">
+          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card border border-border rounded-lg shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
             {toast}
           </div>
         )}
@@ -186,6 +276,41 @@ function ProfilePage() {
           <p className="text-text-secondary">{user.email}</p>
         </div>
 
+        {profile && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <ClockIcon className="w-4 h-4 text-text-secondary" />
+                <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Joined</p>
+              </div>
+              <p className="text-text-primary font-semibold">
+                {new Date(profile.created_at).toLocaleDateString(navigator.language || 'en-CA')}
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <HeartIcon className="w-4 h-4 text-primary" />
+                <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Favorites</p>
+              </div>
+              <p className="text-text-primary font-semibold">{profile.favorites_count}</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <FlashcardIcon className="w-4 h-4 text-primary" />
+                <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Flashcards</p>
+              </div>
+              <p className="text-text-primary font-semibold">{profile.flashcards_reviewed}</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <FileIcon className="w-4 h-4 text-primary" />
+                <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Lists</p>
+              </div>
+              <p className="text-text-primary font-semibold">{profile.vocabulary_lists_count}</p>
+            </div>
+          </div>
+        )}
+
         {selectedList ? (
           <div>
             <div className="flex items-center gap-3 mb-6">
@@ -193,19 +318,72 @@ function ProfilePage() {
                 onClick={goBack}
                 className="px-3 py-2 text-sm text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
+                <ChevronLeftIcon className="w-4 h-4" />
                 Back
               </button>
               <h2 className="text-xl font-bold text-text-primary">{selectedList.name}</h2>
               <span className="text-sm text-text-secondary">({selectedList.words?.length || 0} words)</span>
             </div>
 
-            {selectedList.words && selectedList.words.length === 0 && (
+            <div className="mb-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={wordSearchQuery}
+                  onChange={(e) => {
+                    setWordSearchQuery(e.target.value)
+                    if (e.target.value.trim()) {
+                      searchForWords(e.target.value)
+                    } else {
+                      setWordSearchResults([])
+                    }
+                  }}
+                  placeholder="Search words to add..."
+                  className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              {wordSearchResults.length > 0 && (
+                <div className="mt-2 bg-card border border-border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                  {wordSearchResults.map((word) => (
+                    <div
+                      key={word.id}
+                      className="flex items-center justify-between px-4 py-2.5 hover:bg-surface transition-colors border-b border-border last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-lg font-bold text-text-primary flex-shrink-0">{word.character}</span>
+                        <div className="min-w-0">
+                          <p className="text-xs text-primary truncate">{word.pinyin}</p>
+                          <p className="text-xs text-text-secondary truncate">{word.english_definition || ''}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => addWordToList(word)}
+                        disabled={addingWord === word.id}
+                        className="px-3 py-1.5 bg-primary text-text-primary rounded-lg text-xs font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 flex-shrink-0 ml-2"
+                      >
+                        {addingWord === word.id ? (
+                          <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          'Add'
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {wordSearching && (
+                <div className="flex justify-center py-2 mt-1">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {selectedList.words && selectedList.words.length === 0 && !wordSearchQuery.trim() && (
               <div className="text-center py-12 text-text-secondary">
                 <p className="text-lg mb-2">No words yet</p>
-                <p className="text-sm">Add words from their detail page</p>
+                <p className="text-sm">Search above to add words</p>
               </div>
             )}
 
@@ -233,7 +411,7 @@ function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {word.hsk_level && (
-                        <span className="px-2 py-0.5 bg-primary bg-opacity-20 text-primary rounded text-xs font-semibold">
+                        <span className="px-2 py-0.5 bg-primary/20 text-primary rounded text-xs font-semibold">
                           HSK {word.hsk_level}
                         </span>
                       )}
@@ -246,10 +424,7 @@ function ProfilePage() {
                         {removingWord === word.id ? (
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
+                        <XIcon className="w-4 h-4" />
                         )}
                       </button>
                     </div>
@@ -300,11 +475,7 @@ function ProfilePage() {
                       onClick={() => openList(list)}
                       className="flex items-center gap-3 flex-1 text-left cursor-pointer"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                        <polyline points="17 21 17 13 7 13 7 21" />
-                        <polyline points="7 3 7 8 15 8" />
-                      </svg>
+                      <FileIcon className="w-5 h-5 text-text-secondary flex-shrink-0" />
                       <div>
                         <p className="text-text-primary font-medium">{list.name}</p>
                         <p className="text-xs text-text-secondary">{list.word_count || 0} words</p>
@@ -319,10 +490,7 @@ function ProfilePage() {
                             className="p-2 text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
                             title="Cancel"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18" />
-                              <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
+                            <XIcon className="w-4 h-4" />
                           </button>
                           <button
                             onClick={(e) => deleteList(list.id, e)}
@@ -333,10 +501,7 @@ function ProfilePage() {
                             {deleting === list.id ? (
                               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
+                              <TrashIcon className="w-4 h-4" />
                             )}
                           </button>
                         </>
@@ -347,10 +512,7 @@ function ProfilePage() {
                           className="p-2 text-text-secondary hover:text-red-400 transition-colors disabled:opacity-50"
                           title="Delete list"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
+                          <TrashIcon className="w-4 h-4" />
                         </button>
                       )}
                     </div>

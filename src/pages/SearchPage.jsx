@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import SearchResultCard from '../components/SearchResultCard'
@@ -12,52 +12,67 @@ function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const { user } = useAuth()
-  const lastSavedQueryRef = useRef('')
+  const abortRef = useRef(null)
 
   const displayResults = q.trim() ? results : []
 
-  useEffect(() => {
-    if (!q.trim()) {
+  const fetchSearchResults = useCallback(async (query, signal) => {
+    if (!query.trim()) {
       setResults([])
       return
     }
-
     setLoading(true)
     setError(false)
-    fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          setError(true)
-          setLoading(false)
-          return
-        }
-        try {
-          const data = await res.json()
-          setResults(data)
-        } catch {
-          setError(true)
-        }
-        setLoading(false)
-      })
-      .catch(() => {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(query)}`, { signal })
+      if (!res.ok) {
         setError(true)
-        setLoading(false)
+        return
+      }
+      const data = await res.json()
+      setResults(data)
+    } catch (err) {
+      if (err.name === 'AbortError') return
+      console.error('Search failed:', err)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (abortRef.current) {
+      abortRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortRef.current = controller
+    fetchSearchResults(q, controller.signal)
+    return () => {
+      controller.abort()
+    }
+  }, [q, fetchSearchResults])
+
+  const saveHistory = useCallback(async () => {
+    if (!q.trim() || !user) return
+    try {
+      await fetchWithTimeout(`${API_BASE}/api/history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ query: q.trim() }),
       })
-  }, [q])
+    } catch (err) {
+      console.error('Failed to save search history:', err)
+    }
+  }, [q, user])
 
   useEffect(() => {
     if (!q.trim() || !user) return
-    if (q.trim() === lastSavedQueryRef.current) return
-    lastSavedQueryRef.current = q.trim()
-    fetchWithTimeout(`${API_BASE}/api/history`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ query: q.trim() }),
-    }).catch((err) => { console.error('Failed to save search history:', err) })
-  }, [q, user])
+    const timer = setTimeout(saveHistory, 500)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [q, user, saveHistory])
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,7 +101,18 @@ function SearchPage() {
         {error && (
           <div className="text-center py-12 text-red-400">
             <p className="text-lg font-medium">Something went wrong.</p>
-            <p className="text-sm mt-1">Please try again.</p>
+            <p className="text-sm mt-1 mb-4">Please try again.</p>
+            <button
+              onClick={() => {
+                if (abortRef.current) abortRef.current.abort()
+                const controller = new AbortController()
+                abortRef.current = controller
+                fetchSearchResults(q, controller.signal)
+              }}
+              className="px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+            >
+              Retry
+            </button>
           </div>
         )}
 

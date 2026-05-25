@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, DashboardIcon } from './Icons'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [searchError, setSearchError] = useState(false)
+  const [searchError, setSearchError] = useState(null)
   const debounceRef = useRef(null)
   const abortControllerRef = useRef(null)
   const inputRef = useRef(null)
@@ -57,25 +58,38 @@ function Navbar() {
           signal: abortControllerRef.current.signal,
         })
           .then((res) => {
-            if (!res.ok) throw new Error('search failed')
+            if (!res.ok) {
+              setSearchError('Search unavailable. Server returned an error.')
+              setSuggestions([])
+              setShowDropdown(false)
+              return
+            }
             return res.json()
           })
           .then((data) => {
+            if (!data) return
             setSuggestions(data.slice(0, 6))
             setShowDropdown(true)
-            setSearchError(false)
+            setSearchError(null)
           })
           .catch((err) => {
             if (err.name === 'AbortError') return
+            console.error('Search suggestion failed:', err)
+            if (err.name === 'TimeoutError' || err.message.includes('timed out')) {
+              setSearchError('Search timed out. Please try again.')
+            } else if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+              setSearchError('Network error. Check your connection.')
+            } else {
+              setSearchError('Search unavailable. Please try again.')
+            }
             setSuggestions([])
             setShowDropdown(false)
-            setSearchError(true)
           })
       }, 200)
     } else {
       setSuggestions([])
       setShowDropdown(false)
-      setSearchError(false)
+      setSearchError(null)
     }
   }
 
@@ -92,7 +106,7 @@ function Navbar() {
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         setFocusedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1))
-      } else if (e.key === 'Enter' && focusedIndex >= 0) {
+      } else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < suggestions.length) {
         e.preventDefault()
         handleSelect(suggestions[focusedIndex])
         return
@@ -110,14 +124,6 @@ function Navbar() {
     setShowDropdown(false)
     setFocusedIndex(-1)
     setQuery('')
-    if (user) {
-      fetchWithTimeout(`${API_BASE}/api/history`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ query: suggestion.character }),
-      }).catch((err) => { console.error('Failed to save search history:', err) })
-    }
     navigate(`/word/${suggestion.id}`)
   }
 
@@ -187,7 +193,7 @@ function Navbar() {
 
         {showDropdown && searchError && suggestions.length === 0 && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
-            Search unavailable. Please try again.
+            {searchError}
           </div>
         )}
       </div>
@@ -199,23 +205,7 @@ function Navbar() {
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary"
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {dark ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" />
-              <line x1="21" y1="12" x2="23" y2="12" />
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          )}
+          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
         </button>
         {user ? (
           <>
@@ -227,12 +217,19 @@ function Navbar() {
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
-              </svg>
+              <FlashcardIcon className="w-4 h-4" />
               Flashcards
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
+                location.pathname === '/dashboard'
+                  ? 'text-primary border-primary'
+                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+              }`}
+            >
+              <DashboardIcon className="w-4 h-4" />
+              Dashboard
             </button>
             <button
               onClick={() => navigate('/history')}
@@ -242,10 +239,7 @@ function Navbar() {
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+              <ClockIcon className="w-4 h-4" />
               History
             </button>
             <button
@@ -256,9 +250,7 @@ function Navbar() {
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+              <HeartIcon className="w-4 h-4" />
               Favorites
             </button>
             <button
@@ -269,20 +261,13 @@ function Navbar() {
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              <UserIcon className="w-4 h-4" />
             </button>
             <button
               onClick={handleLogout}
               className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LogoutIcon className="w-4 h-4" />
             </button>
           </>
         ) : (
@@ -304,48 +289,21 @@ function Navbar() {
       </div>
 
       {/* Mobile hamburger */}
-      <div className="sm:hidden flex-shrink-0 relative">
+      <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
         <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onClick={() => setMobileMenuOpen(prev => !prev)}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
         >
-          {mobileMenuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          )}
+          {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
         </button>
 
         {mobileMenuOpen && user && (
-          <div ref={mobileMenuRef} className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm"
             >
-              {dark ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
               {dark ? 'Light Mode' : 'Dark Mode'}
             </button>
             <div className="border-t border-border" />
@@ -357,12 +315,19 @@ function Navbar() {
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
-              </svg>
+              <FlashcardIcon className="w-4 h-4 text-text-secondary" />
               Flashcards
+            </button>
+            <button
+              onClick={() => handleNav('/dashboard')}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
+                location.pathname === '/dashboard'
+                  ? 'text-primary bg-surface'
+                  : 'text-text-primary hover:bg-surface'
+              }`}
+            >
+              <DashboardIcon className="w-4 h-4 text-text-secondary" />
+              Dashboard
             </button>
             <button
               onClick={() => handleNav('/history')}
@@ -372,10 +337,7 @@ function Navbar() {
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+              <ClockIcon className="w-4 h-4 text-text-secondary" />
               History
             </button>
             <button
@@ -386,9 +348,7 @@ function Navbar() {
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+              <HeartIcon className="w-4 h-4 text-text-secondary" />
               Favorites
             </button>
             <button
@@ -399,10 +359,7 @@ function Navbar() {
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              <UserIcon className="w-4 h-4 text-text-secondary" />
               Profile
             </button>
             <div className="border-t border-border" />
@@ -410,39 +367,19 @@ function Navbar() {
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-surface transition-colors text-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LogoutIcon className="w-4 h-4" />
               Logout
             </button>
           </div>
         )}
 
         {mobileMenuOpen && !user && (
-          <div ref={mobileMenuRef} className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm"
             >
-              {dark ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
               {dark ? 'Light Mode' : 'Dark Mode'}
             </button>
             <div className="border-t border-border" />
@@ -450,23 +387,14 @@ function Navbar() {
               onClick={() => handleNav('/login')}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
+              <UserIcon className="w-4 h-4 text-text-secondary" />
               Login
             </button>
             <button
               onClick={() => handleNav('/register')}
               className="w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-surface transition-colors text-sm text-left font-medium"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <line x1="20" y1="8" x2="20" y2="14" />
-                <line x1="23" y1="11" x2="17" y2="11" />
-              </svg>
+              <PlusIcon className="w-4 h-4" />
               Register
             </button>
           </div>

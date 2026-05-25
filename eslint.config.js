@@ -8,13 +8,16 @@ export default defineConfig([
   globalIgnores(['dist', 'backend', 'node_modules']),
   {
     files: ['**/*.{js,jsx}'],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-    ],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
     languageOptions: {
-      globals: globals.browser,
+      globals: { ...globals.browser },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },

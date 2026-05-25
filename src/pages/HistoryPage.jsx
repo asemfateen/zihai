@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { ClockIcon } from '../components/Icons'
 
 function HistoryPage() {
   const navigate = useNavigate()
@@ -14,7 +15,9 @@ function HistoryPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [clearError, setClearError] = useState(false)
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
+    setError(false)
+    setLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/history`, {
         credentials: 'include',
@@ -22,22 +25,21 @@ function HistoryPage() {
       if (res.ok) {
         const data = await res.json()
         setHistory(data)
+        setError(false)
       } else {
         setError(true)
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch history:', err)
       setError(true)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
     fetchHistory()
-  }, [user, navigate])
+  }, [fetchHistory])
 
   const handleClear = async () => {
     setClearing(true)
@@ -52,7 +54,8 @@ function HistoryPage() {
       } else {
         setClearError(true)
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to clear history:', err)
       setClearError(true)
     }
     setClearing(false)
@@ -101,7 +104,7 @@ function HistoryPage() {
         </div>
 
         {clearError && (
-          <div className="mb-4 px-4 py-2.5 bg-red-500 bg-opacity-10 border border-red-500 border-opacity-30 rounded-lg text-red-400 text-sm text-center">
+          <div className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 rounded-lg text-red-400 text-sm text-center">
             Failed to clear history. Please try again.
           </div>
         )}
@@ -122,7 +125,13 @@ function HistoryPage() {
         {error && (
           <div className="text-center py-12 text-red-400">
             <p className="text-lg font-medium">Something went wrong.</p>
-            <p className="text-sm mt-1">Please try again.</p>
+            <p className="text-sm mt-1 mb-4">Please try again.</p>
+            <button
+              onClick={() => { setLoading(true); setError(false); fetchHistory() }}
+              className="px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+            >
+              Retry
+            </button>
           </div>
         )}
 
@@ -147,14 +156,11 @@ function HistoryPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
+                  <ClockIcon className="w-4 h-4 text-text-secondary flex-shrink-0" />
                   <span className="text-text-primary">{item.query}</span>
                 </div>
                 <span className="text-xs text-text-secondary flex-shrink-0 ml-4">
-                  {new Date(item.searched_at).toLocaleDateString('en-CA')}
+                  {new Date(item.searched_at).toLocaleDateString(navigator.language || 'en-CA')}
                 </span>
               </div>
             ))}

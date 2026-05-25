@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { CheckIcon, SpeakerIcon, XIcon } from '../components/Icons'
 
 function FlashcardsPage() {
   const navigate = useNavigate()
@@ -17,44 +18,77 @@ function FlashcardsPage() {
   const [error, setError] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
   const [incorrectCount, setIncorrectCount] = useState(0)
+  const [skippedIds, setSkippedIds] = useState(new Set())
   const transitionTimerRef = useRef(null)
+  const toastTimerRef = useRef(null)
+  const mountedRef = useRef(true)
 
-  const fetchDueCards = async () => {
+  const fetchDueCardsRef = useRef(null)
+
+  fetchDueCardsRef.current = async () => {
+    setError(false)
+    setLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
         credentials: 'include',
       })
+      if (!mountedRef.current) return
       if (res.ok) {
         const data = await res.json()
+        if (!mountedRef.current) return
         setCards(data)
+        setError(false)
       } else {
         setError(true)
       }
-    } catch {
-      setError(true)
+    } catch (err) {
+      console.error('Failed to fetch due cards:', err)
+      if (mountedRef.current) setError(true)
+    } finally {
+      if (mountedRef.current) setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => {
+    mountedRef.current = true
     if (!user) {
       navigate('/login')
       return
     }
-    fetchDueCards()
+    const controller = new AbortController()
+    fetchDueCardsRef.current()
+    return () => {
+      controller.abort()
+      mountedRef.current = false
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel()
+      }
+    }
   }, [user, navigate])
 
+  const [voicesReady, setVoicesReady] = useState(typeof window === 'undefined' ? false : window.speechSynthesis.getVoices().length > 0)
+
   useEffect(() => {
-    return () => {
-      if (transitionTimerRef.current) {
-        clearTimeout(transitionTimerRef.current)
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    const voices = window.speechSynthesis.getVoices()
+    if (voices.length > 0) {
+      setVoicesReady(true)
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        if (window.speechSynthesis.getVoices().length > 0) setVoicesReady(true)
       }
+    }
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null
     }
   }, [])
 
   const currentCharacter = cards[currentIndex]?.character
   const speak = () => {
     if (!currentCharacter || typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    if (!voicesReady) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(currentCharacter)
     utterance.lang = 'zh-CN'
@@ -64,13 +98,22 @@ function FlashcardsPage() {
 
   const showToast = (message) => {
     setToast(message)
-    setTimeout(() => setToast(null), 2500)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setToast(null)
+    }, 2500)
   }
 
-  const handleResult = async (correct) => {
+  const cardsRef = useRef([])
+  cardsRef.current = cards
+
+  const handleResult = async (quality) => {
     if (animating) return
     setAnimating(true)
-    const word = cards[currentIndex]
+    const currentCards = cardsRef.current
+    const idx = currentIndex
+    const word = currentCards[idx]
+    if (!word) { setAnimating(false); return }
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/result`, {
         method: 'POST',
@@ -78,26 +121,27 @@ function FlashcardsPage() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ correct }),
+        body: JSON.stringify({ quality }),
       })
       if (!res.ok) {
         showToast('Failed to save result. Please try again.')
         setAnimating(false)
         return
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to save flashcard result:', err)
       showToast('Failed to save result. Please try again.')
       setAnimating(false)
       return
     }
 
-    if (correct) {
+    if (quality >= 3) {
       setCorrectCount((prev) => prev + 1)
     } else {
       setIncorrectCount((prev) => prev + 1)
     }
 
-    if (currentIndex + 1 >= cards.length) {
+    if (idx + 1 >= currentCards.length) {
       setComplete(true)
       setAnimating(false)
     } else {
@@ -105,12 +149,35 @@ function FlashcardsPage() {
       transitionTimerRef.current = setTimeout(() => {
         setCurrentIndex((prev) => prev + 1)
         setAnimating(false)
-      }, 300)
+      }, 600)
     }
   }
 
-  const handleSkip = async () => {
-    await handleResult(false)
+  const handleSkip = () => {
+    if (animating) return
+    setAnimating(true)
+    const currentCards = cardsRef.current
+    const idx = currentIndex
+    const card = currentCards[idx]
+    if (!card) { setAnimating(false); return }
+    const newSkipped = new Set(skippedIds)
+    newSkipped.add(card.id)
+    setSkippedIds(newSkipped)
+
+    if (newSkipped.size >= currentCards.length) {
+      setComplete(true)
+      setAnimating(false)
+      return
+    }
+
+    const remaining = currentCards.filter((_, i) => i !== idx)
+    const reshuffled = [...remaining, card]
+    setCards(reshuffled)
+    setFlipped(false)
+    transitionTimerRef.current = setTimeout(() => {
+      setCurrentIndex(0)
+      setAnimating(false)
+    }, 600)
   }
 
   if (!user) return null
@@ -139,7 +206,7 @@ function FlashcardsPage() {
           <p className="text-lg font-medium text-red-400 mb-2">Something went wrong.</p>
           <p className="text-sm text-red-400 mb-6">Please try again.</p>
           <button
-            onClick={fetchDueCards}
+            onClick={() => fetchDueCardsRef.current()}
             className="px-6 py-3 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
           >
             Retry
@@ -154,10 +221,8 @@ function FlashcardsPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-primary/20">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="#c0392b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-primary/20">
+            <CheckIcon className="w-8 h-8" style={{ stroke: '#c0392b' }} />
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">All caught up!</h1>
           <p className="text-text-secondary text-lg mb-6 text-center">No cards due for review right now. Check back later.</p>
@@ -177,10 +242,8 @@ function FlashcardsPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="w-20 h-20 bg-primary bg-opacity-20 rounded-full flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+          <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6">
+            <CheckIcon className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">Session complete!</h1>
           <p className="text-text-secondary text-lg mb-2 text-center">You reviewed {cards.length} card{cards.length > 1 ? 's' : ''}.</p>
@@ -195,7 +258,8 @@ function FlashcardsPage() {
                 setFlipped(false)
                 setCorrectCount(0)
                 setIncorrectCount(0)
-                fetchDueCards()
+                setSkippedIds(new Set())
+                fetchDueCardsRef.current()
               }}
               className="px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
@@ -221,7 +285,7 @@ function FlashcardsPage() {
       <Navbar />
       <div className="max-w-lg mx-auto px-4 py-6">
         {toast && (
-          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[55] px-5 py-2.5 bg-card border border-border rounded-lg shadow-lg text-text-primary text-sm animate-fade-in">
+          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card border border-border rounded-lg shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
             {toast}
           </div>
         )}
@@ -237,10 +301,7 @@ function FlashcardsPage() {
               onClick={() => navigate('/')}
               className="text-text-secondary hover:text-text-primary transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <XIcon className="w-5 h-5" />
             </button>
           </div>
           <div className="w-full h-3 bg-surface rounded-full overflow-hidden">
@@ -278,10 +339,7 @@ function FlashcardsPage() {
                   }}
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-border text-text-secondary hover:text-primary hover:border-primary transition-all"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  </svg>
+                  <SpeakerIcon className="w-5 h-5" />
                 </button>
               </div>
               <p className="text-xl text-text-primary text-center">{card.english_definition || 'No definition available'}</p>
@@ -293,7 +351,7 @@ function FlashcardsPage() {
         {flipped && (
           <div className="flex gap-4 animate-fade-in">
             <button
-              onClick={() => handleResult(false)}
+              onClick={() => handleResult(0)}
               disabled={animating}
               className="flex-1 py-4 bg-surface border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface"
             >
@@ -307,7 +365,7 @@ function FlashcardsPage() {
               Skip
             </button>
             <button
-              onClick={() => handleResult(true)}
+              onClick={() => handleResult(4)}
               disabled={animating}
               className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-semibold text-lg hover:bg-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
             >

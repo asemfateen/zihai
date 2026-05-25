@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { HeartIcon } from '../components/Icons'
 
 function FavoritesPage() {
   const navigate = useNavigate()
@@ -13,7 +14,9 @@ function FavoritesPage() {
   const [error, setError] = useState(false)
   const [removeError, setRemoveError] = useState(false)
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
+    setError(false)
+    setLoading(true)
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/favorites`, {
         credentials: 'include',
@@ -21,22 +24,21 @@ function FavoritesPage() {
       if (res.ok) {
         const data = await res.json()
         setFavorites(data)
+        setError(false)
       } else {
         setError(true)
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch favorites:', err)
       setError(true)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
     fetchFavorites()
-  }, [user, navigate])
+  }, [fetchFavorites])
 
   const removeFavorite = async (wordId, e) => {
     e.stopPropagation()
@@ -53,7 +55,8 @@ function FavoritesPage() {
         setRemoveError(true)
         setTimeout(() => setRemoveError(false), 4000)
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to remove favorite:', err)
       setRemoveError(true)
       setTimeout(() => setRemoveError(false), 4000)
     }
@@ -87,15 +90,19 @@ function FavoritesPage() {
         {error && (
           <div className="text-center py-12 text-red-400">
             <p className="text-lg font-medium">Something went wrong.</p>
-            <p className="text-sm mt-1">Please try again.</p>
+            <p className="text-sm mt-1 mb-4">Please try again.</p>
+            <button
+              onClick={() => { setLoading(true); setError(false); fetchFavorites() }}
+              className="px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+            >
+              Retry
+            </button>
           </div>
         )}
 
         {!loading && !error && favorites.length === 0 && (
           <div className="text-center py-12 text-text-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mx-auto mb-4 text-border" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
+            <HeartIcon className="w-16 h-16 mx-auto mb-4 text-border" />
             <p className="text-lg mb-2">No favorites yet</p>
             <p className="text-sm">Tap the heart icon on any word to save it here</p>
           </div>
@@ -115,7 +122,7 @@ function FavoritesPage() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/word/${word.id}`) } }}
                 role="button"
                 tabIndex={0}
-                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-98"
+                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%]"
               >
                 <div className="flex-shrink-0 text-center">
                   <div className="flex gap-0.5 justify-center">
@@ -135,9 +142,7 @@ function FavoritesPage() {
                   {removing === word.id ? (
                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="#c0392b" stroke="#c0392b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
+                    <HeartIcon filled className="w-5 h-5" />
                   )}
                 </button>
               </div>

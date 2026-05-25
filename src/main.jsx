@@ -1,19 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
-import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
-import App from './App.jsx'
+import router from './App.jsx'
 
 const rootEl = document.getElementById('root')
 if (rootEl) {
   createRoot(rootEl).render(
     <StrictMode>
-      <ErrorBoundary>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </ErrorBoundary>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </StrictMode>,
   )
 }

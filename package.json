@@ -1,44 +1,43 @@
 {
   "name": "zihai",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
+    "dev": "concurrently \"vite\" \"node backend/server.js\"",
     "start": "node backend/server.js",
-    "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
     "preview": "vite preview",
-    "bug-fix": "eslint . --fix"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.0",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.5.2",
+    "express-rate-limit": "^7.5.0",
     "hanzi-writer": "^3.7.3",
+    "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
-    "jwt-decode": "^4.0.0",
+    "nodemailer": "^6.10.0",
+    "prop-types": "^15.8.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",
-    "tailwindcss": "^4.3.0",
-    "vite-plugin-pwa": "^1.3.0",
-    "workbox-window": "^7.4.1"
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "vite": "^8.0.12"
+    "@eslint/js": "^9.0.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "@vitejs/plugin-react": "^5.0.1",
+    "concurrently": "^9.1.2",
+    "eslint": "^10.4.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.0.0",
+    "vite": "^8.0.13",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

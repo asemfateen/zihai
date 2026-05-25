@@ -1,16 +1,18 @@
 import Database from 'better-sqlite3'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { normalizePinyin } from './pinyinUtils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const db = new Database(path.join(__dirname, 'zihai.db'))
 
-db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_words_character ON words(character)')
+db.exec('CREATE INDEX IF NOT EXISTS idx_words_character ON words(character)')
+db.exec('CREATE INDEX IF NOT EXISTS idx_words_pinyin_normalized ON words(pinyin_normalized)')
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_words_character_unique ON words(character)')
 
 const words = [
-  // Family
   { character: '爸爸', pinyin: 'ba4 ba', english_definition: 'father', hsk_level: 1 },
   { character: '妈妈', pinyin: 'ma1 ma', english_definition: 'mother', hsk_level: 1 },
   { character: '哥哥', pinyin: 'ge1 ge', english_definition: 'older brother', hsk_level: 1 },
@@ -26,8 +28,6 @@ const words = [
   { character: '叔叔', pinyin: 'shu1 shu', english_definition: 'uncle (father younger brother)', hsk_level: 2 },
   { character: '阿姨', pinyin: 'a1 yi2', english_definition: 'aunt', hsk_level: 2 },
   { character: '表哥', pinyin: 'biao3 ge', english_definition: 'older male cousin (maternal)', hsk_level: 3 },
-
-  // Numbers
   { character: '一', pinyin: 'yi1', english_definition: 'one', hsk_level: 1 },
   { character: '二', pinyin: 'er4', english_definition: 'two', hsk_level: 1 },
   { character: '三', pinyin: 'san1', english_definition: 'three', hsk_level: 1 },
@@ -59,8 +59,6 @@ const words = [
   { character: '第一', pinyin: 'di4 yi1', english_definition: 'first', hsk_level: 2 },
   { character: '第二', pinyin: 'di4 er4', english_definition: 'second', hsk_level: 2 },
   { character: '第三', pinyin: 'di4 san1', english_definition: 'third', hsk_level: 2 },
-
-  // Colors
   { character: '红色', pinyin: 'hong2 se4', english_definition: 'red', hsk_level: 1 },
   { character: '蓝色', pinyin: 'lan2 se4', english_definition: 'blue', hsk_level: 2 },
   { character: '绿色', pinyin: 'lv4 se4', english_definition: 'green', hsk_level: 2 },
@@ -71,8 +69,6 @@ const words = [
   { character: '紫色', pinyin: 'zi3 se4', english_definition: 'purple', hsk_level: 3 },
   { character: '粉色', pinyin: 'fen3 se4', english_definition: 'pink', hsk_level: 3 },
   { character: '棕色', pinyin: 'zong1 se4', english_definition: 'brown', hsk_level: 3 },
-
-  // Food & drink
   { character: '水', pinyin: 'shui3', english_definition: 'water', hsk_level: 1 },
   { character: '米饭', pinyin: 'mi3 fan4', english_definition: 'rice', hsk_level: 1 },
   { character: '面条', pinyin: 'mian4 tiao2', english_definition: 'noodles', hsk_level: 2 },
@@ -90,8 +86,6 @@ const words = [
   { character: '咖啡', pinyin: 'ka1 fei1', english_definition: 'coffee', hsk_level: 2 },
   { character: '啤酒', pinyin: 'pi2 jiu3', english_definition: 'beer', hsk_level: 2 },
   { character: '汤', pinyin: 'tang1', english_definition: 'soup', hsk_level: 2 },
-
-  // Body parts
   { character: '头', pinyin: 'tou2', english_definition: 'head', hsk_level: 2 },
   { character: '眼睛', pinyin: 'yan3 jing', english_definition: 'eye', hsk_level: 1 },
   { character: '耳朵', pinyin: 'er3 duo', english_definition: 'ear', hsk_level: 2 },
@@ -104,8 +98,6 @@ const words = [
   { character: '心', pinyin: 'xin1', english_definition: 'heart', hsk_level: 3 },
   { character: '背', pinyin: 'bei4', english_definition: 'back', hsk_level: 3 },
   { character: '手指', pinyin: 'shou3 zhi3', english_definition: 'finger', hsk_level: 3 },
-
-  // Common verbs
   { character: '吃', pinyin: 'chi1', english_definition: 'eat', hsk_level: 1 },
   { character: '喝', pinyin: 'he1', english_definition: 'drink', hsk_level: 1 },
   { character: '睡觉', pinyin: 'shui4 jiao4', english_definition: 'sleep', hsk_level: 1 },
@@ -131,8 +123,6 @@ const words = [
   { character: '想', pinyin: 'xiang3', english_definition: 'think', hsk_level: 1 },
   { character: '看', pinyin: 'kan4', english_definition: 'see', hsk_level: 1 },
   { character: '听见', pinyin: 'ting1 jian4', english_definition: 'hear', hsk_level: 2 },
-
-  // Time
   { character: '今天', pinyin: 'jin1 tian1', english_definition: 'today', hsk_level: 1 },
   { character: '明天', pinyin: 'ming2 tian1', english_definition: 'tomorrow', hsk_level: 1 },
   { character: '昨天', pinyin: 'zuo2 tian1', english_definition: 'yesterday', hsk_level: 1 },
@@ -146,8 +136,6 @@ const words = [
   { character: '小时', pinyin: 'xiao3 shi2', english_definition: 'hour', hsk_level: 1 },
   { character: '分钟', pinyin: 'fen1 zhong1', english_definition: 'minute', hsk_level: 2 },
   { character: '现在', pinyin: 'xian4 zai4', english_definition: 'now', hsk_level: 1 },
-
-  // Places
   { character: '家', pinyin: 'jia1', english_definition: 'home', hsk_level: 1 },
   { character: '学校', pinyin: 'xue2 xiao4', english_definition: 'school', hsk_level: 1 },
   { character: '医院', pinyin: 'yi1 yuan4', english_definition: 'hospital', hsk_level: 2 },
@@ -158,8 +146,6 @@ const words = [
   { character: '路', pinyin: 'lu4', english_definition: 'road', hsk_level: 2 },
   { character: '机场', pinyin: 'ji1 chang3', english_definition: 'airport', hsk_level: 2 },
   { character: '酒店', pinyin: 'jiu3 dian4', english_definition: 'hotel', hsk_level: 2 },
-
-  // Weather
   { character: '太阳', pinyin: 'tai4 yang2', english_definition: 'sun', hsk_level: 2 },
   { character: '雨', pinyin: 'yu3', english_definition: 'rain', hsk_level: 1 },
   { character: '风', pinyin: 'feng1', english_definition: 'wind', hsk_level: 2 },
@@ -168,8 +154,6 @@ const words = [
   { character: '热', pinyin: 're4', english_definition: 'hot', hsk_level: 1 },
   { character: '冷', pinyin: 'leng3', english_definition: 'cold', hsk_level: 1 },
   { character: '暖和', pinyin: 'nuan3 huo', english_definition: 'warm', hsk_level: 3 },
-
-  // Common adjectives
   { character: '大', pinyin: 'da4', english_definition: 'big', hsk_level: 1 },
   { character: '小', pinyin: 'xiao3', english_definition: 'small', hsk_level: 1 },
   { character: '高', pinyin: 'gao1', english_definition: 'tall', hsk_level: 1 },
@@ -187,8 +171,6 @@ const words = [
   { character: '累', pinyin: 'lei4', english_definition: 'tired', hsk_level: 2 },
   { character: '饿', pinyin: 'e4', english_definition: 'hungry', hsk_level: 2 },
   { character: '渴', pinyin: 'ke3', english_definition: 'thirsty', hsk_level: 2 },
-
-  // Greetings & phrases
   { character: '你好', pinyin: 'ni3 hao3', english_definition: 'hello', hsk_level: 1 },
   { character: '再见', pinyin: 'zai4 jian4', english_definition: 'goodbye', hsk_level: 1 },
   { character: '谢谢', pinyin: 'xie4 xie', english_definition: 'thank you', hsk_level: 1 },
@@ -198,22 +180,60 @@ const words = [
   { character: '请', pinyin: 'qing3', english_definition: 'please', hsk_level: 1 },
   { character: '帮助', pinyin: 'bang1 zhu4', english_definition: 'help', hsk_level: 1 },
   { character: '欢迎', pinyin: 'huan1 ying2', english_definition: 'welcome', hsk_level: 2 },
+
+  // Compound words with repeated syllables
+  { character: '公共', pinyin: 'gong1 gong4', english_definition: 'public; communal', hsk_level: 2 },
+  { character: '乒乓', pinyin: 'ping1 pang1', english_definition: 'ping-pong; table tennis', hsk_level: 2 },
+  { character: '功夫', pinyin: 'gong1 fu', english_definition: 'kung fu; skill; effort', hsk_level: 2 },
+  { character: '刚刚', pinyin: 'gang1 gang1', english_definition: 'just now; a moment ago', hsk_level: 2 },
+  { character: '宝宝', pinyin: 'bao3 bao', english_definition: 'baby; darling', hsk_level: 2 },
+  { character: '星星', pinyin: 'xing1 xing', english_definition: 'star', hsk_level: 1 },
+  { character: '常常', pinyin: 'chang2 chang2', english_definition: 'often; frequently', hsk_level: 1 },
+  { character: '明明', pinyin: 'ming2 ming2', english_definition: 'obviously; plainly', hsk_level: 3 },
+  { character: '慢慢', pinyin: 'man4 man', english_definition: 'slowly', hsk_level: 1 },
+  { character: '好好', pinyin: 'hao3 hao', english_definition: 'well; properly', hsk_level: 1 },
+  { character: '大大', pinyin: 'da4 da', english_definition: 'greatly; enormously', hsk_level: 3 },
+  { character: '小小', pinyin: 'xiao3 xiao3', english_definition: 'very small; tiny', hsk_level: 2 },
+  { character: '早早', pinyin: 'zao3 zao', english_definition: 'early; well in advance', hsk_level: 2 },
+  { character: '晚晚', pinyin: 'wan3 wan', english_definition: 'late at night; every evening', hsk_level: 3 },
+
+  // Common AABB reduplication
+  { character: '高高兴兴', pinyin: 'gao1 gao1 xing4 xing4', english_definition: 'happy and excited', hsk_level: 2 },
+  { character: '开开心心', pinyin: 'kai1 kai1 xin1 xin1', english_definition: 'joyful; delighted', hsk_level: 2 },
+  { character: '快快乐乐', pinyin: 'kuai4 kuai4 le4 le4', english_definition: 'happy; cheerful', hsk_level: 2 },
+  { character: '平平安安', pinyin: 'ping2 ping2 an1 an1', english_definition: 'safe and sound', hsk_level: 3 },
+  { character: '认认真真', pinyin: 'ren4 ren4 zhen1 zhen1', english_definition: 'earnestly; seriously', hsk_level: 3 },
+  { character: '简简单单', pinyin: 'jian3 jian3 dan1 dan1', english_definition: 'simple; uncomplicated', hsk_level: 3 },
+  { character: '明明白白', pinyin: 'ming2 ming2 bai2 bai2', english_definition: 'clear; obvious', hsk_level: 3 },
+  { character: '干干净净', pinyin: 'gan1 gan1 jing4 jing4', english_definition: 'clean; spotless', hsk_level: 2 },
+  { character: '多多少少', pinyin: 'duo1 duo1 shao3 shao3', english_definition: 'more or less; to some extent', hsk_level: 3 },
 ]
 
 const insert = db.prepare(`
-  INSERT INTO words (character, pinyin, english_definition, hsk_level)
-  VALUES (@character, @pinyin, @english_definition, @hsk_level)
+  INSERT INTO words (character, pinyin, english_definition, hsk_level, pinyin_search, pinyin_normalized)
+  VALUES (@character, @pinyin, @english_definition, @hsk_level, @pinyin_search, @pinyin_normalized)
   ON CONFLICT(character) DO NOTHING
 `)
 
 const insertMany = db.transaction((words) => {
   for (const word of words) {
-    insert.run(word)
+    insert.run({
+      character: word.character,
+      pinyin: word.pinyin,
+      english_definition: word.english_definition,
+      hsk_level: word.hsk_level || null,
+      pinyin_search: normalizePinyin(word.pinyin).replace(/v/g, 'u'),
+      pinyin_normalized: normalizePinyin(word.pinyin),
+    })
   }
 })
 
 insertMany(words)
 
 console.log(`Inserted ${words.length} new words into zihai.db`)
+
+const sample = db.prepare('SELECT character, pinyin_normalized FROM words WHERE pinyin_normalized IS NOT NULL LIMIT 5').all()
+console.log('Sample normalized pinyin:')
+sample.forEach(r => console.log(`  ${r.character} -> ${r.pinyin_normalized}`))
 
 db.close()
