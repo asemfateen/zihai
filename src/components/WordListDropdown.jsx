@@ -108,8 +108,8 @@ function WordListDropdown({ word, user, navigate, showToast }) {
         </svg>
       </button>
 
-      {isOpen && (
-        <div className="absolute left-0 right-auto top-full mt-2 min-w-[16rem] bg-card border border-border rounded-xl shadow-2xl z-[70] overflow-hidden">
+       {isOpen && (
+         <div className="absolute left-0 right-auto top-full mt-2 min-w-[20rem] bg-card border border-border rounded-xl shadow-2xl z-[70] overflow-hidden">
           <div className="p-3 border-b border-border">
             <p className="text-sm font-semibold text-text-primary mb-2">Add to list</p>
             {listsLoading ? (
@@ -120,17 +120,17 @@ function WordListDropdown({ word, user, navigate, showToast }) {
               <p className="text-xs text-text-secondary italic py-1">No lists yet</p>
             ) : (
               <div className="max-h-40 overflow-y-auto space-y-1">
-                {lists.map((list) => (
-                  <button
-                    key={list.id}
-                    onClick={() => addToList(list.id, list.name)}
-                    disabled={addingToList}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-surface transition-colors disabled:opacity-50 flex items-center justify-between"
-                  >
-                    <span className="truncate">{list.name}</span>
-                    <span className="text-xs text-text-secondary ml-2">{list.word_count || 0}</span>
-                  </button>
-                ))}
+                 {lists.map((list) => (
+                   <button
+                     key={list.id}
+                     onClick={() => addToList(list.id, list.name)}
+                     disabled={addingToList}
+                     className="w-full text-left px-3 py-2 rounded-lg text-sm text-text-primary hover:bg-surface transition-colors disabled:opacity-50 flex items-center justify-between"
+                   >
+                     <span className="truncate max-w-[12rem]">{list.name}</span>
+                     <span className="text-xs text-text-secondary ml-2">{list.word_count || 0}</span>
+                   </button>
+                 ))}
               </div>
             )}
           </div>

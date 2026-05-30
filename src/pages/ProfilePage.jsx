@@ -464,60 +464,177 @@ function ProfilePage() {
 
             {!loading && lists.length > 0 && (
               <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {lists.map((list, index) => (
-                  <div
-                    key={list.id}
-                    className={`flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors ${
-                      index !== lists.length - 1 ? 'border-b border-border' : ''
-                    }`}
-                  >
-                    <button
-                      onClick={() => openList(list)}
-                      className="flex items-center gap-3 flex-1 text-left cursor-pointer"
+                {lists.map((list, index) => {
+                  const [listSearchQuery, setListSearchQuery] = useState('');
+                  const [listSearchResults, setListSearchResults] = useState([]);
+                  const [listSearching, setListSearching] = useState(false);
+                  
+                  const searchListWords = async (query) => {
+                    if (!query.trim()) {
+                      setListSearchResults([]);
+                      return;
+                    }
+                    setListSearching(true);
+                    try {
+                      const res = await fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(query.trim())}`, {
+                        credentials: 'include',
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        // Filter out words already in this list
+                        const filtered = data.filter(
+                          (w) => !list.words?.some((sw) => sw.id === w.id)
+                        );
+                        setListSearchResults(filtered);
+                      }
+                    } catch (err) {
+                      console.error('Failed to search words for list:', err);
+                    }
+                    setListSearching(false);
+                  };
+                  
+                  const addWordToListFromCard = async (word) => {
+                    try {
+                      const res = await fetchWithTimeout(`${API_BASE}/api/lists/${list.id}/words/${word.id}`, {
+                        method: 'POST',
+                        credentials: 'include',
+                      });
+                      if (res.ok) {
+                        // Update local state
+                        setLists((prev) =>
+                          prev.map((l) =>
+                            l.id === list.id
+                              ? { ...l, word_count: (l.word_count || 0) + 1 }
+                              : l
+                          )
+                        );
+                        setListSearchResults((prev) => prev.filter((w) => w.id !== word.id));
+                        setListSearchQuery('');
+                        showToast(`"${word.character}" added to "${list.name}"`);
+                      } else {
+                        const errData = await res.json().catch(() => ({}));
+                        showToast(errData.error || 'Failed to add word');
+                      }
+                    } catch (err) {
+                      console.error('Failed to add word to list:', err);
+                      showToast('Failed to add word');
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={list.id}
+                      className={`flex flex-col items-start justify-between px-5 py-4 hover:bg-surface transition-colors ${
+                        index !== lists.length - 1 ? 'border-b border-border' : ''
+                      }`}
                     >
-                      <FileIcon className="w-5 h-5 text-text-secondary flex-shrink-0" />
-                      <div>
-                        <p className="text-text-primary font-medium">{list.name}</p>
-                        <p className="text-xs text-text-secondary">{list.word_count || 0} words</p>
-                      </div>
-                    </button>
-                    <div className="ml-3 flex items-center gap-2">
-                      {deleteConfirm === list.id ? (
-                        <>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteConfirm(null) }}
-                            disabled={deleting === list.id}
-                            className="p-2 text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
-                            title="Cancel"
-                          >
-                            <XIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => deleteList(list.id, e)}
-                            disabled={deleting === list.id}
-                            className="p-2 text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
-                            title="Confirm delete"
-                          >
-                            {deleting === list.id ? (
-                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
+                      <div className="w-full flex items-center gap-3">
+                        <button
+                          onClick={() => openList(list)}
+                          className="flex items-center gap-3 flex-1 text-left cursor-pointer"
+                        >
+                          <FileIcon className="w-5 h-5 text-text-secondary flex-shrink-0" />
+                          <div>
+                            <p className="text-text-primary font-medium">{list.name}</p>
+                            <p className="text-xs text-text-secondary">{list.word_count || 0} words</p>
+                          </div>
+                        </button>
+                        <div className="ml-3 flex items-center gap-2">
+                          {deleteConfirm === list.id ? (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirm(null) }}
+                                disabled={deleting === list.id}
+                                className="p-2 text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                                title="Cancel"
+                              >
+                                <XIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => deleteList(list.id, e)}
+                                disabled={deleting === list.id}
+                                className="p-2 text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                                title="Confirm delete"
+                              >
+                                {deleting === list.id ? (
+                                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <TrashIcon className="w-4 h-4" />
+                                )}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={(e) => requestDeleteList(list.id, e)}
+                              disabled={deleting === list.id}
+                              className="p-2 text-text-secondary hover:text-red-400 transition-colors disabled:opacity-50"
+                              title="Delete list"
+                            >
                               <TrashIcon className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Search bar for adding words to this list */}
+                      <div className="mt-3 w-full">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={listSearchQuery}
+                            onChange={(e) => {
+                              setListSearchQuery(e.target.value);
+                              if (e.target.value.trim()) {
+                                searchListWords(e.target.value);
+                              } else {
+                                setListSearchResults([]);
+                              }
+                            }}
+                            placeholder={`Search words to add to "${list.name}"...`}
+                            className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+                          />
+                          <button
+                            onClick={() => {
+                              if (listSearchQuery.trim()) {
+                                searchListWords(listSearchQuery);
+                              }
+                            }}
+                            disabled={listSearching || !listSearchQuery.trim()}
+                            className="px-3 py-2 bg-primary text-text-primary rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {listSearching ? (
+                              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              'Search'
                             )}
                           </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={(e) => requestDeleteList(list.id, e)}
-                          disabled={deleting === list.id}
-                          className="p-2 text-text-secondary hover:text-red-400 transition-colors disabled:opacity-50"
-                          title="Delete list"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      )}
+                        </div>
+                        
+                        {listSearchResults.length > 0 && (
+                          <div className="mt-2 w-full max-h-32 overflow-y-auto bg-card border border-border rounded-xl">
+                            {listSearchResults.map((word) => (
+                              <div
+                                key={word.id}
+                                className="flex items-center justify-between px-3 py-2 hover:bg-surface transition-colors border-b border-border last:border-b-0"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-text-primary">{word.character}</span>
+                                  <span className="text-xs text-text-secondary">{word.pinyin}</span>
+                                </div>
+                                <button
+                                  onClick={() => addWordToListFromCard(word)}
+                                  className="px-2 py-1 bg-primary text-text-primary rounded-lg text-xs font-medium hover:bg-primary-hover transition-colors"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

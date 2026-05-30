@@ -197,18 +197,19 @@ db.exec(`
     UNIQUE(list_id, word_id)
   );
 
-  CREATE TABLE IF NOT EXISTS flashcard_progress (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    word_id INTEGER NOT NULL,
-    ease_factor REAL DEFAULT 2.5,
-    interval_days INTEGER DEFAULT 0,
-    repetition INTEGER DEFAULT 0,
-    next_review_date TEXT DEFAULT (date('now')),
-    correct_count INTEGER DEFAULT 0,
-    incorrect_count INTEGER DEFAULT 0,
-    UNIQUE(user_id, word_id)
-  );
+   CREATE TABLE IF NOT EXISTS flashcard_progress (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     user_id INTEGER NOT NULL,
+     word_id INTEGER NOT NULL,
+     added_at TEXT DEFAULT (datetime('now')),
+     ease_factor REAL DEFAULT 2.5,
+     interval_days INTEGER DEFAULT 0,
+     repetition INTEGER DEFAULT 0,
+     next_review_date TEXT DEFAULT (date('now')),
+     correct_count INTEGER DEFAULT 0,
+     incorrect_count INTEGER DEFAULT 0,
+     UNIQUE(user_id, word_id)
+   );
 
   CREATE TABLE IF NOT EXISTS password_resets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -668,10 +669,21 @@ app.post('/api/flashcards/:wordId/init', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Invalid word ID' })
   }
   db.prepare(`
-    INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, next_review_date)
-    VALUES (?, ?, date('now'))
+    INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, added_at, next_review_date)
+    VALUES (?, ?, datetime('now'), date('now'))
   `).run(req.user.id, req.params.wordId)
   res.json({ message: 'Initialized' })
+})
+
+app.post('/api/flashcards/:wordId/add', requireAuth, (req, res) => {
+  if (FLASHCARD_STATIC_ROUTES[req.params.wordId]) {
+    return res.status(400).json({ error: 'Invalid word ID' })
+  }
+  db.prepare(`
+    INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, added_at, next_review_date)
+    VALUES (?, ?, datetime('now'), date('now'))
+  `).run(req.user.id, req.params.wordId)
+  res.json({ message: 'Added to flashcards' })
 })
 
 app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {

@@ -20,20 +20,54 @@ function WordPage() {
   const { word, loading, notFound, mountedRef } = useWordData(id)
   const { isFavorite, favoriteLoading, toggleFavorite } = useWordFavorite(word, user, showToast)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [voicesReady, setVoicesReady] = useState(typeof window === 'undefined' ? false : window.speechSynthesis.getVoices().length > 0)
+  const [voices, setVoices] = useState([])
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
 
   useEffect(() => {
     if (!speechSupported) return
-    const voices = window.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      setVoicesReady(true)
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        const v = window.speechSynthesis.getVoices()
-        if (v.length > 0) setVoicesReady(true)
-      }
+    const updateVoices = () => {
+      setVoices(window.speechSynthesis.getVoices())
+    }
+    updateVoices()
+    window.speechSynthesis.onvoiceschanged = updateVoices
+    return () => {
+      cleanupToast()
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.onvoiceschanged = null
+    }
+  }, [cleanupToast])
+
+  const speak = () => {
+    if (!speechSupported || !word) return
+    
+    // Check if we have voices loaded
+    if (voices.length === 0) {
+      showToast('Loading voices...')
+      return
+    }
+    
+    // Look for Chinese voice
+    const chineseVoice = voices.find((v) => v.lang.startsWith('zh') || v.lang.includes('cmn'))
+    if (!chineseVoice) {
+      showToast('No Chinese voice available')
+      return
+    }
+    
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(word.character)
+    utterance.lang = 'zh-CN'
+    utterance.rate = 0.8
+    utterance.voice = chineseVoice
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => {
+      console.error('Speech synthesis error')
+      setIsSpeaking(false)
+      showToast('Speech failed')
+    }
+    window.speechSynthesis.speak(utterance)
+  }
     }
     return () => {
       cleanupToast()
@@ -92,7 +126,7 @@ function WordPage() {
     }
   }
 
-  const addToDeck = async () => {
+    const addToDeck = async () => {
     if (!user) {
       navigate('/login')
       return
@@ -103,7 +137,7 @@ function WordPage() {
     }
     setAddingToDeck(true)
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/init`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/add`, {
         method: 'POST',
         credentials: 'include',
       })
