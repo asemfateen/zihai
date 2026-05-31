@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, DashboardIcon } from './Icons'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, FileIcon } from './Icons'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -221,15 +221,15 @@ function Navbar() {
               Flashcards
             </button>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/lists')}
               className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
-                location.pathname === '/dashboard'
+                location.pathname === '/lists'
                   ? 'text-primary border-primary'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <DashboardIcon className="w-4 h-4" />
-              Dashboard
+              <FileIcon className="w-4 h-4" />
+              Lists
             </button>
             <button
               onClick={() => navigate('/history')}
@@ -319,15 +319,15 @@ function Navbar() {
               Flashcards
             </button>
             <button
-              onClick={() => handleNav('/dashboard')}
+              onClick={() => handleNav('/lists')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/dashboard'
+                location.pathname === '/lists'
                   ? 'text-primary bg-surface'
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <DashboardIcon className="w-4 h-4 text-text-secondary" />
-              Dashboard
+              <FileIcon className="w-4 h-4 text-text-secondary" />
+              Lists
             </button>
             <button
               onClick={() => handleNav('/history')}

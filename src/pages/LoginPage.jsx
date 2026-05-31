@@ -37,7 +37,7 @@ function LoginPage() {
         return
       }
       const data = await res.json()
-      login(data.email, data.id)
+      login(data.email, data.id, data.display_name)
       navigate(redirectTo)
     } catch (err) {
       console.error('Login failed:', err)

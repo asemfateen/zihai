@@ -7,74 +7,20 @@ import { useAuth } from '../context/AuthContext'
 import { useWordData } from '../hooks/useWordData'
 import { useWordFavorite } from '../hooks/useWordFavorite'
 import { useToast } from '../hooks/useToast'
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon } from '../components/Icons'
-
-const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
 function WordPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { toast, showToast, cleanupToast } = useToast()
-  const { word, loading, notFound, mountedRef } = useWordData(id)
+  const { toast, showToast } = useToast()
+  const { word, loading, notFound } = useWordData(id)
   const { isFavorite, favoriteLoading, toggleFavorite } = useWordFavorite(word, user, showToast)
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [voices, setVoices] = useState([])
+  const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
-
-  useEffect(() => {
-    if (!speechSupported) return
-    const updateVoices = () => {
-      setVoices(window.speechSynthesis.getVoices())
-    }
-    updateVoices()
-    window.speechSynthesis.onvoiceschanged = updateVoices
-    return () => {
-      cleanupToast()
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.onvoiceschanged = null
-    }
-  }, [cleanupToast])
-
-  const speak = () => {
-    if (!speechSupported || !word) return
-    
-    // Check if we have voices loaded
-    if (voices.length === 0) {
-      showToast('Loading voices...')
-      return
-    }
-    
-    // Look for Chinese voice
-    const chineseVoice = voices.find((v) => v.lang.startsWith('zh') || v.lang.includes('cmn'))
-    if (!chineseVoice) {
-      showToast('No Chinese voice available')
-      return
-    }
-    
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(word.character)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 0.8
-    utterance.voice = chineseVoice
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => {
-      console.error('Speech synthesis error')
-      setIsSpeaking(false)
-      showToast('Speech failed')
-    }
-    window.speechSynthesis.speak(utterance)
-  }
-    }
-    return () => {
-      cleanupToast()
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.onvoiceschanged = null
-    }
-  }, [cleanupToast])
 
   useEffect(() => {
     if (!word || !user) return
@@ -97,25 +43,7 @@ function WordPage() {
 
   const speak = () => {
     if (!speechSupported || !word) return
-    if (!voicesReady) {
-      showToast('Speech not available on this browser')
-      return
-    }
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(word.character)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 0.8
-    const voices = window.speechSynthesis.getVoices()
-    const zhVoice = voices.find((v) => v.lang.startsWith('zh'))
-    if (zhVoice) utterance.voice = zhVoice
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => {
-      console.error('Speech synthesis error')
-      setIsSpeaking(false)
-      showToast('Speech failed')
-    }
-    window.speechSynthesis.speak(utterance)
+    speakTTS(word.character)
   }
 
   const handleBack = () => {
@@ -126,7 +54,7 @@ function WordPage() {
     }
   }
 
-    const addToDeck = async () => {
+  const addToDeck = async () => {
     if (!user) {
       navigate('/login')
       return
@@ -301,7 +229,7 @@ function WordPage() {
 
           <div className="flex items-center justify-center gap-3 mb-3">
             <p className="text-2xl text-primary">{word.pinyin}</p>
-            {speechSupported && voicesReady ? (
+            {speechSupported ? (
               <button
                 onClick={speak}
                 className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
@@ -309,14 +237,14 @@ function WordPage() {
                     ? 'bg-primary text-text-primary scale-110 animate-pulse'
                     : 'bg-surface text-text-secondary hover:text-primary hover:border-primary border border-border'
                 }`}
-                title="Listen to pronunciation"
+                title='Listen to pronunciation'
               >
                 {isSpeaking ? <SpeakerWaveIcon className="w-5 h-5" /> : <SpeakerIcon className="w-5 h-5" />}
               </button>
             ) : (
               <div
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-border text-text-secondary opacity-50 cursor-not-allowed"
-                title={speechSupported ? 'Speech voice not loaded' : 'Speech not supported in this browser'}
+                title="Speech not supported in this browser"
                 tabIndex={-1}
               >
                 <SpeakerMuteIcon className="w-5 h-5" />
@@ -336,7 +264,7 @@ function WordPage() {
           <p className="text-lg sm:text-xl text-text-primary">{word.english_definition || 'No definition available'}</p>
         </div>
 
-        <StrokeOrderSection word={word} mountedRef={mountedRef} />
+        <StrokeOrderSection word={word} />
       </div>
     </div>
   )

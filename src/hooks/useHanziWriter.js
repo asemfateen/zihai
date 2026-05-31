@@ -3,31 +3,48 @@ import HanziWriter from 'hanzi-writer'
 
 const HANZI_CACHE_MAX = 200
 
-function isMounted(mountedRef) {
-  return !mountedRef.current
-}
-
-export function useHanziWriter(word, mountedRef) {
+export function useHanziWriter(word) {
   const [supportedChars, setSupportedChars] = useState({})
+  const [writersReady, setWritersReady] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const writerRefs = useRef({})
   const writersRef = useRef({})
   const strokeCountsRef = useRef({})
   const hanziDataCacheRef = useRef(new Map())
   const effectIdRef = useRef(0)
+  const activeCharIndexRef = useRef(-1)
+  const pausedRef = useRef(false)
+  const iterationRef = useRef(0)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!word) return
 
     const effectId = ++effectIdRef.current
     const chars = word.character.split('')
-    const newSupported = {}
-    const newWriters = {}
     const cache = hanziDataCacheRef.current
 
     const rafIds = []
+    let pending = chars.length
+    let readyFired = false
+
+    writersRef.current = {}
+
     chars.forEach((char, i) => {
       const container = writerRefs.current[i]
-      if (!container) return
+      if (!container) {
+        pending--
+        checkReady()
+        return
+      }
 
       container.innerHTML = ''
 
@@ -52,119 +69,151 @@ export function useHanziWriter(word, mountedRef) {
             radicalColor: '#e74c3c',
             showCharacter: false,
           })
-
-          newWriters[i] = writer
-          newSupported[i] = true
+          writersRef.current[i] = writer
+          setSupportedChars((prev) => ({ ...prev, [i]: true }))
         } catch (e) {
           console.error('Failed to initialize HanziWriter:', e)
-          newSupported[i] = false
+          setSupportedChars((prev) => ({ ...prev, [i]: false }))
         }
+        pending--
+        checkReady()
       })
       rafIds.push(rafId)
     })
 
-    writersRef.current = newWriters
-    setSupportedChars(newSupported)
+    function checkReady() {
+      if (!readyFired && pending <= 0) {
+        readyFired = true
+        setWritersReady(true)
+      }
+    }
 
     chars.forEach((char, i) => {
       if (cache.has(char)) {
         strokeCountsRef.current[i] = cache.get(char).strokes.length
         return
       }
-      HanziWriter.loadCharacterData(char).then((data) => {
-        if (effectId !== effectIdRef.current) return
-        if (!mountedRef.current) return
-        if (cache.size >= HANZI_CACHE_MAX) {
-          const firstKey = cache.keys().next().value
-          cache.delete(firstKey)
-        }
-        cache.set(char, data)
-        strokeCountsRef.current[i] = data.strokes.length
-      }).catch((err) => {
-        if (effectId !== effectIdRef.current) return
-        if (!mountedRef.current) return
-        console.error(`Failed to load character data for ${char}:`, err)
-        strokeCountsRef.current[i] = 5
-        setSupportedChars((prev) => ({ ...prev, [i]: false }))
-      })
+      HanziWriter.loadCharacterData(char)
+        .then((data) => {
+          if (effectId !== effectIdRef.current) return
+          if (!mountedRef.current) return
+          if (cache.size >= HANZI_CACHE_MAX) {
+            const firstKey = cache.keys().next().value
+            cache.delete(firstKey)
+          }
+          cache.set(char, data)
+          strokeCountsRef.current[i] = data.strokes.length
+        })
+        .catch((err) => {
+          if (effectId !== effectIdRef.current) return
+          if (!mountedRef.current) return
+          console.error(`Failed to load character data for ${char}:`, err)
+          strokeCountsRef.current[i] = 5
+        })
     })
 
     return () => {
-      rafIds.forEach(id => cancelAnimationFrame(id))
+      rafIds.forEach((id) => cancelAnimationFrame(id))
       Object.values(writersRef.current).forEach((writer) => {
         if (writer && typeof writer.cancelAnimation === 'function') writer.cancelAnimation()
       })
       writersRef.current = {}
       strokeCountsRef.current = {}
     }
-  }, [word, mountedRef])
+  }, [word])
 
-  const pausedRef = useRef(false)
-  const resumeHandlersRef = useRef([])
+  const playFromIndex = useCallback(
+    (startIndex) => {
+      if (!word || !writersReady) return
+      const iteration = ++iterationRef.current
+      pausedRef.current = false
+      setIsPaused(false)
+      setIsPlaying(true)
+      activeCharIndexRef.current = startIndex
 
-  const animateCharacterWithPromise = useCallback((writer, charIndex) => {
-    return new Promise((resolve) => {
-      if (!mountedRef.current) { resolve(); return }
-      const strokeCount = strokeCountsRef.current[charIndex]
-      const effectiveStrokes = (strokeCount !== undefined && strokeCount > 0) ? strokeCount : 5
-      const duration = effectiveStrokes * 300 + 200
-      if (writer) writer.cancelAnimation()
-      if (writer) writer.animateCharacter()
-      const timer = setTimeout(() => {
-        resumeHandlersRef.current = resumeHandlersRef.current.filter(h => h !== resume)
-        if (!pausedRef.current) resolve()
-      }, duration)
-      const resume = () => { clearTimeout(timer); resolve() }
-      resumeHandlersRef.current = [...resumeHandlersRef.current, resume]
-    })
-  }, [mountedRef])
+      Object.values(writersRef.current).forEach((w) => {
+        if (w && typeof w.cancelAnimation === 'function') w.cancelAnimation()
+      })
 
-  const playAll = useCallback(async () => {
-    if (!word) return
-    pausedRef.current = false
-    const chars = word.character.split('')
-    for (let i = 0; i < chars.length; i++) {
-      if (!mountedRef.current || pausedRef.current) break
-      const writer = writersRef.current[i]
-      if (writer) {
-        await animateCharacterWithPromise(writer, i)
-        if (!mountedRef.current || pausedRef.current) break
-        if (i < chars.length - 1) {
-          await new Promise((resolve) => {
-            const interval = setInterval(() => {
-              if (!mountedRef.current || pausedRef.current) { clearInterval(interval); resolve(); return }
-            }, 100)
-            setTimeout(() => { clearInterval(interval); resolve() }, 400)
+      const chars = word.character.split('')
+      let i = startIndex
+
+      const animateNext = () => {
+        if (iteration !== iterationRef.current || !mountedRef.current) {
+          setIsPlaying(false)
+          setIsPaused(false)
+          return
+        }
+        if (pausedRef.current) {
+          return
+        }
+        if (i >= chars.length) {
+          setIsPlaying(false)
+          setIsPaused(false)
+          return
+        }
+        activeCharIndexRef.current = i
+        const writer = writersRef.current[i]
+        if (writer && typeof writer.animateCharacter === 'function') {
+          writer.cancelAnimation()
+          writer.animateCharacter({
+            onComplete: () => {
+              if (iteration !== iterationRef.current || !mountedRef.current) return
+              i++
+              setTimeout(animateNext, 200)
+            },
           })
+        } else {
+          i++
+          setTimeout(animateNext, 100)
         }
       }
-    }
-  }, [word, animateCharacterWithPromise, mountedRef])
 
-  const pauseAll = useCallback(() => {
+      animateNext()
+    },
+    [word, writersReady],
+  )
+
+  const pause = useCallback(() => {
+    if (!isPlaying || isPaused) return
     pausedRef.current = true
-    resumeHandlersRef.current.forEach(h => h())
-    resumeHandlersRef.current = []
-    Object.values(writersRef.current).forEach((writer) => {
-      if (writer && typeof writer.pauseAnimation === 'function') writer.pauseAnimation()
-    })
-  }, [])
+    setIsPaused(true)
+    const i = activeCharIndexRef.current
+    const writer = writersRef.current[i]
+    if (writer && typeof writer.pauseAnimation === 'function') {
+      writer.pauseAnimation()
+    }
+  }, [isPlaying, isPaused])
 
-  const replayAll = useCallback(() => {
+  const resume = useCallback(() => {
+    if (!isPlaying || !isPaused) return
     pausedRef.current = false
-    Object.values(writersRef.current).forEach((writer) => {
-      if (writer && typeof writer.animateCharacter === 'function') {
-        if (typeof writer.cancelAnimation === 'function') writer.cancelAnimation()
-        writer.animateCharacter()
-      }
-    })
-  }, [])
+    setIsPaused(false)
+    const writer = writersRef.current[activeCharIndexRef.current]
+    if (writer && typeof writer.resumeAnimation === 'function') {
+      writer.resumeAnimation()
+    }
+  }, [isPlaying, isPaused])
+
+  const togglePlay = useCallback(() => {
+    if (isPlaying && isPaused) {
+      resume()
+    } else if (isPlaying) {
+      pause()
+    } else {
+      playFromIndex(0)
+    }
+  }, [isPlaying, isPaused, pause, resume, playFromIndex])
 
   return {
     writerRefs,
     supportedChars,
-    playAll,
-    pauseAll,
-    replayAll,
+    writersReady,
+    isPlaying,
+    isPaused,
+    playFromIndex,
+    pause,
+    resume,
+    togglePlay,
   }
 }

@@ -17,7 +17,9 @@ const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const FlashcardsPage = lazy(() => import('./pages/FlashcardsPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
-const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const ListsPage = lazy(() => import('./pages/ListsPage'))
+const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
+const ProfileChangePasswordPage = lazy(() => import('./pages/ProfileChangePasswordPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageSuspense({ children }) {
@@ -51,9 +53,11 @@ const router = createBrowserRouter([
       { path: '/reset-password/:token', element: <PageSuspense><ErrorBoundary><ResetPasswordPage /></ErrorBoundary></PageSuspense> },
       { path: '/history', element: <PageSuspense><ProtectedRoute><ErrorBoundary><HistoryPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/profile', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfilePage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
-      { path: '/dashboard', element: <PageSuspense><ProtectedRoute><ErrorBoundary><DashboardPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/flashcards', element: <PageSuspense><ProtectedRoute><ErrorBoundary><FlashcardsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/favorites', element: <PageSuspense><ProtectedRoute><ErrorBoundary><FavoritesPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/lists', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ListsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/profile/edit', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileEditPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/profile/change-password', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileChangePasswordPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },

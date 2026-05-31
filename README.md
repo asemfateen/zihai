@@ -1,76 +1,179 @@
-# 🌊 Zihai (字海) — Premium Chinese Dictionary & Learning Engine
+# 字海 Zihai — Chinese Dictionary
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Stage-Development-orange?style=for-the-badge" alt="Development Stage">
-  <img src="https://img.shields.io/badge/Frontend-React%20%7C%20Tailwind-blue?style=for-the-badge&logo=react" alt="Frontend Tech">
-  <img src="https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-green?style=for-the-badge&logo=node.js" alt="Backend Tech">
-  <img src="https://img.shields.io/badge/Database-SQLite-003B57?style=for-the-badge&logo=sqlite" alt="Database">
-</p>
+A full-stack Chinese dictionary and learning tool. Search for characters, build vocabulary lists, study with spaced-repetition flashcards, and explore stroke order animations.
 
-**Zihai (字海 - "Sea of Characters")** is a high-performance, dark-themed Chinese-English dictionary and smart learning application built for the modern language learner. Designed to bridge the gap between cluttered, outdated traditional dictionaries and sleek, developer-centric user interfaces, Zihai redefines how learners explore, study, and master the Chinese language.
+## Features
 
-Built with a fast **React (Vite) and Tailwind CSS** frontend, a scalable **Node.js/Express** backend, and an optimized, offline-capable **SQLite** database, Zihai delivers an instantaneous, fluid experience whether you are looking up a complex character or drilling flashcards.
+- **Search** — Look up characters by hanzi, pinyin, or English definition with fuzzy matching
+- **Stroke Order** — Animated character stroke order diagrams (via Hanzi Writer)
+- **Text-to-Speech** — Listen to pronunciation with the Web Speech API
+- **Flashcards** — Spaced-repetition (SM-2 algorithm) with due-card tracking
+- **Vocabulary Lists** — Create custom word lists for organized learning
+- **Favorites** — Bookmark characters for quick reference
+- **Search History** — Review recent searches (persisted per user)
+- **Authentication** — Register/login with JWT + bcrypt, password reset via email
+- **PWA** — Installable as a progressive web app with offline caching
+- **Dark/Light Theme** — Toggle between themes with system preference detection
 
----
+## Stack
 
-## 🌟 Key Features
+| Layer   | Technology                                                   |
+| ------- | ------------------------------------------------------------ |
+| Frontend| React 19, Vite 8, Tailwind CSS 4, React Router 7             |
+| Backend | Express 5, better-sqlite3                                    |
+| Auth    | bcryptjs, jsonwebtoken, HTTP-only cookies, CSRF protection   |
+| Deploy  | Vercel (frontend), Railway (backend)                         |
 
-### 🔍 1. Multi-Criteria Smart Search Engine
-Traditional dictionaries break down when you don't type *exactly* what they expect. Zihai’s intelligent search engine handles multi-layered queries effortlessly:
-* **Smart Pinyin Splitting:** Type running pinyin without spaces or tone marks (e.g., typing `nihao` instantly splits into `nǐ hǎo` and returns `你好`).
-* **Hanzi Search:** Look up characters directly with optimized multi-column indexing (`pinyin_search`, `hanzi`, `definition`).
-* **English Definitions:** Fast semantic matching across English definitions to find the exact Chinese word you need.
+## Getting Started
 
-### 📖 2. Interactive Word & Character Exploration
-Every word page is a comprehensive learning dashboard:
-* **Visual Stroke Order:** Seamless integration with `hanzi-writer` provides interactive, stroke-by-stroke drawing animations to master writing mechanics.
-* **Character Drill-Down:** Tap on any individual character within a compound word to instantly explore its specific meanings, radical composition, and usage.
-* **Audio Pronunciation:** High-quality crystal-clear audio playback for proper tone and native pronunciation acquisition.
+### Prerequisites
 
-### 🧠 3. Advanced Retention & Study Tools (SRS)
-Zihai goes beyond a simple lookup tool by embedding a fully realized spaced repetition flashcard deck right into your dictionary workflow:
-* **SM-2 Algorithm:** Powered by the scientifically proven Spaced Repetition scheduling algorithm (the math behind Anki) to dynamically schedule reviews right before you are about to forget a word.
-* **Custom Decks & Favorites:** Organize your learning journey by building tailored vocabulary lists or quick-saving words to your master Favorites deck.
-* **Search History:** A frictionless tracking system that remembers recent searches, transforming passive lookups into active review sessions.
+- Node.js 18+
+- npm
 
-### 🔒 4. Secure Full User System
-Take your data with you across devices with a secure, robust authentication pipeline:
-* Traditional email/password authentication backed by industry-standard security.
-* Integrated **Google OAuth 2.0** for frictionless, single-tap onboarding.
-* Cloud-synced user data ensuring study streaks and flashcard intervals are never lost.
+### Setup
 
----
+```bash
+# Install dependencies
+npm install
 
-## 🛠️ Tech Stack
+# Configure environment variables
+cp .env.example .env
+# Edit .env as needed (defaults work for local dev)
 
-* **Frontend:** React.js (Vite), Tailwind CSS, Hanzi-Writer (SVG stroke animation).
-* **Backend:** Node.js, Express.js.
-* **Database:** SQLite (Embedded, highly indexed for lightning-fast querying).
-* **Authentication:** JWT (JSON Web Tokens), Passport.js, Google OAuth 2.0.
-* **Core Logic:** Custom Pinyin-syllable splitting engine, SM-2 Spaced Repetition algorithm.
+# Initialize the dictionary database
+# The backend auto-creates tables on first run.
+# Populate the database by running the load scripts in backend/:
+# (Requires a dictionary data source - see backend scripts)
+cd backend
+node loadDictionary.js
+```
 
----
+### Development
 
-## 📂 Project Structure
+```bash
+# Start both frontend (Vite on :5173) and backend (Express on :3002)
+npm run dev
+```
 
-```text
+The Vite dev server proxies `/api` requests to the Express backend.
+
+### Production
+
+```bash
+# Build the frontend
+npm run build
+
+# Start the backend (serves the built frontend from dist/)
+npm start
+```
+
+## Project Structure
+
+```
 zihai/
-├── backend/
-│   ├── config/             # Database and Passport OAuth configurations
-│   ├── controllers/        # Request handlers (Auth, Dictionary, Flashcards)
-│   ├── data/               # SQLite database file and raw dictionary JSON
-│   ├── middleware/         # JWT verification, error handling
-│   ├── models/             # Database schemas and query interfaces
-│   ├── routes/             # Express API route definitions
-│   └── server.js           # Backend application entry point
-├── frontend/
-│   ├── src/
-│   │   ├── components/     # Reusable UI elements (Navbar, SearchBar, Cards)
-│   │   ├── context/        # Global state management (AuthContext, Theme)
-│   │   ├── pages/          # View components (Home, WordPage, Decks, Profile)
-│   │   ├── services/       # API call handlers (axios configuration)
-│   │   ├── App.jsx         # App routing and layout root
-│   │   └── main.jsx        # React DOM mounting point
-│   ├── tailwind.config.js  # Premium dark theme styling rules
-│   └── vite.config.js      # Frontend build configurations
-└── README.md
+├── backend/                  # Express API server
+│   ├── server.js             # Routes, auth, DB queries
+│   ├── pinyinUtils.js        # Pinyin normalization utilities
+│   ├── loadDictionary.js     # Dictionary data loader
+│   ├── addVocabulary.js      # Vocabulary import scripts
+│   ├── zihai.db              # SQLite database
+│   └── .env                  # Backend environment variables
+├── src/                      # React frontend
+│   ├── App.jsx               # Router configuration
+│   ├── main.jsx              # Entry point
+│   ├── api.js                # HTTP client with CSRF + retry
+│   ├── pages/                # Route components
+│   │   ├── HomePage.jsx      # Guest landing / authed dashboard
+│   │   ├── SearchPage.jsx    # Search results
+│   │   ├── WordPage.jsx      # Single word detail
+│   │   ├── FlashcardsPage.jsx# SM-2 review session
+│   │   ├── FavoritesPage.jsx
+│   │   ├── ListsPage.jsx     # Vocabulary list management
+│   │   ├── HistoryPage.jsx
+│   │   ├── ProfilePage.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── ForgotPasswordPage.jsx
+│   │   ├── ResetPasswordPage.jsx
+│   │   └── NotFoundPage.jsx
+│   ├── components/           # Reusable UI
+│   │   ├── Navbar.jsx        # Top nav with search + auth
+│   │   ├── SearchResultCard.jsx
+│   │   ├── StrokeOrderSection.jsx
+│   │   ├── WordListDropdown.jsx
+│   │   ├── Spinner.jsx
+│   │   └── ...
+│   ├── hooks/                # Custom React hooks
+│   │   ├── useHanziWriter.js
+│   │   ├── useSpeechSynthesis.js
+│   │   ├── useTheme.js
+│   │   ├── useWordData.js
+│   │   └── ...
+│   └── context/
+│       └── AuthContext.jsx   # Auth state management
+├── index.html
+├── vite.config.js            # Vite + Tailwind + PWA config
+├── vercel.json               # Vercel deployment config
+└── package.json
+```
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable         | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `JWT_SECRET`     | Secret key for signing JWT tokens                |
+| `PORT`           | Server port (default 3002)                       |
+| `NODE_ENV`       | `development` or `production`                    |
+| `FRONTEND_URL`   | Frontend URL for password reset links            |
+| `SMTP_HOST`      | SMTP server for password reset emails            |
+| `SMTP_PORT`      | SMTP port (default 587)                          |
+| `SMTP_USER`      | SMTP username                                    |
+| `SMTP_PASS`      | SMTP password                                    |
+| `SMTP_FROM`      | From address for emails                          |
+| `ALLOWED_ORIGIN` | Extra CORS origin (optional)                     |
+
+### Frontend (`VITE_API_URL` in `.env`)
+
+| Variable        | Description                                    |
+| --------------- | ---------------------------------------------- |
+| `VITE_API_URL`  | Backend URL (blank for dev proxy, set for prod) |
+
+## API Endpoints
+
+| Method   | Endpoint                              | Auth     | Description                |
+| -------- | ------------------------------------- | -------- | -------------------------- |
+| POST     | `/api/register`                       | —        | Create account             |
+| POST     | `/api/login`                          | —        | Log in                     |
+| POST     | `/api/logout`                         | —        | Log out                    |
+| GET      | `/api/me`                             | Required | Current user info          |
+| GET      | `/api/profile`                        | Required | Profile with stats         |
+| PATCH    | `/api/profile`                        | Required | Update display name        |
+| POST     | `/api/profile/change-password`        | Required | Change password            |
+| GET      | `/api/search?q=`                      | —        | Search words               |
+| GET      | `/api/word/:id`                       | —        | Word detail                |
+| POST     | `/api/history`                        | Required | Save search to history     |
+| GET      | `/api/history`                        | Required | Get search history         |
+| DELETE   | `/api/history`                        | Required | Clear search history       |
+| POST     | `/api/favorites/:wordId`              | Required | Add favorite               |
+| DELETE   | `/api/favorites/:wordId`              | Required | Remove favorite            |
+| GET      | `/api/favorites/:wordId`              | Required | Check if favorited         |
+| GET      | `/api/favorites`                      | Required | List favorites             |
+| GET/POST | `/api/lists`                          | Required | List/Create vocab lists    |
+| DELETE   | `/api/lists/:listId`                  | Required | Delete list                |
+| POST     | `/api/lists/:listId/words/:wordId`    | Required | Add word to list           |
+| DELETE   | `/api/lists/:listId/words/:wordId`    | Required | Remove word from list      |
+| GET      | `/api/lists/:listId`                  | Required | Get list with words        |
+| GET      | `/api/flashcards/due`                 | Required | Due cards for review       |
+| POST     | `/api/flashcards/:wordId/init`        | Required | Init flashcard             |
+| POST     | `/api/flashcards/:wordId/add`         | Required | Add to deck                |
+| POST     | `/api/flashcards/:wordId/result`      | Required | Submit review (SM-2)       |
+| DELETE   | `/api/flashcards/:wordId`             | Required | Remove from deck           |
+| POST     | `/api/forgot-password`                | —        | Request password reset     |
+| POST     | `/api/reset-password`                 | —        | Reset password with token  |
+
+## Deployment
+
+The frontend is configured for **Vercel** (`vercel.json`) with API rewrites pointing to the backend on Railway. The backend deploys independently with its own environment variables.

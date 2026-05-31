@@ -95,11 +95,6 @@ function AuthedHome() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-text-primary mb-1">Welcome back</h1>
-          <p className="text-text-secondary">{user.email}</p>
-        </div>
-
         <div className="grid grid-cols-3 gap-3 mb-8">
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -126,8 +121,8 @@ function AuthedHome() {
             </p>
           </div>
           <div
-            onClick={() => navigate('/profile')}
-            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/profile') }}
+            onClick={() => navigate('/lists')}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/lists') }}
             role="button"
             tabIndex={0}
             className="bg-card border border-border rounded-xl p-4 hover:bg-surface cursor-pointer transition-colors"

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import { CheckIcon, SpeakerIcon, XIcon } from '../components/Icons'
 
 function FlashcardsPage() {
@@ -14,6 +15,7 @@ function FlashcardsPage() {
   const [loading, setLoading] = useState(true)
   const [complete, setComplete] = useState(false)
   const [animating, setAnimating] = useState(false)
+  const [cardPhase, setCardPhase] = useState('idle')
   const [toast, setToast] = useState(null)
   const [error, setError] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
@@ -24,30 +26,34 @@ function FlashcardsPage() {
   const mountedRef = useRef(true)
 
   const fetchDueCardsRef = useRef(null)
+  const sessionDeckRef = useRef([])
 
-  fetchDueCardsRef.current = async () => {
-    setError(false)
-    setLoading(true)
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
-        credentials: 'include',
-      })
-      if (!mountedRef.current) return
-      if (res.ok) {
-        const data = await res.json()
+  useEffect(() => {
+    fetchDueCardsRef.current = async () => {
+      setError(false)
+      setLoading(true)
+      try {
+        const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
+          credentials: 'include',
+        })
         if (!mountedRef.current) return
-        setCards(data)
-        setError(false)
-      } else {
-        setError(true)
+        if (res.ok) {
+          const data = await res.json()
+          if (!mountedRef.current) return
+          setCards(data)
+          if (data.length > 0) sessionDeckRef.current = data
+          setError(false)
+        } else {
+          setError(true)
+        }
+      } catch (err) {
+        console.error('Failed to fetch due cards:', err)
+        if (mountedRef.current) setError(true)
+      } finally {
+        if (mountedRef.current) setLoading(false)
       }
-    } catch (err) {
-      console.error('Failed to fetch due cards:', err)
-      if (mountedRef.current) setError(true)
-    } finally {
-      if (mountedRef.current) setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
@@ -68,32 +74,12 @@ function FlashcardsPage() {
     }
   }, [user, navigate])
 
-  const [voicesReady, setVoicesReady] = useState(typeof window === 'undefined' ? false : window.speechSynthesis.getVoices().length > 0)
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    const voices = window.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      setVoicesReady(true)
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        if (window.speechSynthesis.getVoices().length > 0) setVoicesReady(true)
-      }
-    }
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null
-    }
-  }, [])
+  const { speak: speakTTS } = useSpeechSynthesis()
 
   const currentCharacter = cards[currentIndex]?.character
   const speak = () => {
-    if (!currentCharacter || typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    if (!voicesReady) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(currentCharacter)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 0.8
-    window.speechSynthesis.speak(utterance)
+    if (!currentCharacter) return
+    speakTTS(currentCharacter)
   }
 
   const showToast = (message) => {
@@ -105,15 +91,38 @@ function FlashcardsPage() {
   }
 
   const cardsRef = useRef([])
-  cardsRef.current = cards
+  useLayoutEffect(() => {
+    cardsRef.current = cards
+  })
+
+  const advanceToNext = (newCards) => {
+    setFlipped(false)
+    setCardPhase('exiting')
+    transitionTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return
+      if (newCards) {
+        setCards(newCards)
+        setCurrentIndex(0)
+      } else {
+        setCurrentIndex((prev) => prev + 1)
+      }
+      setCardPhase('entering')
+      transitionTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) setCardPhase('idle')
+        setAnimating(false)
+      }, 350)
+    }, 350)
+  }
 
   const handleResult = async (quality) => {
-    if (animating) return
+    if (animating || cardPhase !== 'idle') return
     setAnimating(true)
     const currentCards = cardsRef.current
     const idx = currentIndex
     const word = currentCards[idx]
     if (!word) { setAnimating(false); return }
+
+    let apiError = null
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/result`, {
         method: 'POST',
@@ -124,7 +133,9 @@ function FlashcardsPage() {
         body: JSON.stringify({ quality }),
       })
       if (!res.ok) {
-        showToast('Failed to save result. Please try again.')
+        const errData = await res.json().catch(() => ({}))
+        apiError = errData.error || 'Failed to save result'
+        showToast(apiError)
         setAnimating(false)
         return
       }
@@ -137,24 +148,26 @@ function FlashcardsPage() {
 
     if (quality >= 3) {
       setCorrectCount((prev) => prev + 1)
+      if (idx + 1 >= currentCards.length) {
+        setComplete(true)
+        setAnimating(false)
+      } else {
+        advanceToNext(null)
+      }
     } else {
       setIncorrectCount((prev) => prev + 1)
-    }
-
-    if (idx + 1 >= currentCards.length) {
-      setComplete(true)
-      setAnimating(false)
-    } else {
-      setFlipped(false)
-      transitionTimerRef.current = setTimeout(() => {
-        setCurrentIndex((prev) => prev + 1)
+      if (currentCards.length <= 1) {
+        setComplete(true)
         setAnimating(false)
-      }, 600)
+      } else {
+        const reshuffled = [...currentCards.slice(0, idx), ...currentCards.slice(idx + 1), word]
+        advanceToNext(reshuffled)
+      }
     }
   }
 
   const handleSkip = () => {
-    if (animating) return
+    if (animating || cardPhase !== 'idle') return
     setAnimating(true)
     const currentCards = cardsRef.current
     const idx = currentIndex
@@ -172,12 +185,7 @@ function FlashcardsPage() {
 
     const remaining = currentCards.filter((_, i) => i !== idx)
     const reshuffled = [...remaining, card]
-    setCards(reshuffled)
-    setFlipped(false)
-    transitionTimerRef.current = setTimeout(() => {
-      setCurrentIndex(0)
-      setAnimating(false)
-    }, 600)
+    advanceToNext(reshuffled)
   }
 
   if (!user) return null
@@ -253,17 +261,35 @@ function FlashcardsPage() {
           <div className="flex gap-4">
             <button
               onClick={() => {
+                setCards([...sessionDeckRef.current])
                 setComplete(false)
                 setCurrentIndex(0)
                 setFlipped(false)
+                setCardPhase('idle')
                 setCorrectCount(0)
                 setIncorrectCount(0)
                 setSkippedIds(new Set())
-                fetchDueCardsRef.current()
+                setAnimating(false)
               }}
               className="px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
               Review Again
+            </button>
+            <button
+              onClick={() => {
+                setComplete(false)
+                setCurrentIndex(0)
+                setFlipped(false)
+                setCardPhase('idle')
+                setCorrectCount(0)
+                setIncorrectCount(0)
+                setSkippedIds(new Set())
+                setAnimating(false)
+                fetchDueCardsRef.current()
+              }}
+              className="px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+            >
+              Study More
             </button>
             <button
               onClick={() => navigate('/')}
@@ -313,15 +339,17 @@ function FlashcardsPage() {
         </div>
 
         {/* Card */}
-        <div className="perspective-1000 mb-8">
+        <div className={`mb-8 ${cardPhase === 'exiting' ? 'animate-card-exit' : ''} ${cardPhase === 'entering' ? 'animate-card-enter' : ''}`}>
           <div
-            onClick={() => !flipped && setFlipped(true)}
-            className={`relative w-full min-h-64 sm:min-h-80 cursor-pointer transition-transform duration-500 transform-style-3d ${
-              flipped ? 'rotate-y-180' : ''
+            onClick={() => {
+              if (cardPhase === 'idle' && !flipped) setFlipped(true)
+            }}
+            className={`flashcard-flipper w-full min-h-64 sm:min-h-80 cursor-pointer ${
+              flipped ? 'is-flipped' : ''
             }`}
           >
             {/* Front */}
-            <div className="absolute inset-0 backface-hidden bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
+            <div className="flashcard-face bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
               <p className="text-7xl sm:text-8xl font-bold text-text-primary mb-4 select-none">
                 {card.character}
               </p>
@@ -329,7 +357,7 @@ function FlashcardsPage() {
             </div>
 
             {/* Back */}
-            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
+            <div className="flashcard-face flashcard-face--back bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
               <div className="flex items-center gap-3 mb-4">
                 <p className="text-2xl text-primary">{card.pinyin}</p>
                 <button
@@ -348,26 +376,26 @@ function FlashcardsPage() {
         </div>
 
         {/* Action buttons */}
-        {flipped && (
+        {flipped && cardPhase === 'idle' && (
           <div className="flex gap-4 animate-fade-in">
             <button
               onClick={() => handleResult(0)}
               disabled={animating}
-              className="flex-1 py-4 bg-surface border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface"
+              className="flex-1 py-4 bg-surface border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Try again
             </button>
             <button
               onClick={handleSkip}
               disabled={animating}
-              className="flex-1 py-4 bg-surface border-2 border-border text-text-secondary rounded-xl font-semibold text-lg hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface disabled:hover:border-border disabled:hover:text-text-secondary"
+              className="flex-1 py-4 bg-surface border-2 border-border text-text-secondary rounded-xl font-semibold text-lg hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Skip
             </button>
             <button
               onClick={() => handleResult(4)}
               disabled={animating}
-              className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-semibold text-lg hover:bg-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+              className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-semibold text-lg hover:bg-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Got it
             </button>

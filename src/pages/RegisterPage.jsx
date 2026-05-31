@@ -39,7 +39,7 @@ function RegisterPage() {
         return
       }
       const data = await res.json()
-      login(data.email, data.id)
+      login(data.email, data.id, data.display_name)
       navigate('/')
     } catch (err) {
       console.error('Registration failed:', err)

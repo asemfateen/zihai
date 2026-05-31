@@ -102,3 +102,57 @@ input, button, svg, path, polyline, circle, rect, line {
 .border-3 {
   border-width: 3px;
 }
+
+@keyframes card-exit-left {
+  from {
+    opacity: 1;
+    transform: translateX(0) rotateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-120%) rotateY(-15deg);
+  }
+}
+
+@keyframes card-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(120%) rotateY(15deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotateY(0);
+  }
+}
+
+.animate-card-exit {
+  animation: card-exit-left 350ms ease-in forwards;
+}
+
+.animate-card-enter {
+  animation: card-enter-right 350ms ease-out forwards;
+}
+
+.flashcard-scene {
+  perspective: 1000px;
+}
+
+.flashcard-flipper {
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flashcard-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.flashcard-face--back {
+  transform: rotateY(180deg);
+}

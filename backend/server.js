@@ -239,6 +239,12 @@ try {
   // Column already exists
 }
 
+try {
+  db.exec('ALTER TABLE users ADD COLUMN display_name TEXT')
+} catch {
+  // Column already exists
+}
+
 const isSecure = process.env.NODE_ENV === 'production'
 const cookieOptions = {
   httpOnly: true,
@@ -291,7 +297,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
   const result = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run(email, password_hash)
   const token = jwt.sign({ id: result.lastInsertRowid, email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ id: result.lastInsertRowid, email })
+  res.json({ id: result.lastInsertRowid, email, display_name: null })
 })
 
 app.post('/api/login', authLimiter, async (req, res) => {
@@ -311,7 +317,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
   }
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ id: user.id, email: user.email })
+  res.json({ id: user.id, email: user.email, display_name: user.display_name })
 })
 
 app.post('/api/logout', (req, res) => {
@@ -320,13 +326,13 @@ app.post('/api/logout', (req, res) => {
 })
 
 app.get('/api/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, email, created_at FROM users WHERE id = ?').get(req.user.id)
+  const user = db.prepare('SELECT id, email, display_name, created_at FROM users WHERE id = ?').get(req.user.id)
   if (!user) return res.status(401).json({ error: 'User not found' })
-  res.json({ id: user.id, email: user.email, created_at: user.created_at })
+  res.json({ id: user.id, email: user.email, display_name: user.display_name, created_at: user.created_at })
 })
 
 app.get('/api/profile', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT email, created_at FROM users WHERE id = ?').get(req.user.id)
+  const user = db.prepare('SELECT email, display_name, created_at FROM users WHERE id = ?').get(req.user.id)
   if (!user) return res.status(404).json({ error: 'User not found' })
   const favorites_count = db.prepare('SELECT COUNT(*) as count FROM favorites WHERE user_id = ?').get(req.user.id).count
   const flashcards_reviewed = db.prepare(`
@@ -334,13 +340,53 @@ app.get('/api/profile', requireAuth, (req, res) => {
     FROM flashcard_progress WHERE user_id = ?
   `).get(req.user.id).total
   const vocabulary_lists_count = db.prepare('SELECT COUNT(*) as count FROM vocabulary_lists WHERE user_id = ?').get(req.user.id).count
+  const flashcards_due = db.prepare(`
+    SELECT COUNT(*) as count FROM flashcard_progress
+    WHERE user_id = ? AND next_review_date <= date('now')
+  `).get(req.user.id).count
   res.json({
     email: user.email,
+    display_name: user.display_name,
     created_at: user.created_at,
     favorites_count,
     flashcards_reviewed,
+    flashcards_due,
     vocabulary_lists_count,
   })
+})
+
+app.patch('/api/profile', requireAuth, (req, res) => {
+  const { display_name } = req.body
+  if (display_name !== undefined) {
+    const sanitized = sanitizeString(display_name)
+    if (sanitized.length > 50) {
+      return res.status(400).json({ error: 'Display name must be 50 characters or less' })
+    }
+    db.prepare('UPDATE users SET display_name = ? WHERE id = ?').run(sanitized || null, req.user.id)
+  }
+  const user = db.prepare('SELECT email, display_name, created_at FROM users WHERE id = ?').get(req.user.id)
+  res.json({ email: user.email, display_name: user.display_name, created_at: user.created_at })
+})
+
+app.post('/api/profile/change-password', requireAuth, async (req, res) => {
+  const { current_password, new_password } = req.body
+  if (!current_password || !new_password) {
+    return res.status(400).json({ error: 'Current and new password required' })
+  }
+  if (new_password.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' })
+  }
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  if (!user || !user.password_hash) {
+    return res.status(400).json({ error: 'Cannot change password for this account' })
+  }
+  const valid = await bcrypt.compare(current_password, user.password_hash)
+  if (!valid) {
+    return res.status(401).json({ error: 'Current password is incorrect' })
+  }
+  const password_hash = await bcrypt.hash(new_password, 10)
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(password_hash, req.user.id)
+  res.json({ message: 'Password updated successfully' })
 })
 
 app.get('/api/dashboard', requireAuth, (req, res) => {
@@ -698,10 +744,16 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Quality must be an integer between 0 and 5' })
   }
 
-  let entry = db.prepare('SELECT * FROM flashcard_progress WHERE user_id = ? AND word_id = ?').get(req.user.id, wordId)
+  let entry = db.prepare(`
+    SELECT *, COALESCE(repetition, 0) as repetition FROM flashcard_progress
+    WHERE user_id = ? AND word_id = ?
+  `).get(req.user.id, wordId)
   if (!entry) {
     db.prepare('INSERT INTO flashcard_progress (user_id, word_id, next_review_date) VALUES (?, ?, date(\'now\'))').run(req.user.id, wordId)
-    entry = db.prepare('SELECT * FROM flashcard_progress WHERE user_id = ? AND word_id = ?').get(req.user.id, wordId)
+    entry = db.prepare(`
+      SELECT *, COALESCE(repetition, 0) as repetition FROM flashcard_progress
+      WHERE user_id = ? AND word_id = ?
+    `).get(req.user.id, wordId)
   }
 
   let { ease_factor, interval_days, repetition, correct_count, incorrect_count } = entry
@@ -758,7 +810,27 @@ const shutdown = () => {
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
-app.listen(PORT, () => {
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason)
+})
+
+const server = app.listen(PORT, () => {
   console.log(`Zihai backend running on http://localhost:${PORT}`)
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+})
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\nPort ${PORT} is already in use.`)
+    console.error(`Stop the other backend process or run: kill $(lsof -t -i:${PORT})`)
+    process.exit(1)
+  } else {
+    console.error('Server error:', err)
+    process.exit(1)
+  }
 })

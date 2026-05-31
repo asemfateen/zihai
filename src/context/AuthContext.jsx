@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
       })
       .then((data) => {
         if (cancelled) return
-        if (data) setUser({ id: data.id, email: data.email })
+        if (data) setUser({ id: data.id, email: data.email, display_name: data.display_name })
       })
       .catch((err) => {
         if (cancelled) return
@@ -38,8 +38,8 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true }
   }, [])
 
-  const login = (email, id = null) => {
-    setUser({ id, email })
+  const login = (email, id = null, display_name = null) => {
+    setUser({ id, email, display_name })
   }
 
   const logout = async () => {
@@ -51,8 +51,10 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const updateUser = (fields) => setUser((u) => (u ? { ...u, ...fields } : u))
+
   const contextValue = useMemo(() => ({
-    user, initialized, login, logout
+    user, initialized, login, logout, updateUser
   }), [user, initialized])
 
   if (!initialized) {
