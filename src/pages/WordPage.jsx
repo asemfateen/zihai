@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import StrokeOrderSection from '../components/StrokeOrderSection'
-import WordListDropdown from '../components/WordListDropdown'
 import { useAuth } from '../context/AuthContext'
 import { useWordData } from '../hooks/useWordData'
 import { useWordFavorite } from '../hooks/useWordFavorite'
@@ -10,9 +9,11 @@ import { useToast } from '../hooks/useToast'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon } from '../components/Icons'
+import ExampleSentenceCard from '../components/ExampleSentenceCard'
+import RADICAL_MAP from '../data/radicals'
 
 function WordPage() {
-  const { id } = useParams()
+  const { query } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast, showToast } = useToast()
@@ -201,13 +202,6 @@ function WordPage() {
             )}
           </button>
 
-          <WordListDropdown
-            word={word}
-            user={user}
-            navigate={navigate}
-            showToast={showToast}
-          />
-
           <button
             onClick={inDeck ? removeFromDeck : addToDeck}
             disabled={addingToDeck}
@@ -257,12 +251,36 @@ function WordPage() {
               HSK {word.hsk_level}
             </span>
           )}
+          {word.radical && RADICAL_MAP[word.radical] && (
+            <button
+              onClick={() => navigate(`/radicals/${word.radical}`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-card border border-border rounded-full text-sm text-text-secondary hover:text-primary hover:border-primary transition-colors ml-2"
+            >
+              <span className="font-bold">{RADICAL_MAP[word.radical]}</span>
+              <span>Radical {word.radical}</span>
+            </button>
+          )}
         </div>
 
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4 hover:border-primary/50 transition-colors">
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Definition</h2>
           <p className="text-lg sm:text-xl text-text-primary">{word.english_definition || 'No definition available'}</p>
         </div>
+
+        {word.examples && word.examples.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4">
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Example Sentences</h2>
+            <div className="space-y-3">
+              {word.examples.map((ex, i) => (
+                <ExampleSentenceCard
+                  key={i}
+                  sentence={ex.sentence}
+                  translation={ex.translation}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         <StrokeOrderSection word={word} />
       </div>

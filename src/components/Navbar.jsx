@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, FileIcon } from './Icons'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon } from './Icons'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -54,7 +54,7 @@ function Navbar() {
     if (value.length >= 1) {
       debounceRef.current = setTimeout(() => {
         abortControllerRef.current = new AbortController()
-        fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(value)}`, {
+        fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(value)}&limit=6`, {
           signal: abortControllerRef.current.signal,
         })
           .then((res) => {
@@ -184,7 +184,7 @@ function Navbar() {
                   i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
                 }`}
               >
-                <span className="text-xl font-bold text-text-primary">{s.character}</span>
+                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
                 <span className="text-sm text-primary">{s.pinyin}</span>
               </div>
             ))}
@@ -200,6 +200,17 @@ function Navbar() {
 
       {/* Desktop nav */}
       <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+        <button
+          onClick={() => navigate('/radicals')}
+          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
+            location.pathname === '/radicals' || location.pathname.startsWith('/radicals/')
+              ? 'text-primary border-primary'
+              : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+          }`}
+        >
+          <GridIcon className="w-4 h-4" />
+          Radicals
+        </button>
         <button
           onClick={toggleTheme}
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary"
@@ -219,17 +230,6 @@ function Navbar() {
             >
               <FlashcardIcon className="w-4 h-4" />
               Flashcards
-            </button>
-            <button
-              onClick={() => navigate('/lists')}
-              className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
-                location.pathname === '/lists'
-                  ? 'text-primary border-primary'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <FileIcon className="w-4 h-4" />
-              Lists
             </button>
             <button
               onClick={() => navigate('/history')}
@@ -319,15 +319,15 @@ function Navbar() {
               Flashcards
             </button>
             <button
-              onClick={() => handleNav('/lists')}
+              onClick={() => handleNav('/radicals')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/lists'
+                location.pathname === '/radicals' || location.pathname.startsWith('/radicals/')
                   ? 'text-primary bg-surface'
                   : 'text-text-primary hover:bg-surface'
               }`}
             >
-              <FileIcon className="w-4 h-4 text-text-secondary" />
-              Lists
+              <GridIcon className="w-4 h-4 text-text-secondary" />
+              Radicals
             </button>
             <button
               onClick={() => handleNav('/history')}
@@ -381,6 +381,14 @@ function Navbar() {
             >
               {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
               {dark ? 'Light Mode' : 'Dark Mode'}
+            </button>
+            <div className="border-t border-border" />
+            <button
+              onClick={() => handleNav('/radicals')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
+            >
+              <GridIcon className="w-4 h-4 text-text-secondary" />
+              Radicals
             </button>
             <div className="border-t border-border" />
             <button

@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import { normalizePinyin } from './pinyinUtils.js'
@@ -9,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, '.env') })
 
-const dbPath = path.join(__dirname, 'zihai.db')
+const dbPath = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
 const jsonPath = path.resolve(__dirname, '../src/assets/data/dictionary.json')
 
 const isExecute = process.argv.includes('--execute')

@@ -108,6 +108,54 @@ export function toDisplayPinyin(pinyin) {
   return converted.join(' ')
 }
 
+const CONSONANT_MAP = {
+  'c': ['s'],
+  's': ['c', 'sh'],
+  'sh': ['s'],
+  'z': ['zh'],
+  'zh': ['z'],
+  'ch': ['c', 'q'],
+  'r': ['l'],
+  'l': ['r', 'n'],
+  'n': ['l'],
+  'b': ['p'],
+  'p': ['b'],
+  'd': ['t'],
+  't': ['d'],
+  'g': ['k'],
+  'k': ['g'],
+  'j': ['q', 'x'],
+  'q': ['j', 'ch', 'x'],
+  'x': ['j', 'q', 'sh'],
+}
+
+export function generatePinyinAlternatives(input) {
+  const normalized = normalizePinyin(input)
+  const primary = splitPinyin(normalized)
+  const seen = new Set([primary])
+  const alternatives = [primary]
+
+  const syllables = primary.split(' ')
+  for (let i = 0; i < syllables.length; i++) {
+    const syl = syllables[i]
+    for (const [from, toList] of Object.entries(CONSONANT_MAP)) {
+      if (syl.startsWith(from)) {
+        for (const to of toList) {
+          const alt = [...syllables]
+          alt[i] = to + syl.slice(from.length)
+          const joined = alt.join(' ')
+          if (!seen.has(joined)) {
+            seen.add(joined)
+            alternatives.push(joined)
+          }
+        }
+      }
+    }
+  }
+
+  return alternatives
+}
+
 export function splitPinyin(input) {
   const s = input.toLowerCase()
   const result = []

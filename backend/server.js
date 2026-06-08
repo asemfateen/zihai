@@ -9,9 +9,12 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import crypto from 'crypto'
+import os from 'os'
 import rateLimit from 'express-rate-limit'
 import nodemailer from 'nodemailer'
-import { normalizePinyin, searchNormalizePinyin, splitPinyin } from './pinyinUtils.js'
+import { normalizePinyin, searchNormalizePinyin, splitPinyin, generatePinyinAlternatives } from './pinyinUtils.js'
+import { convertNumberedPinyin } from './utils/pinyin.js'
+import RADICALS from './radicals.js'
 
 function generateCsrfToken() {
   return crypto.randomBytes(32).toString('hex')
@@ -57,7 +60,8 @@ if (!JWT_SECRET) {
   JWT_SECRET = 'zihai-dev-insecure-secret-do-not-use-in-production'
 }
 
-const db = new Database(path.join(__dirname, 'zihai.db'))
+const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
+const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
 db.pragma('foreign_keys = ON')
 
@@ -103,14 +107,29 @@ app.use(helmet({
   contentSecurityPolicy: false,
 }))
 
+const localIps = []
+try {
+  const nets = os.networkInterfaces()
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        localIps.push(net.address)
+      }
+    }
+  }
+} catch { /* ignore */ }
+
 app.use(cors({
   origin: function(origin, callback) {
     const allowed = [
       'https://zihai.vercel.app',
       /https:\/\/zihai-.*\.vercel\.app$/,
       /https?:\/\/.*\.railway\.app$/,
-      /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/,
+      /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]):\d+$/,
     ]
+    for (const ip of localIps) {
+      allowed.push(new RegExp(`^https?:\\/\\/${ip.replace(/\./g, '\\.')}:\\d+$`))
+    }
     if (process.env.ALLOWED_ORIGIN) {
       allowed.push(process.env.ALLOWED_ORIGIN)
     }
@@ -140,26 +159,13 @@ app.use((err, req, res, next) => {
 })
 
 app.use('/api/', (req, res, next) => {
-  if (['/login', '/register', '/forgot-password', '/reset-password'].includes(req.path)) {
+  if (['/login', '/register', '/forgot-password', '/reset-password', '/ping'].includes(req.path)) {
     return next()
   }
   return apiLimiter(req, res, next)
 })
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS words (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    character TEXT UNIQUE NOT NULL,
-    pinyin TEXT NOT NULL,
-    english_definition TEXT NOT NULL,
-    hsk_level INTEGER,
-    pinyin_search TEXT,
-    pinyin_normalized TEXT
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_words_pinyin_normalized ON words(pinyin_normalized);
-  CREATE INDEX IF NOT EXISTS idx_words_character ON words(character);
-
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
@@ -181,20 +187,6 @@ db.exec(`
     query TEXT NOT NULL,
     searched_at TEXT DEFAULT (datetime('now')),
     UNIQUE(user_id, query)
-  );
-
-  CREATE TABLE IF NOT EXISTS vocabulary_lists (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS list_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    list_id INTEGER NOT NULL,
-    word_id INTEGER NOT NULL,
-    UNIQUE(list_id, word_id)
   );
 
    CREATE TABLE IF NOT EXISTS flashcard_progress (
@@ -224,12 +216,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_favorites_user_word ON favorites(user_id, word_id);
   CREATE INDEX IF NOT EXISTS idx_flashcard_due ON flashcard_progress(user_id, next_review_date);
   CREATE INDEX IF NOT EXISTS idx_search_history_user ON search_history(user_id, searched_at);
-  CREATE INDEX IF NOT EXISTS idx_list_items_list ON list_items(list_id);
-  CREATE INDEX IF NOT EXISTS idx_words_english_definition ON words(english_definition);
   CREATE INDEX IF NOT EXISTS idx_flashcard_user ON flashcard_progress(user_id, word_id);
-  CREATE INDEX IF NOT EXISTS idx_vocabulary_lists_user ON vocabulary_lists(user_id);
-  CREATE INDEX IF NOT EXISTS idx_list_items_word ON list_items(word_id);
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_words_character_unique ON words(character);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_search_history_unique ON search_history(user_id, query);
+
+  CREATE TABLE IF NOT EXISTS dictionary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    traditional TEXT NOT NULL,
+    simplified TEXT NOT NULL,
+    pinyin TEXT NOT NULL,
+    definitions TEXT NOT NULL
+  );
 
 `)
 
@@ -240,10 +236,44 @@ try {
 }
 
 try {
+  db.exec('ALTER TABLE flashcard_progress ADD COLUMN added_at TEXT')
+} catch {
+  // Column already exists
+}
+
+try {
   db.exec('ALTER TABLE users ADD COLUMN display_name TEXT')
 } catch {
   // Column already exists
 }
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS word_examples (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      word_id INTEGER NOT NULL,
+      sentence TEXT NOT NULL,
+      translation TEXT
+    )
+  `)
+} catch {
+  // Table may already exist
+}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_word_examples_word ON word_examples(word_id)') } catch {}
+
+// Radicals table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS radicals (
+    id INTEGER PRIMARY KEY,
+    character TEXT NOT NULL,
+    name TEXT
+  )
+`)
+const insertRadical = db.prepare('INSERT OR IGNORE INTO radicals (id, character, name) VALUES (?, ?, ?)')
+const insertMany = db.transaction((rads) => {
+  for (const r of rads) insertRadical.run(r.id, r.character, r.name)
+})
+insertMany(RADICALS)
 
 const isSecure = process.env.NODE_ENV === 'production'
 const cookieOptions = {
@@ -297,7 +327,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
   const result = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run(email, password_hash)
   const token = jwt.sign({ id: result.lastInsertRowid, email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ id: result.lastInsertRowid, email, display_name: null })
+  res.json({ token, id: result.lastInsertRowid, email, display_name: null })
 })
 
 app.post('/api/login', authLimiter, async (req, res) => {
@@ -317,7 +347,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
   }
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ id: user.id, email: user.email, display_name: user.display_name })
+  res.json({ token, id: user.id, email: user.email, display_name: user.display_name })
 })
 
 app.post('/api/logout', (req, res) => {
@@ -339,7 +369,6 @@ app.get('/api/profile', requireAuth, (req, res) => {
     SELECT COALESCE(SUM(correct_count + incorrect_count), 0) as total
     FROM flashcard_progress WHERE user_id = ?
   `).get(req.user.id).total
-  const vocabulary_lists_count = db.prepare('SELECT COUNT(*) as count FROM vocabulary_lists WHERE user_id = ?').get(req.user.id).count
   const flashcards_due = db.prepare(`
     SELECT COUNT(*) as count FROM flashcard_progress
     WHERE user_id = ? AND next_review_date <= date('now')
@@ -351,7 +380,6 @@ app.get('/api/profile', requireAuth, (req, res) => {
     favorites_count,
     flashcards_reviewed,
     flashcards_due,
-    vocabulary_lists_count,
   })
 })
 
@@ -490,84 +518,162 @@ app.get('/api/dev-reset-link/:token', (req, res) => {
   res.json({ resetUrl: `${frontendUrl}/reset-password/${req.params.token}` })
 })
 
-app.get('/api/search', (req, res) => {
-  const q = (req.query.q || '').trim()
-  if (!q) return res.json([])
-
-  const escapedQuery = q.replace(/[%_]/g, '\\$&')
-  const pinyinNorm = normalizePinyin(escapedQuery)
-  const pinyinNormQuery = pinyinNorm ? '% ' + pinyinNorm + ' %' : null
-  const pinyinConcat = pinyinNorm ? pinyinNorm.replace(/\s+/g, '') : null
-  const pinyinConcatQuery = pinyinConcat && pinyinConcat !== pinyinNorm ? '%' + pinyinConcat + '%' : null
-  const pinyinSearchNorm = searchNormalizePinyin(escapedQuery)
-  const pinyinSearchQuery = pinyinSearchNorm ? '% ' + pinyinSearchNorm + ' %' : null
-  const pinyinSplit = pinyinNorm && !pinyinNorm.includes(' ') ? splitPinyin(pinyinNorm) : null
-  const pinyinSplitQuery = pinyinSplit && pinyinSplit !== pinyinNorm ? '% ' + pinyinSplit + ' %' : null
-
-  const defWordQuery = '% ' + escapedQuery + ' %'
-  const defStartQuery = escapedQuery + ' %'
-  const defEndQuery = '% ' + escapedQuery
-
-  const whereParts = [
-    'character = ?',
-    "(' ' || pinyin_normalized || ' ') LIKE ?",
-    "(' ' || pinyin_search || ' ') LIKE ?",
-  ]
-  const whereParams = [q, pinyinNormQuery, pinyinSearchQuery]
-
-  if (pinyinConcatQuery) {
-    whereParts.push("(REPLACE(pinyin_normalized, ' ', '') LIKE ?)")
-    whereParams.push(pinyinConcatQuery)
-  }
-  if (pinyinSplitQuery) {
-    whereParts.push("(' ' || pinyin_normalized || ' ') LIKE ?")
-    whereParams.push(pinyinSplitQuery)
-  }
-
-  whereParts.push('english_definition = ?', 'english_definition LIKE ?', 'english_definition LIKE ?', 'english_definition LIKE ?')
-  whereParams.push(escapedQuery, defWordQuery, defStartQuery, defEndQuery)
-
-  const orderBy = [
-    'CASE WHEN character = ? THEN 0 ELSE 1 END',
-    "CASE WHEN english_definition = ? OR (' ' || pinyin_normalized || ' ') LIKE ? THEN 0 ELSE 1 END",
-    'LENGTH(character)',
-    'COALESCE(hsk_level, 999)',
-    'CASE WHEN english_definition = ? THEN 0 ELSE 1 END',
-    "CASE WHEN (' ' || pinyin_search || ' ') LIKE ? THEN 0 ELSE 1 END",
-    'CASE WHEN english_definition LIKE ? THEN 0 ELSE 1 END',
-  ]
-  const orderParams = [q, q, pinyinNormQuery, q, pinyinSearchQuery, defStartQuery]
-
-  const rows = db.prepare(`
-    SELECT id, character, COALESCE(pinyin_display, pinyin_normalized, pinyin) AS pinyin, english_definition, hsk_level
-    FROM words
-    WHERE ${whereParts.join(' OR ')}
-    ORDER BY ${orderBy.join(', ')},
-      LENGTH(character),
-      CASE WHEN LENGTH(english_definition) > 100 OR (LENGTH(english_definition) - LENGTH(REPLACE(english_definition, ',', ''))) > 3 THEN 1 ELSE 0 END,
-      id
-    LIMIT 100
-  `).all(...whereParams, ...orderParams)
-
-  const filtered = rows.filter(r =>
-    r.character
-    && !r.character.includes('\uFFFD')
-    && r.english_definition
-    && r.character.length <= 8
-    && r.english_definition.length <= 300
-    && /^[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]+$/.test(r.character)
-  )
-  res.json(filtered)
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok' })
 })
 
-app.get('/api/word/:id', (req, res) => {
-  const word = db.prepare(`
-    SELECT id, character, COALESCE(pinyin_display, pinyin_normalized, pinyin) AS pinyin,
-           english_definition, hsk_level, pinyin_search
-    FROM words WHERE id = ?
-  `).get(req.params.id)
-  if (!word) return res.status(404).json({ error: 'Word not found' })
-  res.json(word)
+app.get('/api/search', (req, res) => {
+  const q = (typeof req.query.q === 'string' ? req.query.q : '').trim()
+  if (!q) return res.json([])
+  if (q.length > 50) return res.status(400).json({ error: 'Query too long' })
+
+  const hasChinese = /[\u4e00-\u9fa5]/.test(q)
+  const isAlpha = /^[A-Za-z]+$/.test(q)
+  const qLower = q.toLowerCase()
+  let rows = []
+
+  try {
+    if (hasChinese) {
+      const pattern = q + '%'
+      const ch = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          CASE WHEN simplified = ? THEN 1 ELSE 0 END as exact_match,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM characters WHERE simplified LIKE ?
+        ORDER BY is_variant, exact_match DESC, (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, length(simplified) ASC LIMIT 50
+      `).all(q, pattern)
+      const cw = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          CASE WHEN simplified = ? THEN 1 ELSE 0 END as exact_match,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM cedict_words WHERE simplified LIKE ?
+        ORDER BY is_variant, exact_match DESC, (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, length(simplified) ASC LIMIT 50
+      `).all(q, pattern)
+      rows = [...ch, ...cw]
+    } else if (isAlpha) {
+      const prefix = qLower + '%'
+      const wildcard = '%' + qLower + '%'
+      const prefixSpace = qLower + ' %'
+      const prefixSemi = qLower + ';%'
+
+      const ch = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM characters WHERE pinyin_flat LIKE ? OR definition LIKE ?
+        ORDER BY is_variant ASC,
+          (CASE
+            WHEN pinyin_flat = ? THEN 3
+            WHEN definition = ? OR definition LIKE ? OR definition LIKE ? THEN 3
+            WHEN pinyin_flat LIKE ? THEN 1
+            ELSE 0
+          END) DESC,
+          (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC,
+          hsk_level ASC,
+          length(simplified) ASC
+        LIMIT 50
+      `).all(prefix, wildcard, qLower, qLower, prefixSpace, prefixSemi, prefix)
+      const cw = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM cedict_words WHERE pinyin_flat LIKE ? OR definition LIKE ?
+        ORDER BY is_variant ASC,
+          (CASE
+            WHEN pinyin_flat = ? THEN 3
+            WHEN definition = ? OR definition LIKE ? OR definition LIKE ? THEN 3
+            WHEN pinyin_flat LIKE ? THEN 1
+            ELSE 0
+          END) DESC,
+          (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC,
+          hsk_level ASC,
+          length(simplified) ASC
+        LIMIT 50
+      `).all(prefix, wildcard, qLower, qLower, prefixSpace, prefixSemi, prefix)
+      rows = [...ch, ...cw]
+    } else {
+      const pattern = '%' + q + '%'
+      const ch = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          0 as exact_match,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM characters WHERE definition LIKE ?
+        ORDER BY is_variant, (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, length(simplified) ASC LIMIT 50
+      `).all(pattern)
+      const cw = db.prepare(`
+        SELECT id, simplified, traditional, pinyin, pinyin_flat, definition, hsk_level,
+          0 as exact_match,
+          CASE WHEN definition LIKE '%variant of%' THEN 1 ELSE 0 END as is_variant
+        FROM cedict_words WHERE definition LIKE ?
+        ORDER BY is_variant, (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, length(simplified) ASC LIMIT 50
+      `).all(pattern)
+      rows = [...ch, ...cw]
+    }
+  } catch (err) {
+    console.error('Search query failed:', err.message)
+    return res.status(500).json({ error: 'Search query failed' })
+  }
+
+  rows.forEach(r => { r.pinyin = convertNumberedPinyin(r.pinyin) })
+  res.json(rows)
+})
+
+app.get('/api/radicals', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT r.id, r.character, r.name, COALESCE(w.cnt, 0) AS count
+      FROM radicals r
+      LEFT JOIN (SELECT radical, COUNT(*) AS cnt FROM characters WHERE radical IS NOT NULL GROUP BY radical) w ON w.radical = r.id
+      ORDER BY w.cnt DESC NULLS LAST, r.id
+    `).all()
+    res.json(rows)
+  } catch (err) {
+    console.error('Radicals query failed:', err.message)
+    return res.status(500).json({ error: 'Failed to fetch radicals' })
+  }
+})
+
+app.get('/api/radicals/:radical', (req, res) => {
+  const radical = parseInt(req.params.radical, 10)
+  if (isNaN(radical) || radical < 1 || radical > 214) {
+    return res.status(400).json({ error: 'Radical must be an integer between 1 and 214' })
+  }
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit, 10) || 50), 100)
+  const offset = (page - 1) * limit
+  try {
+    const radicalInfo = db.prepare('SELECT id, character, name FROM radicals WHERE id = ?').get(radical)
+    if (!radicalInfo) return res.status(404).json({ error: 'Radical not found' })
+    const total = db.prepare('SELECT COUNT(*) AS cnt FROM characters WHERE radical = ?').get(radical).cnt
+    const words = db.prepare(`
+      SELECT id, simplified, traditional, pinyin, pinyin AS pinyin_display, definition, hsk_level, radical, stroke_count
+      FROM characters WHERE radical = ?
+      ORDER BY (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, LENGTH(simplified)
+      LIMIT ? OFFSET ?
+    `).all(radical, limit, offset)
+    words.forEach(w => { w.pinyin = convertNumberedPinyin(w.pinyin) })
+    res.json({ radical: radicalInfo, words, total, page, limit, totalPages: Math.ceil(total / limit) })
+  } catch (err) {
+    console.error('Radical detail query failed:', err.message)
+    return res.status(500).json({ error: 'Failed to fetch radical details' })
+  }
+})
+
+app.get('/api/word/:query', (req, res) => {
+  const { query } = req.params
+  let item = db.prepare(`
+    SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+           definition AS english_definition, hsk_level
+    FROM cedict_words WHERE simplified = ?
+  `).get(query)
+  if (!item) {
+    item = db.prepare(`
+      SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+             definition AS english_definition, hsk_level, radical, stroke_count
+      FROM characters WHERE simplified = ?
+    `).get(query)
+  }
+  if (!item) return res.status(404).json({ error: 'Word not found' })
+  item.pinyin = convertNumberedPinyin(item.pinyin)
+  res.json({ ...item, examples: [] })
 })
 
 app.post('/api/history', requireAuth, (req, res) => {
@@ -618,74 +724,13 @@ app.get('/api/favorites/:wordId', requireAuth, (req, res) => {
 
 app.get('/api/favorites', requireAuth, (req, res) => {
   const rows = db.prepare(`
-    SELECT w.id, w.character, COALESCE(w.pinyin_display, w.pinyin_normalized, w.pinyin) AS pinyin, w.english_definition, w.hsk_level
+    SELECT w.id, w.simplified AS character, w.pinyin, w.definition AS english_definition, w.hsk_level
     FROM favorites f
-    JOIN words w ON w.id = f.word_id
+    JOIN cedict_words w ON w.id = f.word_id
     WHERE f.user_id = ?
     ORDER BY f.created_at DESC
   `).all(req.user.id)
   res.json(rows)
-})
-
-app.get('/api/lists', requireAuth, (req, res) => {
-  const rows = db.prepare(`
-    SELECT vl.id, vl.name, vl.created_at,
-      (SELECT COUNT(*) FROM list_items WHERE list_id = vl.id) AS word_count
-    FROM vocabulary_lists vl
-    WHERE vl.user_id = ?
-    ORDER BY vl.created_at DESC
-  `).all(req.user.id)
-  res.json(rows)
-})
-
-app.post('/api/lists', requireAuth, (req, res) => {
-  const { name } = req.body
-  if (!name || typeof name !== 'string' || name.trim().length === 0) {
-    return res.status(400).json({ error: 'Name is required' })
-  }
-  const trimmed = name.trim().replace(/<[^>]*>/g, '').replace(/[<>]/g, '')
-  if (trimmed.length === 0) {
-    return res.status(400).json({ error: 'Name is required' })
-  }
-  if (trimmed.length > 100) {
-    return res.status(400).json({ error: 'Name must be 100 characters or less' })
-  }
-  const result = db.prepare('INSERT INTO vocabulary_lists (user_id, name) VALUES (?, ?)').run(req.user.id, trimmed)
-  res.json({ id: result.lastInsertRowid, name: trimmed })
-})
-
-app.delete('/api/lists/:listId', requireAuth, (req, res) => {
-  const list = db.prepare('SELECT id FROM vocabulary_lists WHERE id = ? AND user_id = ?').get(req.params.listId, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  db.transaction(() => {
-    db.prepare('DELETE FROM list_items WHERE list_id = ?').run(req.params.listId)
-    db.prepare('DELETE FROM vocabulary_lists WHERE id = ?').run(req.params.listId)
-  })()
-  res.json({ message: 'Deleted' })
-})
-
-app.post('/api/lists/:listId/words/:wordId', requireAuth, (req, res) => {
-  const list = db.prepare('SELECT id FROM vocabulary_lists WHERE id = ? AND user_id = ?').get(req.params.listId, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  db.prepare('INSERT OR IGNORE INTO list_items (list_id, word_id) VALUES (?, ?)').run(req.params.listId, req.params.wordId)
-  res.json({ message: 'Added' })
-})
-
-app.delete('/api/lists/:listId/words/:wordId', requireAuth, (req, res) => {
-  db.prepare('DELETE FROM list_items WHERE list_id = ? AND word_id = ?').run(req.params.listId, req.params.wordId)
-  res.json({ message: 'Removed' })
-})
-
-app.get('/api/lists/:listId', requireAuth, (req, res) => {
-  const list = db.prepare('SELECT * FROM vocabulary_lists WHERE id = ? AND user_id = ?').get(req.params.listId, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  const words = db.prepare(`
-    SELECT w.id, w.character, COALESCE(w.pinyin_display, w.pinyin_normalized, w.pinyin) AS pinyin, w.english_definition, w.hsk_level
-    FROM list_items li
-    JOIN words w ON w.id = li.word_id
-    WHERE li.list_id = ?
-  `).all(req.params.listId)
-  res.json({ ...list, words })
 })
 
 const FLASHCARD_STATIC_ROUTES = {
@@ -696,9 +741,9 @@ app.get('/api/flashcards/due', requireAuth, (req, res) => {
   const rows = db.prepare(`
     SELECT fp.id AS progress_id, fp.ease_factor, fp.interval_days, fp.repetition, fp.next_review_date,
          fp.correct_count, fp.incorrect_count,
-         w.id, w.character, COALESCE(w.pinyin_display, w.pinyin_normalized, w.pinyin) AS pinyin, w.english_definition, w.hsk_level
+         w.id, w.simplified AS character, w.pinyin, w.definition AS english_definition, w.hsk_level
     FROM flashcard_progress fp
-    JOIN words w ON w.id = fp.word_id
+    JOIN cedict_words w ON w.id = fp.word_id
     WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
     ORDER BY fp.next_review_date ASC
   `).all(req.user.id)
@@ -795,6 +840,93 @@ app.delete('/api/flashcards/:wordId', requireAuth, (req, res) => {
   }
   db.prepare('DELETE FROM flashcard_progress WHERE user_id = ? AND word_id = ?').run(req.user.id, req.params.wordId)
   res.json({ message: 'Removed from deck' })
+})
+
+// Deck management
+app.get('/api/decks', (req, res) => {
+  try {
+    const decks = db.prepare('SELECT id, name, created_at FROM decks ORDER BY created_at DESC').all()
+    res.json(decks)
+  } catch (err) {
+    console.error('Failed to fetch decks:', err.message)
+    res.status(500).json({ error: 'Failed to fetch decks' })
+  }
+})
+
+app.post('/api/decks', (req, res) => {
+  const name = (req.body.name || '').trim()
+  if (!name) return res.status(400).json({ error: 'Name is required' })
+  if (name.length > 200) return res.status(400).json({ error: 'Name too long' })
+  try {
+    const result = db.prepare('INSERT INTO decks (name) VALUES (?)').run(name)
+    res.json({ id: result.lastInsertRowid, name })
+  } catch (err) {
+    console.error('Failed to create deck:', err.message)
+    res.status(500).json({ error: 'Failed to create deck' })
+  }
+})
+
+// Flashcard lifecycle
+app.post('/api/flashcards', (req, res) => {
+  const { deck_id, item_id, item_type } = req.body
+  if (!deck_id || !item_id || !item_type) return res.status(400).json({ error: 'deck_id, item_id, and item_type required' })
+  if (!['character', 'word'].includes(item_type)) return res.status(400).json({ error: 'item_type must be character or word' })
+  try {
+    db.prepare('INSERT INTO flashcards (deck_id, item_id, item_type) VALUES (?, ?, ?)').run(deck_id, item_id, item_type)
+    res.json({ message: 'Flashcard added' })
+  } catch (err) {
+    console.error('Failed to add flashcard:', err.message)
+    res.status(500).json({ error: 'Failed to add flashcard' })
+  }
+})
+
+app.get('/api/decks/:id/review', (req, res) => {
+  try {
+    const flashcards = db.prepare(`
+      SELECT id, deck_id, item_id, item_type, box_level, next_review, created_at
+      FROM flashcards WHERE deck_id = ? AND next_review <= CURRENT_TIMESTAMP
+      ORDER BY next_review ASC
+    `).all(req.params.id)
+
+    const enriched = flashcards.map(fc => {
+      const table = fc.item_type === 'character' ? 'characters' : 'cedict_words'
+      const row = db.prepare(`SELECT simplified, pinyin, definition FROM ${table} WHERE id = ?`).get(fc.item_id)
+      return { ...fc, ...(row || {}) }
+    })
+
+    res.json(enriched)
+  } catch (err) {
+    console.error('Failed to fetch review cards:', err.message)
+    res.status(500).json({ error: 'Failed to fetch review cards' })
+  }
+})
+
+app.post('/api/flashcards/:id/grade', (req, res) => {
+  const { score } = req.body
+  if (!score || !['correct', 'incorrect'].includes(score)) {
+    return res.status(400).json({ error: 'score must be "correct" or "incorrect"' })
+  }
+  try {
+    const card = db.prepare('SELECT id, box_level FROM flashcards WHERE id = ?').get(req.params.id)
+    if (!card) return res.status(404).json({ error: 'Flashcard not found' })
+
+    let newBox
+    let interval
+    if (score === 'incorrect') {
+      newBox = 1
+      interval = '+1 day'
+    } else {
+      newBox = Math.min(card.box_level + 1, 5)
+      const gaps = { 2: '+3 days', 3: '+7 days', 4: '+14 days' }
+      interval = gaps[newBox] || '+30 days'
+    }
+
+    db.prepare('UPDATE flashcards SET box_level = ?, next_review = datetime(\'now\', ?) WHERE id = ?').run(newBox, interval, req.params.id)
+    res.json({ message: 'Graded', box_level: newBox })
+  } catch (err) {
+    console.error('Failed to grade flashcard:', err.message)
+    res.status(500).json({ error: 'Failed to grade flashcard' })
+  }
 })
 
 app.use((err, req, res, next) => {

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { HeartIcon, FlashcardIcon, ClockIcon, FileIcon, ChevronRightIcon, PencilIcon } from '../components/Icons'
+import { HeartIcon, FlashcardIcon, ClockIcon, ChevronRightIcon, PencilIcon } from '../components/Icons'
 
 function ProfilePage() {
   const navigate = useNavigate()
@@ -71,8 +71,8 @@ function ProfilePage() {
             </button>
           </div>
         ) : loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+            {[1, 2, 3].map((i) => (
               <div key={i} className="bg-card border border-border rounded-xl p-4">
                 <div className="skeleton h-4 w-16 mb-2" />
                 <div className="skeleton h-6 w-12" />
@@ -80,7 +80,7 @@ function ProfilePage() {
             ))}
           </div>
         ) : profile && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
                 <ClockIcon className="w-4 h-4 text-text-secondary" />
@@ -116,19 +116,6 @@ function ProfilePage() {
               </div>
               <p className="text-text-primary font-semibold">{profile.flashcards_reviewed}</p>
             </div>
-            <div
-              onClick={() => navigate('/lists')}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/lists') }}
-              role="button"
-              tabIndex={0}
-              className="bg-card border border-border rounded-xl p-4 hover:bg-surface cursor-pointer transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <FileIcon className="w-4 h-4 text-primary" />
-                <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Lists</p>
-              </div>
-              <p className="text-text-primary font-semibold">{profile.vocabulary_lists_count}</p>
-            </div>
           </div>
         )}
 
@@ -140,16 +127,6 @@ function ProfilePage() {
             <div className="flex items-center gap-3">
               <HeartIcon className="w-5 h-5 text-primary" />
               <span className="text-text-primary text-sm font-medium">My Favorites</span>
-            </div>
-            <ChevronRightIcon className="w-4 h-4 text-text-secondary" />
-          </Link>
-          <Link
-            to="/lists"
-            className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors no-underline border-b border-border"
-          >
-            <div className="flex items-center gap-3">
-              <FileIcon className="w-5 h-5 text-primary" />
-              <span className="text-text-primary text-sm font-medium">My Lists</span>
             </div>
             <ChevronRightIcon className="w-4 h-4 text-text-secondary" />
           </Link>

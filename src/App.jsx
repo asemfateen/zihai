@@ -17,9 +17,10 @@ const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const FlashcardsPage = lazy(() => import('./pages/FlashcardsPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
-const ListsPage = lazy(() => import('./pages/ListsPage'))
 const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
 const ProfileChangePasswordPage = lazy(() => import('./pages/ProfileChangePasswordPage'))
+const RadicalsPage = lazy(() => import('./pages/RadicalsPage'))
+const RadicalDetailPage = lazy(() => import('./pages/RadicalDetailPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageSuspense({ children }) {
@@ -46,7 +47,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <PageSuspense><ErrorBoundary><HomePage /></ErrorBoundary></PageSuspense> },
       { path: '/search', element: <PageSuspense><ErrorBoundary><SearchPage /></ErrorBoundary></PageSuspense> },
-      { path: '/word/:id', element: <PageSuspense><ErrorBoundary><WordPage /></ErrorBoundary></PageSuspense> },
+      { path: '/word/:query', element: <PageSuspense><ErrorBoundary><WordPage /></ErrorBoundary></PageSuspense> },
       { path: '/login', element: <PageSuspense><ErrorBoundary><LoginPage /></ErrorBoundary></PageSuspense> },
       { path: '/register', element: <PageSuspense><ErrorBoundary><RegisterPage /></ErrorBoundary></PageSuspense> },
       { path: '/forgot-password', element: <PageSuspense><ErrorBoundary><ForgotPasswordPage /></ErrorBoundary></PageSuspense> },
@@ -55,9 +56,10 @@ const router = createBrowserRouter([
       { path: '/profile', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfilePage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/flashcards', element: <PageSuspense><ProtectedRoute><ErrorBoundary><FlashcardsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/favorites', element: <PageSuspense><ProtectedRoute><ErrorBoundary><FavoritesPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
-      { path: '/lists', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ListsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/profile/edit', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileEditPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/profile/change-password', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileChangePasswordPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/radicals', element: <PageSuspense><ErrorBoundary><RadicalsPage /></ErrorBoundary></PageSuspense> },
+      { path: '/radicals/:radical', element: <PageSuspense><ErrorBoundary><RadicalDetailPage /></ErrorBoundary></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },

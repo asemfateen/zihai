@@ -1,12 +1,14 @@
 import Database from 'better-sqlite3'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import { toDisplayPinyin } from './pinyinUtils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const db = new Database(path.join(__dirname, 'zihai.db'))
+const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
+const db = new Database(DB_PATH)
 
 // Add the new column (IF NOT EXISTS is not supported for ALTER TABLE, so catch the error)
 try {

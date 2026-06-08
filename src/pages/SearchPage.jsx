@@ -79,7 +79,7 @@ function SearchPage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h2 className="text-xl text-text-secondary mb-6 break-words">
-          {q.trim() ? `Results for "${q}"` : 'Search for a word'}
+          {q.trim() ? `${displayResults.length} results for "${q}"` : 'Search for a word'}
         </h2>
 
         {loading && (

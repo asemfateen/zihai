@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { HeartIcon, FlashcardIcon, ClockIcon, FileIcon } from '../components/Icons'
+import { HeartIcon, FlashcardIcon, ClockIcon } from '../components/Icons'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -64,22 +64,19 @@ function AuthedHome() {
   const { user } = useAuth()
   const [favoritesCount, setFavoritesCount] = useState(null)
   const [flashcardsDue, setFlashcardsDue] = useState(null)
-  const [listsCount, setListsCount] = useState(null)
   const [history, setHistory] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [favRes, flashRes, listsRes, histRes] = await Promise.all([
+      const [favRes, flashRes, histRes] = await Promise.all([
         fetchWithTimeout(`${API_BASE}/api/favorites`, { credentials: 'include' }),
         fetchWithTimeout(`${API_BASE}/api/flashcards/due`, { credentials: 'include' }),
-        fetchWithTimeout(`${API_BASE}/api/lists`, { credentials: 'include' }),
         fetchWithTimeout(`${API_BASE}/api/history`, { credentials: 'include' }),
       ])
       if (favRes.ok) setFavoritesCount((await favRes.json()).length)
       if (flashRes.ok) setFlashcardsDue((await flashRes.json()).length)
-      if (listsRes.ok) setListsCount((await listsRes.json()).length)
       if (histRes.ok) setHistory((await histRes.json()).slice(0, 5))
     } catch (err) {
       console.error('Failed to fetch home data:', err)
@@ -95,7 +92,7 @@ function AuthedHome() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-2 gap-3 mb-8">
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <HeartIcon className="w-4 h-4 text-primary" />
@@ -118,21 +115,6 @@ function AuthedHome() {
             </div>
             <p className="text-2xl font-bold text-text-primary">
               {loading ? <span className="skeleton inline-block w-8 h-8 align-middle" /> : flashcardsDue ?? 0}
-            </p>
-          </div>
-          <div
-            onClick={() => navigate('/lists')}
-            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/lists') }}
-            role="button"
-            tabIndex={0}
-            className="bg-card border border-border rounded-xl p-4 hover:bg-surface cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <FileIcon className="w-4 h-4 text-primary" />
-              <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Lists</p>
-            </div>
-            <p className="text-2xl font-bold text-text-primary">
-              {loading ? <span className="skeleton inline-block w-8 h-8 align-middle" /> : listsCount ?? 0}
             </p>
           </div>
         </div>

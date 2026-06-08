@@ -1,16 +1,22 @@
 import Database from 'better-sqlite3'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import { normalizePinyin } from './pinyinUtils.js'
+import { missingWords } from './missingWords.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const db = new Database(path.join(__dirname, 'zihai.db'))
+const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
+const db = new Database(DB_PATH)
 
 db.exec('CREATE INDEX IF NOT EXISTS idx_words_character ON words(character)')
 db.exec('CREATE INDEX IF NOT EXISTS idx_words_pinyin_normalized ON words(pinyin_normalized)')
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_words_character_unique ON words(character)')
+
+try { db.exec(`ALTER TABLE words ADD COLUMN pinyin_plain TEXT`) } catch {}
+try { db.exec(`UPDATE words SET pinyin_plain = REPLACE(pinyin_normalized, ' ', '')`) } catch {}
 
 const words = [
   { character: '爸爸', pinyin: 'ba4 ba', english_definition: 'father', hsk_level: 1 },
@@ -197,6 +203,23 @@ const words = [
   { character: '早早', pinyin: 'zao3 zao', english_definition: 'early; well in advance', hsk_level: 2 },
   { character: '晚晚', pinyin: 'wan3 wan', english_definition: 'late at night; every evening', hsk_level: 3 },
 
+  // Academic/Language learning words
+  { character: '词典', pinyin: 'ci2 dian3', english_definition: 'dictionary (of words)', hsk_level: 4 },
+  { character: '词语', pinyin: 'ci2 yu3', english_definition: 'word; term; expression', hsk_level: 4 },
+  { character: '字典', pinyin: 'zi4 dian3', english_definition: 'character dictionary', hsk_level: 4 },
+  { character: '语言', pinyin: 'yu3 yan2', english_definition: 'language', hsk_level: 4 },
+  { character: '汉语', pinyin: 'han4 yu3', english_definition: 'Chinese language', hsk_level: 3 },
+  { character: '普通话', pinyin: 'pu3 tong1 hua4', english_definition: 'Mandarin; standard Chinese', hsk_level: 4 },
+  { character: '学习', pinyin: 'xue2 xi2', english_definition: 'to study; to learn', hsk_level: 1 },
+  { character: '练习', pinyin: 'lian4 xi2', english_definition: 'to practice; exercise', hsk_level: 3 },
+  { character: '复习', pinyin: 'fu4 xi2', english_definition: 'to review; to revise', hsk_level: 3 },
+  { character: '预习', pinyin: 'yu4 xi2', english_definition: 'to preview lessons', hsk_level: 4 },
+  { character: '考试', pinyin: 'kao3 shi4', english_definition: 'exam; test', hsk_level: 3 },
+  { character: '作业', pinyin: 'zuo4 ye4', english_definition: 'homework; assignment', hsk_level: 3 },
+  { character: '课本', pinyin: 'ke4 ben3', english_definition: 'textbook', hsk_level: 3 },
+  { character: '笔记', pinyin: 'bi3 ji4', english_definition: 'notes', hsk_level: 4 },
+  { character: '图书馆', pinyin: 'tu2 shu1 guan3', english_definition: 'library', hsk_level: 3 },
+
   // Common AABB reduplication
   { character: '高高兴兴', pinyin: 'gao1 gao1 xing4 xing4', english_definition: 'happy and excited', hsk_level: 2 },
   { character: '开开心心', pinyin: 'kai1 kai1 xin1 xin1', english_definition: 'joyful; delighted', hsk_level: 2 },
@@ -207,23 +230,70 @@ const words = [
   { character: '明明白白', pinyin: 'ming2 ming2 bai2 bai2', english_definition: 'clear; obvious', hsk_level: 3 },
   { character: '干干净净', pinyin: 'gan1 gan1 jing4 jing4', english_definition: 'clean; spotless', hsk_level: 2 },
   { character: '多多少少', pinyin: 'duo1 duo1 shao3 shao3', english_definition: 'more or less; to some extent', hsk_level: 3 },
+  // Missing common words
+  { character: '国', pinyin: 'guó', english_definition: 'country; nation', hsk_level: 1 },
+  { character: '语', pinyin: 'yǔ', english_definition: 'language; speech', hsk_level: 2 },
+  { character: '言', pinyin: 'yán', english_definition: 'speech; words', hsk_level: 3 },
+  { character: '汉', pinyin: 'Hàn', english_definition: 'Han Chinese; Chinese', hsk_level: 2 },
+  { character: '词', pinyin: 'cí', english_definition: 'word; term', hsk_level: 3 },
+  { character: '时', pinyin: 'shí', english_definition: 'time; hour', hsk_level: 2 },
+  { character: '间', pinyin: 'jiān', english_definition: 'between; interval; space', hsk_level: 2 },
+  { character: '今', pinyin: 'jīn', english_definition: 'today; now; current', hsk_level: 1 },
+  { character: '昨', pinyin: 'zuó', english_definition: 'yesterday', hsk_level: 2 },
+  { character: '银行', pinyin: 'yín háng', english_definition: 'bank', hsk_level: 3 },
+  { character: '地铁', pinyin: 'dì tiě', english_definition: 'subway; metro', hsk_level: 3 },
+  { character: '火车', pinyin: 'huǒ chē', english_definition: 'train', hsk_level: 2 },
+  { character: '是的', pinyin: 'shì de', english_definition: 'yes; that is correct', hsk_level: 1 },
+  { character: '吃饭', pinyin: 'chī fàn', english_definition: 'to eat a meal; to have food', hsk_level: 1 },
+  { character: '喝水', pinyin: 'hē shuǐ', english_definition: 'to drink water', hsk_level: 1 },
+  { character: '电脑', pinyin: 'diàn nǎo', english_definition: 'computer', hsk_level: 2 },
+  { character: '网络', pinyin: 'wǎng luò', english_definition: 'network; internet', hsk_level: 3 },
+  { character: '春节', pinyin: 'Chūn Jié', english_definition: 'Spring Festival; Chinese New Year', hsk_level: 3 },
+
+  // HSK 5
+  { character: '经济', pinyin: 'jīng jì', english_definition: 'economy; economics', hsk_level: 5 },
+  { character: '政治', pinyin: 'zhèng zhì', english_definition: 'politics; political', hsk_level: 5 },
+  { character: '文化', pinyin: 'wén huà', english_definition: 'culture; civilization', hsk_level: 5 },
+  { character: '社会', pinyin: 'shè huì', english_definition: 'society; community', hsk_level: 5 },
+  { character: '环境', pinyin: 'huán jìng', english_definition: 'environment; surroundings', hsk_level: 5 },
+  { character: '科学', pinyin: 'kē xué', english_definition: 'science; scientific', hsk_level: 5 },
+  { character: '技术', pinyin: 'jì shù', english_definition: 'technology; technique', hsk_level: 5 },
+  { character: '发展', pinyin: 'fā zhǎn', english_definition: 'to develop; development', hsk_level: 5 },
+  { character: '影响', pinyin: 'yǐng xiǎng', english_definition: 'influence; to affect', hsk_level: 5 },
+  { character: '解决', pinyin: 'jiě jué', english_definition: 'to solve; to resolve', hsk_level: 5 },
+
+  // HSK 6
+  { character: '哲学', pinyin: 'zhé xué', english_definition: 'philosophy', hsk_level: 6 },
+  { character: '心理', pinyin: 'xīn lǐ', english_definition: 'psychology; mental', hsk_level: 6 },
+  { character: '法律', pinyin: 'fǎ lǜ', english_definition: 'law; legal', hsk_level: 6 },
+  { character: '建筑', pinyin: 'jiàn zhù', english_definition: 'architecture; building', hsk_level: 6 },
+  { character: '竞争', pinyin: 'jìng zhēng', english_definition: 'competition; to compete', hsk_level: 6 },
+  { character: '矛盾', pinyin: 'máo dùn', english_definition: 'contradiction; conflict', hsk_level: 6 },
+  { character: '逻辑', pinyin: 'luó ji', english_definition: 'logic', hsk_level: 6 },
+  { character: '抽象', pinyin: 'chōu xiàng', english_definition: 'abstract; abstraction', hsk_level: 6 },
+  { character: '主观', pinyin: 'zhǔ guān', english_definition: 'subjective', hsk_level: 6 },
+  { character: '客观', pinyin: 'kè guān', english_definition: 'objective; impartial', hsk_level: 6 },
+
+  ...missingWords,
 ]
 
 const insert = db.prepare(`
-  INSERT INTO words (character, pinyin, english_definition, hsk_level, pinyin_search, pinyin_normalized)
-  VALUES (@character, @pinyin, @english_definition, @hsk_level, @pinyin_search, @pinyin_normalized)
+  INSERT INTO words (character, pinyin, english_definition, hsk_level, pinyin_search, pinyin_normalized, pinyin_plain)
+  VALUES (@character, @pinyin, @english_definition, @hsk_level, @pinyin_search, @pinyin_normalized, @pinyin_plain)
   ON CONFLICT(character) DO NOTHING
 `)
 
 const insertMany = db.transaction((words) => {
   for (const word of words) {
+    const normalized = normalizePinyin(word.pinyin)
     insert.run({
       character: word.character,
       pinyin: word.pinyin,
       english_definition: word.english_definition,
       hsk_level: word.hsk_level || null,
-      pinyin_search: normalizePinyin(word.pinyin).replace(/v/g, 'u'),
-      pinyin_normalized: normalizePinyin(word.pinyin),
+      pinyin_search: normalized.replace(/v/g, 'u'),
+      pinyin_normalized: normalized,
+      pinyin_plain: normalized.replace(/\s+/g, ''),
     })
   }
 })

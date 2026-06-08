@@ -33,7 +33,7 @@ function FlashcardsPage() {
       setError(false)
       setLoading(true)
       try {
-        const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
+        const res = await fetchWithTimeout(`${API_BASE}/api/decks/1/review`, {
           credentials: 'include',
         })
         if (!mountedRef.current) return
@@ -76,7 +76,7 @@ function FlashcardsPage() {
 
   const { speak: speakTTS } = useSpeechSynthesis()
 
-  const currentCharacter = cards[currentIndex]?.character
+  const currentCharacter = cards[currentIndex]?.simplified
   const speak = () => {
     if (!currentCharacter) return
     speakTTS(currentCharacter)
@@ -124,13 +124,13 @@ function FlashcardsPage() {
 
     let apiError = null
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/result`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/grade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ quality }),
+        body: JSON.stringify({ score: quality >= 3 ? 'correct' : 'incorrect' }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
@@ -351,7 +351,7 @@ function FlashcardsPage() {
             {/* Front */}
             <div className="flashcard-face bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
               <p className="text-7xl sm:text-8xl font-bold text-text-primary mb-4 select-none">
-                {card.character}
+                {card.simplified}
               </p>
               <p className="text-sm text-text-secondary">Tap to reveal</p>
             </div>
@@ -370,7 +370,7 @@ function FlashcardsPage() {
                   <SpeakerIcon className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-xl text-text-primary text-center">{card.english_definition || 'No definition available'}</p>
+              <p className="text-xl text-text-primary text-center">{card.definition || 'No definition available'}</p>
             </div>
           </div>
         </div>
@@ -383,7 +383,7 @@ function FlashcardsPage() {
               disabled={animating}
               className="flex-1 py-4 bg-surface border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Try again
+              Forgot
             </button>
             <button
               onClick={handleSkip}
@@ -397,7 +397,7 @@ function FlashcardsPage() {
               disabled={animating}
               className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-semibold text-lg hover:bg-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Got it
+              Remembered
             </button>
           </div>
         )}
