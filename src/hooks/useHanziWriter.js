@@ -115,7 +115,7 @@ export function useHanziWriter(word) {
     return () => {
       rafIds.forEach((id) => cancelAnimationFrame(id))
       Object.values(writersRef.current).forEach((writer) => {
-        if (writer && typeof writer.cancelAnimation === 'function') writer.cancelAnimation()
+        if (writer && typeof writer.pauseAnimation === 'function') writer.pauseAnimation()
       })
       writersRef.current = {}
       strokeCountsRef.current = {}
@@ -132,7 +132,7 @@ export function useHanziWriter(word) {
       activeCharIndexRef.current = startIndex
 
       Object.values(writersRef.current).forEach((w) => {
-        if (w && typeof w.cancelAnimation === 'function') w.cancelAnimation()
+        if (w && typeof w.pauseAnimation === 'function') w.pauseAnimation()
       })
 
       const chars = word.character.split('')
@@ -155,7 +155,6 @@ export function useHanziWriter(word) {
         activeCharIndexRef.current = i
         const writer = writersRef.current[i]
         if (writer && typeof writer.animateCharacter === 'function') {
-          writer.cancelAnimation()
           writer.animateCharacter({
             onComplete: () => {
               if (iteration !== iterationRef.current || !mountedRef.current) return

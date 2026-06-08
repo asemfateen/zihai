@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 function SearchResultCard({ result }) {
   const navigate = useNavigate()
 
-  const handleClick = () => navigate(`/word/${result.id}`)
+  const handleClick = () => navigate(`/word/${encodeURIComponent(result.simplified)}`)
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
