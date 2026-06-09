@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon } from './Icons'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, ChevronRightIcon } from './Icons'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -16,11 +16,13 @@ function Navbar() {
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchError, setSearchError] = useState(null)
+  const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const debounceRef = useRef(null)
   const abortControllerRef = useRef(null)
   const inputRef = useRef(null)
   const containerRef = useRef(null)
   const mobileMenuRef = useRef(null)
+  const toolsDropdownRef = useRef(null)
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -29,6 +31,9 @@ function Navbar() {
       }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
         setMobileMenuOpen(false)
+      }
+      if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(e.target)) {
+        setShowToolsDropdown(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -147,172 +152,239 @@ function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface border-b border-border sticky top-0 z-50">
-      <div className="flex-shrink-0">
-        <Link to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
-          字海 Zihai
-        </Link>
-      </div>
+    <nav className="bg-surface border-b border-border sticky top-0 z-50 px-4 py-3 sm:py-3.5">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        
+        {/* Top Header Row for mobile / Logo Row for desktop */}
+        <div className="flex items-center justify-between w-full sm:w-auto flex-shrink-0">
+          <Link to="/" className="text-xl font-bold text-primary no-underline tracking-wide hover:scale-102 transition-transform">
+            字海 Zihai
+          </Link>
 
-      <div ref={containerRef} className="flex-1 max-w-md mx-2 sm:mx-4 relative">
-        <form onSubmit={handleSubmit}>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search characters, pinyin, or definitions..."
-            value={query}
-            onChange={handleSearch}
-            onKeyDown={handleKeyDown}
-            aria-label="Search characters, pinyin, or definitions"
-            className="w-full px-3 sm:px-4 py-2 bg-card text-text-primary border border-border rounded-lg outline-none focus:border-primary transition-colors placeholder:text-text-secondary text-sm sm:text-base"
-          />
-        </form>
+          {/* Theme & Menu toggle ONLY on mobile top row */}
+          <div className="flex sm:hidden items-center gap-1.5">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 border border-border rounded-xl text-text-secondary hover:text-primary hover:border-primary transition-all active:scale-95"
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {dark ? <SunIcon className="w-4.5 h-4.5" /> : <MoonIcon className="w-4.5 h-4.5" />}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(prev => !prev)}
+              className="p-2.5 text-text-secondary border border-border rounded-xl hover:text-primary hover:border-primary transition-all active:scale-95"
+            >
+              {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
 
-        {showDropdown && suggestions.length > 0 && (
-          <div
-            className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
-            role="listbox"
-          >
-            {suggestions.map((s, i) => (
-              <div
-                key={s.id}
-                onClick={() => handleSelect(s)}
-                onMouseEnter={() => setFocusedIndex(i)}
-                role="option"
-                aria-selected={i === focusedIndex ? 'true' : 'false'}
-                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                  i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
-                }`}
-              >
-                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
-                <span className="text-sm text-primary">{s.pinyin}</span>
+        {/* Centered Google-like Search Bar */}
+        <div ref={containerRef} className="w-full sm:flex-1 sm:max-w-md relative mx-auto">
+          <form onSubmit={handleSubmit} className="w-full">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search characters, pinyin, or definitions..."
+              value={query}
+              onChange={handleSearch}
+              onKeyDown={handleKeyDown}
+              aria-label="Search characters, pinyin, or definitions"
+              className="w-full px-5 py-3 sm:py-2 bg-card text-text-primary border border-border rounded-full sm:rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-secondary text-base sm:text-sm shadow-sm hover:border-border-hover"
+            />
+          </form>
+
+          {showDropdown && suggestions.length > 0 && (
+            <div
+              className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-y-auto overflow-x-hidden z-50 max-h-72"
+              role="listbox"
+            >
+              {suggestions.map((s, i) => (
+                <div
+                  key={s.id}
+                  onClick={() => handleSelect(s)}
+                  onMouseEnter={() => setFocusedIndex(i)}
+                  role="option"
+                  aria-selected={i === focusedIndex ? 'true' : 'false'}
+                  className={`flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors ${
+                    i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
+                  }`}
+                >
+                  <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
+                  <span className="text-sm text-primary font-medium">{s.pinyin}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showDropdown && searchError && suggestions.length === 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-red-500/50 rounded-2xl shadow-xl overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
+              {searchError}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Nav Items */}
+        <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
+          
+          {/* Explore Dropdown */}
+          <div ref={toolsDropdownRef} className="relative">
+            <button
+              onClick={() => setShowToolsDropdown(prev => !prev)}
+              className={`px-3 py-2 border rounded-lg transition-all flex items-center gap-1.5 text-sm font-medium ${
+                showToolsDropdown || ['/radicals', '/pinyin', '/hsk', '/stats', '/history', '/favorites'].some(p => location.pathname.startsWith(p))
+                  ? 'text-primary border-primary bg-primary/5'
+                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+              }`}
+            >
+              <GridIcon className="w-4 h-4" />
+              Explore Tools
+              <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${showToolsDropdown ? 'rotate-90' : 'rotate-0'}`} />
+            </button>
+
+            {showToolsDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 py-1.5 animate-fade-in">
+                <button
+                  onClick={() => { setShowToolsDropdown(false); navigate('/radicals') }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                >
+                  <GridIcon className="w-4 h-4 text-text-secondary" />
+                  Radicals
+                </button>
+                <button
+                  onClick={() => { setShowToolsDropdown(false); navigate('/pinyin') }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                >
+                  <SpeakerIcon className="w-4 h-4 text-text-secondary" />
+                  Pinyin Chart
+                </button>
+                {user && (
+                  <>
+                    <button
+                      onClick={() => { setShowToolsDropdown(false); navigate('/hsk') }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                    >
+                      HSK Levels
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsDropdown(false); navigate('/stats') }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                    >
+                      Stats
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsDropdown(false); navigate('/history') }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                    >
+                      <ClockIcon className="w-4 h-4 text-text-secondary" />
+                      History
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsDropdown(false); navigate('/favorites') }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
+                    >
+                      <HeartIcon className="w-4 h-4 text-text-secondary" />
+                      Favorites
+                    </button>
+                  </>
+                )}
               </div>
-            ))}
+            )}
           </div>
-        )}
 
-        {showDropdown && searchError && suggestions.length === 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
-            {searchError}
-          </div>
-        )}
-      </div>
-
-      {/* Desktop nav */}
-      <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={() => navigate('/radicals')}
-          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
-            location.pathname === '/radicals' || location.pathname.startsWith('/radicals/')
-              ? 'text-primary border-primary'
-              : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-          }`}
-        >
-          <GridIcon className="w-4 h-4" />
-          Radicals
-        </button>
-        <button
-          onClick={toggleTheme}
-          className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary"
-          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
-        </button>
-        {user ? (
-          <>
+          {user && (
             <button
               onClick={() => navigate('/flashcards')}
-              className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
+              className={`px-3 py-2 border rounded-lg transition-all flex items-center gap-1.5 text-sm font-medium ${
                 location.pathname === '/flashcards'
-                  ? 'text-primary border-primary'
+                  ? 'text-primary border-primary bg-primary/5'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
               <FlashcardIcon className="w-4 h-4" />
               Flashcards
             </button>
-            <button
-              onClick={() => navigate('/history')}
-              className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
-                location.pathname === '/history'
-                  ? 'text-primary border-primary'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <ClockIcon className="w-4 h-4" />
-              History
-            </button>
-            <button
-              onClick={() => navigate('/favorites')}
-              className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm ${
-                location.pathname === '/favorites'
-                  ? 'text-primary border-primary'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <HeartIcon className="w-4 h-4" />
-              Favorites
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className={`p-2 border rounded-lg transition-colors ${
-                location.pathname === '/profile'
-                  ? 'text-primary border-primary'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <UserIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleLogout}
-              className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
-            >
-              <LogoutIcon className="w-4 h-4" />
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-colors text-sm"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate('/register')}
-              className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors text-sm"
-            >
-              Register
-            </button>
-          </>
-        )}
+          )}
+
+          {/* Desktop Theme Switcher */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 border border-border rounded-lg transition-all text-text-secondary hover:text-primary hover:border-primary hover:scale-105 active:scale-95"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+          </button>
+
+          {user ? (
+            <>
+              <button
+                onClick={() => navigate('/profile')}
+                className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+                  location.pathname === '/profile'
+                    ? 'text-primary border-primary'
+                    : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-all hover:scale-105 active:scale-95"
+              >
+                <LogoutIcon className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-all text-sm font-semibold hover:scale-105 active:scale-95"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-all text-sm font-semibold hover:scale-105 active:scale-95"
+              >
+                Register
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Mobile hamburger */}
+      {/* Mobile hamburger menu content */}
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
-        <button
-          onClick={() => setMobileMenuOpen(prev => !prev)}
-          className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
-        >
-          {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
-        </button>
-
         {mobileMenuOpen && user && (
           <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm"
+              onClick={() => handleNav('/hsk')}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
+                location.pathname === '/hsk' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
+              }`}
             >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
+              HSK Levels
             </button>
-            <div className="border-t border-border" />
+            <button
+              onClick={() => handleNav('/stats')}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
+                location.pathname === '/stats' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
+              }`}
+            >
+              Stats
+            </button>
+            <button
+              onClick={() => handleNav('/pinyin')}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
+                location.pathname === '/pinyin' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
+              }`}
+            >
+              Pinyin Chart
+            </button>
             <button
               onClick={() => handleNav('/flashcards')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/flashcards'
-                  ? 'text-primary bg-surface'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === '/flashcards' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
               }`}
             >
               <FlashcardIcon className="w-4 h-4 text-text-secondary" />
@@ -321,9 +393,7 @@ function Navbar() {
             <button
               onClick={() => handleNav('/radicals')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/radicals' || location.pathname.startsWith('/radicals/')
-                  ? 'text-primary bg-surface'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === '/radicals' || location.pathname.startsWith('/radicals/') ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
               }`}
             >
               <GridIcon className="w-4 h-4 text-text-secondary" />
@@ -332,9 +402,7 @@ function Navbar() {
             <button
               onClick={() => handleNav('/history')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/history'
-                  ? 'text-primary bg-surface'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === '/history' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
               }`}
             >
               <ClockIcon className="w-4 h-4 text-text-secondary" />
@@ -343,9 +411,7 @@ function Navbar() {
             <button
               onClick={() => handleNav('/favorites')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/favorites'
-                  ? 'text-primary bg-surface'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === '/favorites' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
               }`}
             >
               <HeartIcon className="w-4 h-4 text-text-secondary" />
@@ -354,9 +420,7 @@ function Navbar() {
             <button
               onClick={() => handleNav('/profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/profile'
-                  ? 'text-primary bg-surface'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === '/profile' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
               }`}
             >
               <UserIcon className="w-4 h-4 text-text-secondary" />
@@ -376,19 +440,17 @@ function Navbar() {
         {mobileMenuOpen && !user && (
           <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm"
-            >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
-            </button>
-            <div className="border-t border-border" />
-            <button
               onClick={() => handleNav('/radicals')}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
             >
               <GridIcon className="w-4 h-4 text-text-secondary" />
               Radicals
+            </button>
+            <button
+              onClick={() => handleNav('/pinyin')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
+            >
+              Pinyin Chart
             </button>
             <div className="border-t border-border" />
             <button

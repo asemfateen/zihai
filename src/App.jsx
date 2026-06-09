@@ -21,6 +21,9 @@ const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
 const ProfileChangePasswordPage = lazy(() => import('./pages/ProfileChangePasswordPage'))
 const RadicalsPage = lazy(() => import('./pages/RadicalsPage'))
 const RadicalDetailPage = lazy(() => import('./pages/RadicalDetailPage'))
+const StatsPage = lazy(() => import('./pages/StatsPage'))
+const HSKPage = lazy(() => import('./pages/HSKPage'))
+const PinyinChartPage = lazy(() => import('./pages/PinyinChartPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageSuspense({ children }) {
@@ -60,6 +63,9 @@ const router = createBrowserRouter([
       { path: '/profile/change-password', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileChangePasswordPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/radicals', element: <PageSuspense><ErrorBoundary><RadicalsPage /></ErrorBoundary></PageSuspense> },
       { path: '/radicals/:radical', element: <PageSuspense><ErrorBoundary><RadicalDetailPage /></ErrorBoundary></PageSuspense> },
+      { path: '/stats', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StatsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/hsk', element: <PageSuspense><ProtectedRoute><ErrorBoundary><HSKPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/pinyin', element: <PageSuspense><ErrorBoundary><PinyinChartPage /></ErrorBoundary></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },

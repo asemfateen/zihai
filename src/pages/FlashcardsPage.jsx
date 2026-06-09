@@ -33,15 +33,20 @@ function FlashcardsPage() {
       setError(false)
       setLoading(true)
       try {
-        const res = await fetchWithTimeout(`${API_BASE}/api/decks/1/review`, {
+        const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
           credentials: 'include',
         })
         if (!mountedRef.current) return
         if (res.ok) {
           const data = await res.json()
           if (!mountedRef.current) return
-          setCards(data)
-          if (data.length > 0) sessionDeckRef.current = data
+          const mapped = data.map(c => ({
+            ...c,
+            simplified: c.character,
+            definition: c.english_definition,
+          }))
+          setCards(mapped)
+          if (mapped.length > 0) sessionDeckRef.current = mapped
           setError(false)
         } else {
           setError(true)
@@ -124,13 +129,13 @@ function FlashcardsPage() {
 
     let apiError = null
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/grade`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ score: quality >= 3 ? 'correct' : 'incorrect' }),
+        body: JSON.stringify({ quality }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
