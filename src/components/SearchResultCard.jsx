@@ -20,7 +20,7 @@ function SearchResultCard({ result }) {
       role="button"
       tabIndex={0}
       aria-label={`View details for ${result.simplified}, ${result.pinyin}: ${result.definition}`}
-      className="flex items-center gap-4 sm:gap-5 p-4 bg-card border border-border rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+      className="flex items-center gap-4 sm:gap-5 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
     >
       <div className="flex-shrink-0 text-center">
         <div className="flex gap-0.5 justify-center">

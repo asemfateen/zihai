@@ -31,7 +31,7 @@ function StrokeOrderSection({ word }) {
   )
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 sm:p-5 mb-4">
+    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 sm:p-5 mb-4">
       <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Stroke Order</h2>
 
       <div className="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4">
@@ -43,7 +43,7 @@ function StrokeOrderSection({ word }) {
               onKeyDown={(e) => handleBoxKeyDown(e, i)}
               role="button"
               tabIndex={0}
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 bg-surface rounded-lg border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/50 transition-shadow"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 bg-surface/80 backdrop-blur-xl rounded-lg border border-border/50 overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/50 transition-shadow"
             />
             {supportedChars[i] === false && (
               <p className="text-xs text-text-secondary mt-1">Not available</p>

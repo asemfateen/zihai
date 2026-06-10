@@ -192,7 +192,7 @@ function FlashcardsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           <div className="skeleton w-full h-3 rounded-full" />
@@ -208,7 +208,7 @@ function FlashcardsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <p className="text-lg font-medium text-red-400 mb-2">Something went wrong.</p>
@@ -226,7 +226,7 @@ function FlashcardsPage() {
 
   if (cards.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-primary/20">
@@ -247,7 +247,7 @@ function FlashcardsPage() {
 
   if (complete) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6">
@@ -271,7 +271,7 @@ function FlashcardsPage() {
                 setSkippedIds(new Set())
                 setAnimating(false)
               }}
-              className="px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+              className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
               Review Again
             </button>
@@ -287,7 +287,7 @@ function FlashcardsPage() {
                 setAnimating(false)
                 fetchDueCardsRef.current()
               }}
-              className="px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+              className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
               Study More
             </button>
@@ -307,11 +307,11 @@ function FlashcardsPage() {
   const card = cards[currentIndex]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-lg mx-auto px-4 py-6">
         {toast && (
-          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card border border-border rounded-lg shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
+          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
             {toast}
           </div>
         )}
@@ -330,7 +330,7 @@ function FlashcardsPage() {
               <XIcon className="w-5 h-5" />
             </button>
           </div>
-          <div className="w-full h-3 bg-surface rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
@@ -349,7 +349,7 @@ function FlashcardsPage() {
             }`}
           >
             {/* Front */}
-            <div className="flashcard-face bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
+            <div className="flashcard-face bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl flex flex-col items-center justify-center p-8">
               <p className="text-7xl sm:text-8xl font-bold text-text-primary mb-4 select-none">
                 {card.simplified}
               </p>
@@ -357,7 +357,7 @@ function FlashcardsPage() {
             </div>
 
             {/* Back */}
-            <div className="flashcard-face flashcard-face--back bg-card border border-border rounded-2xl flex flex-col items-center justify-center p-8">
+            <div className="flashcard-face flashcard-face--back bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl flex flex-col items-center justify-center p-8">
               <div className="flex items-center gap-3 mb-4">
                 <p className="text-2xl text-primary">{card.pinyin}</p>
                 <button
@@ -365,7 +365,7 @@ function FlashcardsPage() {
                     e.stopPropagation()
                     speak()
                   }}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-border text-text-secondary hover:text-primary hover:border-primary transition-all"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-surface/80 backdrop-blur-xl border border-border/50 text-text-secondary hover:text-primary hover:border-primary transition-all"
                 >
                   <SpeakerIcon className="w-5 h-5" />
                 </button>
@@ -381,14 +381,14 @@ function FlashcardsPage() {
             <button
               onClick={() => handleResult(0)}
               disabled={animating}
-              className="flex-1 py-4 bg-surface border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Forgot
             </button>
             <button
               onClick={handleSkip}
               disabled={animating}
-              className="flex-1 py-4 bg-surface border-2 border-border text-text-secondary rounded-xl font-semibold text-lg hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-border/50 text-text-secondary rounded-xl font-semibold text-lg hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Skip
             </button>

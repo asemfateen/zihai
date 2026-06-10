@@ -66,7 +66,7 @@ function FavoritesPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-text-primary mb-6">Favorites</h1>
@@ -74,7 +74,7 @@ function FavoritesPage() {
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5">
+              <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-14 h-14 rounded-lg" />
                   <div className="flex-1 space-y-2">
@@ -122,7 +122,7 @@ function FavoritesPage() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/word/${word.id}`) } }}
                 role="button"
                 tabIndex={0}
-                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%]"
+                className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%]"
               >
                 <div className="flex-shrink-0 text-center">
                   <div className="flex gap-0.5 justify-center">

@@ -48,14 +48,14 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">Welcome Back</h1>
           <p className="text-text-secondary">Log in to continue learning</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6">
           <form onSubmit={handleLogin}>
             <div className="mb-4">
               <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1.5">
@@ -68,7 +68,7 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                 placeholder="you@example.com"
               />
             </div>
@@ -86,7 +86,7 @@ function LoginPage() {
                   required
                   minLength={6}
                   autoComplete="current-password"
-                  className="w-full px-4 py-2.5 pr-12 bg-surface border border-border rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                  className="w-full px-4 py-2.5 pr-12 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                   placeholder="Enter your password"
                 />
                 <button

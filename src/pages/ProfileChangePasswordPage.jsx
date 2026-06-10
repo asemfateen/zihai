@@ -56,12 +56,12 @@ function ProfileChangePasswordPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate('/profile/edit')}
-          className="mb-6 px-3 py-2 text-sm text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-3 py-2 text-sm text-text-secondary border border-border/50 rounded-lg hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back to Edit Profile
@@ -69,7 +69,7 @@ function ProfileChangePasswordPage() {
 
         <h1 className="text-2xl font-bold text-text-primary mb-6">Change Password</h1>
 
-        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">Current Password</label>
             <input
@@ -77,7 +77,7 @@ function ProfileChangePasswordPage() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter current password"
-              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+              className="w-full px-3 py-2 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
             />
           </div>
           <div>
@@ -87,7 +87,7 @@ function ProfileChangePasswordPage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="At least 6 characters"
-              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+              className="w-full px-3 py-2 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
             />
           </div>
           <div>
@@ -97,7 +97,7 @@ function ProfileChangePasswordPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Repeat new password"
-              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+              className="w-full px-3 py-2 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
             />
           </div>
 

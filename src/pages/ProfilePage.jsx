@@ -41,7 +41,7 @@ function ProfilePage() {
   const displayName = profile?.display_name || user.email?.split('@')[0] || 'User'
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
@@ -51,7 +51,7 @@ function ProfilePage() {
 
         <Link
           to="/profile/edit"
-          className="flex items-center justify-between w-full px-4 py-3 bg-card border border-border rounded-xl mb-6 hover:bg-surface transition-colors no-underline"
+          className="flex items-center justify-between w-full px-4 py-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl mb-6 hover:bg-surface/80 backdrop-blur-xl transition-colors no-underline"
         >
           <div className="flex items-center gap-3">
             <PencilIcon className="w-5 h-5 text-text-secondary" />
@@ -61,7 +61,7 @@ function ProfilePage() {
         </Link>
 
         {profileError ? (
-          <div className="bg-card border border-border rounded-xl p-6 mb-6 text-center">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 mb-6 text-center">
             <p className="text-red-400 mb-3">Failed to load profile stats</p>
             <button
               onClick={fetchProfile}
@@ -73,7 +73,7 @@ function ProfilePage() {
         ) : loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-4">
+              <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4">
                 <div className="skeleton h-4 w-16 mb-2" />
                 <div className="skeleton h-6 w-12" />
               </div>
@@ -81,7 +81,7 @@ function ProfilePage() {
           </div>
         ) : profile && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            <div className="bg-card border border-border rounded-xl p-4">
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
                 <ClockIcon className="w-4 h-4 text-text-secondary" />
                 <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Joined</p>
@@ -95,7 +95,7 @@ function ProfilePage() {
               onKeyDown={(e) => { if (e.key === 'Enter') navigate('/favorites') }}
               role="button"
               tabIndex={0}
-              className="bg-card border border-border rounded-xl p-4 hover:bg-surface cursor-pointer transition-colors"
+              className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-2 mb-1">
                 <HeartIcon className="w-4 h-4 text-primary" />
@@ -108,7 +108,7 @@ function ProfilePage() {
               onKeyDown={(e) => { if (e.key === 'Enter') navigate('/flashcards') }}
               role="button"
               tabIndex={0}
-              className="bg-card border border-border rounded-xl p-4 hover:bg-surface cursor-pointer transition-colors"
+              className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-2 mb-1">
                 <FlashcardIcon className="w-4 h-4 text-primary" />
@@ -119,10 +119,10 @@ function ProfilePage() {
           </div>
         )}
 
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden">
           <Link
             to="/favorites"
-            className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors no-underline border-b border-border"
+            className="flex items-center justify-between px-5 py-4 hover:bg-surface/80 backdrop-blur-xl transition-colors no-underline border-b border-border/50"
           >
             <div className="flex items-center gap-3">
               <HeartIcon className="w-5 h-5 text-primary" />
@@ -132,7 +132,7 @@ function ProfilePage() {
           </Link>
           <Link
             to="/flashcards"
-            className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors no-underline border-b border-border"
+            className="flex items-center justify-between px-5 py-4 hover:bg-surface/80 backdrop-blur-xl transition-colors no-underline border-b border-border/50"
           >
             <div className="flex items-center gap-3">
               <FlashcardIcon className="w-5 h-5 text-primary" />
@@ -142,7 +142,7 @@ function ProfilePage() {
           </Link>
           <Link
             to="/profile/change-password"
-            className="flex items-center justify-between px-5 py-4 hover:bg-surface transition-colors no-underline"
+            className="flex items-center justify-between px-5 py-4 hover:bg-surface/80 backdrop-blur-xl transition-colors no-underline"
           >
             <div className="flex items-center gap-3">
               <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
