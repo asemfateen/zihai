@@ -383,6 +383,69 @@ app.get('/api/profile', requireAuth, (req, res) => {
   })
 })
 
+app.get('/api/stats', requireAuth, (req, res) => {
+  try {
+    const historyDates = db.prepare(`
+      SELECT DISTINCT date(searched_at) as date FROM search_history
+      WHERE user_id = ? ORDER BY date DESC
+    `).all(req.user.id).map(r => r.date)
+
+    let streak = 0
+    if (historyDates.length > 0) {
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayStr = yesterday.toISOString().slice(0, 10)
+
+      if (historyDates[0] === todayStr || historyDates[0] === yesterdayStr) {
+        streak = 1
+        let lastDate = new Date(historyDates[0])
+        for (let i = 1; i < historyDates.length; i++) {
+          const currentDate = new Date(historyDates[i])
+          const diffDays = Math.round((lastDate - currentDate) / (1000 * 60 * 60 * 24))
+          if (diffDays === 1) {
+            streak++
+            lastDate = currentDate
+          } else if (diffDays > 1) {
+            break
+          }
+        }
+      }
+    }
+
+    const totalCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ?').get(req.user.id).count
+    const newCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND next_review_date <= date(\'now\')').get(req.user.id).count
+    const learningCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND repetition > 0 AND repetition < 5').get(req.user.id).count
+    const masteredCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND repetition >= 5').get(req.user.id).count
+
+    const hskProgress = db.prepare(`
+      SELECT hsk_level, COUNT(*) as count
+      FROM (
+        SELECT fp.word_id, COALESCE(w.hsk_level, c.hsk_level) as hsk_level
+        FROM flashcard_progress fp
+        LEFT JOIN cedict_words w ON w.id = fp.word_id
+        LEFT JOIN characters c ON c.id = fp.word_id
+        WHERE fp.user_id = ?
+      )
+      WHERE hsk_level IS NOT NULL AND hsk_level > 0
+      GROUP BY hsk_level
+      ORDER BY hsk_level ASC
+    `).all(req.user.id)
+
+    res.json({
+      streak,
+      totalCards,
+      newCards,
+      learningCards,
+      masteredCards,
+      hskProgress,
+    })
+  } catch (err) {
+    console.error('Failed to compile stats:', err.message)
+    res.status(500).json({ error: 'Failed to fetch statistics' })
+  }
+})
+
 app.patch('/api/profile', requireAuth, (req, res) => {
   const { display_name } = req.body
   if (display_name !== undefined) {
@@ -659,18 +722,38 @@ app.get('/api/radicals/:radical', (req, res) => {
 
 app.get('/api/word/:query', (req, res) => {
   const { query } = req.params
-  let item = db.prepare(`
-    SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-           definition AS english_definition, hsk_level
-    FROM cedict_words WHERE simplified = ?
-  `).get(query)
-  if (!item) {
+  const isNumeric = /^\d+$/.test(query)
+  let item
+
+  if (isNumeric) {
+    const id = parseInt(query, 10)
     item = db.prepare(`
       SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-             definition AS english_definition, hsk_level, radical, stroke_count
-      FROM characters WHERE simplified = ?
+             definition AS english_definition, hsk_level
+      FROM cedict_words WHERE id = ?
+    `).get(id)
+    if (!item) {
+      item = db.prepare(`
+        SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+               definition AS english_definition, hsk_level, radical, stroke_count
+        FROM characters WHERE id = ?
+      `).get(id)
+    }
+  } else {
+    item = db.prepare(`
+      SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+             definition AS english_definition, hsk_level
+      FROM cedict_words WHERE simplified = ?
     `).get(query)
+    if (!item) {
+      item = db.prepare(`
+        SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+               definition AS english_definition, hsk_level, radical, stroke_count
+        FROM characters WHERE simplified = ?
+      `).get(query)
+    }
   }
+
   if (!item) return res.status(404).json({ error: 'Word not found' })
   item.pinyin = convertNumberedPinyin(item.pinyin)
   res.json({ ...item, examples: [] })

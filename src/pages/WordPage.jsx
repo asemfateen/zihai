@@ -17,7 +17,7 @@ function WordPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast, showToast } = useToast()
-  const { word, loading, notFound } = useWordData(id)
+  const { word, loading, notFound } = useWordData(query)
   const { isFavorite, favoriteLoading, toggleFavorite } = useWordFavorite(word, user, showToast)
   const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)

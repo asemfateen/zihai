@@ -33,7 +33,7 @@ function FlashcardsPage() {
       setError(false)
       setLoading(true)
       try {
-        const res = await fetchWithTimeout(`${API_BASE}/api/decks/1/review`, {
+        const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/due`, {
           credentials: 'include',
         })
         if (!mountedRef.current) return
@@ -76,7 +76,7 @@ function FlashcardsPage() {
 
   const { speak: speakTTS } = useSpeechSynthesis()
 
-  const currentCharacter = cards[currentIndex]?.simplified
+  const currentCharacter = cards[currentIndex]?.character || cards[currentIndex]?.simplified
   const speak = () => {
     if (!currentCharacter) return
     speakTTS(currentCharacter)
@@ -124,13 +124,13 @@ function FlashcardsPage() {
 
     let apiError = null
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/grade`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/flashcards/${word.id}/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ score: quality >= 3 ? 'correct' : 'incorrect' }),
+        body: JSON.stringify({ quality }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
@@ -352,7 +352,7 @@ function FlashcardsPage() {
             <div className="flashcard-face bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl flex flex-col items-center justify-center p-8 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/20 transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
               <p className="text-8xl sm:text-9xl font-black text-text-primary mb-6 select-none drop-shadow-sm relative z-10 group-hover:scale-105 transition-transform duration-300">
-                {card.simplified}
+                {card.character || card.simplified}
               </p>
               <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface/50 px-4 py-2 rounded-full border border-border/50 relative z-10 shadow-sm">Tap to reveal</p>
             </div>
@@ -374,7 +374,7 @@ function FlashcardsPage() {
                   </button>
                 </div>
                 <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-3 bg-surface inline-block px-3 py-1 rounded-full border border-border shadow-sm">Definition</h3>
-                <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{card.definition || 'No definition available'}</p>
+                <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{card.english_definition || card.definition || 'No definition available'}</p>
               </div>
             </div>
           </div>
