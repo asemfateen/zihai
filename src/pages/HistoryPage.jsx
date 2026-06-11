@@ -143,7 +143,7 @@ function HistoryPage() {
         )}
 
         {!loading && !error && history.length > 0 && (
-          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden">
+          <div className="flex flex-col gap-3">
             {history.map((item, index) => (
               <div
                 key={item.id}
@@ -151,9 +151,8 @@ function HistoryPage() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(item.query) } }}
                 role="button"
                 tabIndex={0}
-                className={`flex items-center justify-between px-5 py-4 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors ${
-                  index !== history.length - 1 ? 'border-b border-border' : ''
-                }`}
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                className="flex items-center justify-between px-5 py-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
               >
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-4 h-4 text-text-secondary flex-shrink-0" />

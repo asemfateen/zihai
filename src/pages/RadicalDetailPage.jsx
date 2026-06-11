@@ -78,51 +78,60 @@ function RadicalDetailPage() {
   return (
     <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="mb-4 px-3 py-2 text-sm text-text-secondary border border-border/50 rounded-lg hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface/50 backdrop-blur-md border border-border/50 rounded-xl hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Radicals
         </button>
 
-        <div className="flex items-center gap-4 mb-6">
-          <span className="text-5xl sm:text-6xl font-bold text-text-primary">{radicalInfo.character}</span>
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">Radical {radicalInfo.id}</h1>
-            <p className="text-text-secondary text-sm">{total.toLocaleString()} characters</p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
+          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 sm:p-10 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] relative overflow-hidden group flex items-center gap-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary/10 rounded-3xl flex items-center justify-center group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300 relative z-10 border border-primary/20">
+              <span className="text-6xl sm:text-7xl font-black text-primary drop-shadow-sm">{radicalInfo.character}</span>
+            </div>
+            
+            <div className="relative z-10">
+              <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-2">Radical {radicalInfo.id}</h1>
+              <span className="inline-block px-3 py-1 bg-surface border border-border rounded-full text-sm font-bold text-text-secondary uppercase tracking-widest">{total.toLocaleString()} characters</span>
+            </div>
           </div>
         </div>
 
         {words.length === 0 ? (
-          <div className="text-center py-12 text-text-secondary">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-12 text-center text-text-secondary animate-fade-in [animation-delay:200ms]">
             No characters found for this radical.
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {words.map(word => (
-              <SearchResultCard key={word.id} result={word} />
+          <div className="flex flex-col gap-4">
+            {words.map((word, i) => (
+              <div key={word.id} className="animate-fade-in" style={{ animationDelay: `${200 + Math.min(i * 50, 500)}ms` }}>
+                <SearchResultCard result={word} />
+              </div>
             ))}
           </div>
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
+          <div className="flex items-center justify-center gap-3 mt-8 animate-fade-in [animation-delay:300ms]">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm border border-border/50 rounded-lg hover:border-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card/80 backdrop-blur-xl rounded-xl hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
             >
               Previous
             </button>
-            <span className="text-sm text-text-secondary">
+            <span className="text-sm font-bold text-text-secondary px-4 py-2 bg-surface/50 rounded-xl border border-border/50">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="px-3 py-2 text-sm border border-border/50 rounded-lg hover:border-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card/80 backdrop-blur-xl rounded-xl hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
             >
               Next
             </button>

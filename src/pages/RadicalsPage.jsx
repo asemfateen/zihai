@@ -64,18 +64,19 @@ function RadicalsPage() {
           <h1 className="text-2xl font-bold text-text-primary">Radical Browser</h1>
           <p className="text-text-secondary text-sm mt-1">Browse Chinese characters by Kangxi radical ({radicals.length} radicals)</p>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {radicals.map(r => {
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:auto-rows-[100px]">
+          {radicals.map((r, index) => {
             const intensity = Math.min(100, Math.round((r.count / maxCount) * 100))
             return (
               <button
                 key={r.id}
                 onClick={() => navigate(`/radicals/${r.id}`)}
-                className="flex flex-col items-center gap-1 p-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer active:scale-95 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary"
+                className="flex flex-col items-center justify-center gap-1 p-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-95 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary animate-fade-in group"
+                style={{ animationDelay: `${(index % 20 + 1) * 30}ms` }}
               >
-                <span className="text-2xl sm:text-3xl font-bold text-text-primary">{r.character}</span>
-                <span className="text-xs text-text-secondary">{r.count.toLocaleString()}</span>
-                <div className="w-full h-1.5 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden mt-0.5">
+                <span className="text-3xl sm:text-4xl font-bold text-text-primary group-hover:text-primary transition-colors">{r.character}</span>
+                <span className="text-[10px] sm:text-xs text-text-secondary font-medium tracking-wider">{r.count.toLocaleString()}</span>
+                <div className="w-full h-1 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
                   <div
                     className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${intensity}%` }}

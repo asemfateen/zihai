@@ -115,14 +115,15 @@ function FavoritesPage() {
                 <p className="text-sm font-medium">Failed to remove favorite. Please try again.</p>
               </div>
             )}
-            {favorites.map((word) => (
+            {favorites.map((word, index) => (
               <div
                 key={word.id}
                 onClick={() => navigate(`/word/${word.id}`)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/word/${word.id}`) } }}
                 role="button"
                 tabIndex={0}
-                className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl hover:border-primary hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[98%]"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
               >
                 <div className="flex-shrink-0 text-center">
                   <div className="flex gap-0.5 justify-center">

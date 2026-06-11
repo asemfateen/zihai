@@ -114,29 +114,30 @@ function HSKPage() {
               Select an HSK level to browse its full vocabulary list or start a custom review quiz.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {HSK_LEVELS.map((lvl) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:auto-rows-[180px]">
+              {HSK_LEVELS.map((lvl, index) => (
                 <div
                   key={lvl.level}
-                  className={`bg-gradient-to-br ${lvl.color} border ${lvl.border} rounded-2xl p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-200`}
+                  className={`col-span-2 md:col-span-1 bg-gradient-to-br ${lvl.color} border border-border/50 rounded-3xl p-6 flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-${lvl.color.split('-')[1]}-500/10 transition-all duration-300 animate-fade-in group bg-card/80 backdrop-blur-xl`}
+                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
                 >
                   <div>
-                    <h2 className="text-xl font-bold mb-1">{lvl.name}</h2>
+                    <h2 className="text-2xl font-bold mb-1 group-hover:scale-105 origin-left transition-transform">{lvl.name}</h2>
                     <p className="text-xs text-text-secondary mb-4 uppercase font-bold tracking-wider">{lvl.desc}</p>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button
                       onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)}
-                      className="flex-1 py-2 bg-primary text-text-primary rounded-xl font-semibold hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20"
+                      className="flex-1 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
                     >
                       <PlayIcon className="w-3.5 h-3.5" />
-                      Quiz Me
+                      Quiz
                     </button>
                     <button
                       onClick={() => handleSelectLevel(lvl.level)}
-                      className="flex-1 py-2 bg-card/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-xl font-semibold hover:bg-surface/80 backdrop-blur-xl transition-colors text-sm cursor-pointer"
+                      className="flex-1 py-2 bg-surface border border-border/50 text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm cursor-pointer hover:scale-105 active:scale-95"
                     >
-                      Browse Words
+                      Browse
                     </button>
                   </div>
                 </div>
@@ -163,66 +164,62 @@ function HSKPage() {
               </button>
             </div>
 
-            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden mb-6 shadow-md">
-              <div className="p-4 border-b border-border/50 bg-surface/30 flex justify-between items-center text-xs text-text-secondary font-bold uppercase tracking-wider">
-                <span>Word / Character</span>
-                <span>Actions</span>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {loading ? (
-                <div className="py-20 flex justify-center items-center">
+                <div className="col-span-full py-20 flex justify-center items-center">
                   <span className="animate-spin text-primary font-bold text-2xl">...</span>
                 </div>
+              ) : words.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-text-secondary text-sm bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl">No words found.</div>
               ) : (
-                <div className="divide-y divide-border">
-                  {words.map((word) => (
-                    <div key={word.id} className="p-4 flex items-center justify-between gap-4 hover:bg-surface/10 transition-colors">
-                      <div className="space-y-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
-                            {word.character}
-                          </span>
-                          <span className="text-sm font-semibold text-primary">{word.pinyin}</span>
-                        </div>
-                        <p className="text-sm text-text-secondary">{word.english_definition}</p>
+                words.map((word, index) => (
+                  <div 
+                    key={word.id} 
+                    className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-5 flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in group min-h-[140px]"
+                    style={{ animationDelay: `${(index % 10 + 1) * 50}ms` }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
+                          {word.character}
+                        </span>
+                        <span className="text-sm font-semibold text-primary">{word.pinyin}</span>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        {supported && (
-                          <button
-                            onClick={() => speak(word.character)}
-                            className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                              isSpeaking ? 'bg-primary/20 border-primary text-primary animate-pulse' : 'bg-transparent border-border/50 text-text-secondary hover:border-primary hover:text-primary'
-                            }`}
-                            title="Listen to pronunciation"
-                          >
-                            {isSpeaking ? <SpeakerWaveIcon className="w-5 h-5" /> : <SpeakerIcon className="w-5 h-5" />}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleToggleDeck(word)}
-                          disabled={actionLoading[word.id]}
-                          className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                            word.inDeck
-                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/25'
-                              : 'bg-transparent border-border/50 text-text-secondary hover:border-primary hover:text-primary'
-                          }`}
-                        >
-                          {actionLoading[word.id] ? (
-                            <span className="w-5 h-5 text-xs animate-spin font-bold">...</span>
-                          ) : word.inDeck ? (
-                            <CheckIcon className="w-5 h-5" />
-                          ) : (
-                            <PlusIcon className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
+                      <p className="text-sm text-text-secondary line-clamp-2">{word.english_definition}</p>
                     </div>
-                  ))}
-                  {words.length === 0 && (
-                    <div className="py-12 text-center text-text-secondary text-sm">No words found.</div>
-                  )}
-                </div>
+
+                    <div className="flex items-center justify-end gap-2 mt-4 opacity-70 group-hover:opacity-100 transition-opacity">
+                      {supported && (
+                        <button
+                          onClick={() => speak(word.character)}
+                          className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 ${
+                            isSpeaking ? 'bg-primary/20 border-primary text-primary animate-pulse' : 'bg-surface border-border/50 text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
+                          }`}
+                          title="Listen to pronunciation"
+                        >
+                          {isSpeaking ? <SpeakerWaveIcon className="w-4 h-4" /> : <SpeakerIcon className="w-4 h-4" />}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleToggleDeck(word)}
+                        disabled={actionLoading[word.id]}
+                        className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 ${
+                          word.inDeck
+                            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/25'
+                            : 'bg-surface border-border/50 text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
+                        }`}
+                      >
+                        {actionLoading[word.id] ? (
+                          <span className="w-4 h-4 flex items-center justify-center text-xs animate-spin font-bold">...</span>
+                        ) : word.inDeck ? (
+                          <CheckIcon className="w-4 h-4" />
+                        ) : (
+                          <PlusIcon className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 

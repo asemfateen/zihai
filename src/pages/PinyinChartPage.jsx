@@ -99,94 +99,105 @@ function PinyinChartPage() {
     <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Pinyin Sound Chart</h1>
-          <p className="text-text-secondary">Click any initial, combine with a final, and tap tones to hear correct pronunciations.</p>
+        <header className="mb-8 animate-fade-in">
+          <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-primary via-blue-500 to-emerald-500 bg-clip-text text-transparent drop-shadow-sm">Pinyin Sound Chart</h1>
+          <p className="text-lg text-text-secondary font-medium">Click any initial, combine with a final, and tap tones to hear correct pronunciations.</p>
         </header>
 
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5 mb-6">
-          <h3 className="text-xs uppercase font-bold text-text-secondary tracking-wider mb-3">1. Select Initials</h3>
-          <div className="flex flex-wrap gap-2">
-            {INITIALS.map((init) => (
-              <button
-                key={init.label}
-                onClick={() => {
-                  setSelectedInitial(init.value)
-                  setSelectedSyllable(null)
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
-                  selectedInitial === init.value
-                    ? 'bg-primary border-primary text-text-primary'
-                    : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-secondary hover:border-primary/50'
-                }`}
-              >
-                {init.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
-            <h3 className="text-xs uppercase font-bold text-text-secondary tracking-wider mb-3">2. Combines into Syllable</h3>
-            {validFinals.length > 0 ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {validFinals.map((fn) => {
-                  const syl = selectedInitial + fn
-                  return (
-                    <button
-                      key={fn}
-                      onClick={() => setSelectedSyllable(syl)}
-                      className={`p-3 rounded-lg text-base font-bold transition-all border text-center ${
-                        selectedSyllable === syl
-                          ? 'bg-primary/20 border-primary text-primary'
-                          : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-primary/50'
-                      }`}
-                    >
-                      {syl}
-                    </button>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-text-secondary">Select an initial above to see syllable options.</p>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] group relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">1. Select Initials</h3>
+             <div className="flex flex-wrap gap-2.5 relative z-10">
+               {INITIALS.map((init) => (
+                 <button
+                   key={init.label}
+                   onClick={() => {
+                     setSelectedInitial(init.value)
+                     setSelectedSyllable(null)
+                   }}
+                   className={`px-5 py-3 rounded-2xl text-sm font-bold transition-all border ${
+                     selectedInitial === init.value
+                       ? 'bg-primary border-primary text-text-primary shadow-md shadow-primary/20 scale-105'
+                       : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-secondary hover:border-primary/50 hover:bg-surface hover:-translate-y-0.5'
+                   }`}
+                 >
+                   {init.label || 'None'}
+                 </button>
+               ))}
+             </div>
           </div>
 
-          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5 flex flex-col justify-start">
-            <h3 className="text-xs uppercase font-bold text-text-secondary tracking-wider mb-3">3. Play Tones</h3>
-            {selectedSyllable ? (
-              <div className="space-y-3 mt-2">
-                <p className="text-center text-xl font-semibold mb-4">
-                  Syllable: <span className="text-primary font-black">{selectedSyllable}</span>
-                </p>
-                {[1, 2, 3, 4].map((tone) => {
-                  const tonedText = getToneSyllable(selectedSyllable, tone)
-                  const isActive = isSpeaking && activeTonedSyllable === tonedText
-                  return (
-                    <button
-                      key={tone}
-                      onClick={() => speakSyllable(selectedSyllable, tone)}
-                      className={`w-full p-4 border rounded-xl flex items-center justify-between transition-all hover:scale-102 active:scale-98 ${
-                        isActive
-                          ? 'bg-primary/10 border-primary text-primary animate-pulse'
-                          : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-primary hover:bg-primary/5'
-                      }`}
-                    >
-                      <div className="flex flex-col items-start">
-                        <span className="text-2xl font-black text-text-primary">{tonedText}</span>
-                        <span className="text-xs text-text-secondary font-medium">Tone {tone}</span>
-                      </div>
-                      {isActive ? <SpeakerWaveIcon className="w-5 h-5" /> : <SpeakerIcon className="w-5 h-5" />}
-                    </button>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-center text-sm text-text-secondary py-12">
-                Select a syllable on the left to play tones.
-              </div>
-            )}
+          <div className="md:col-span-8 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:200ms] group relative overflow-hidden min-h-[300px]">
+             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">2. Combines into Syllable</h3>
+             <div className="relative z-10">
+               {validFinals.length > 0 ? (
+                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                   {validFinals.map((fn) => {
+                     const syl = selectedInitial + fn
+                     return (
+                       <button
+                         key={fn}
+                         onClick={() => setSelectedSyllable(syl)}
+                         className={`p-4 rounded-2xl text-lg font-bold transition-all border text-center ${
+                           selectedSyllable === syl
+                             ? 'bg-blue-500/20 border-blue-500 text-blue-500 shadow-md shadow-blue-500/20 scale-105'
+                             : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-blue-500/50 hover:bg-surface hover:-translate-y-0.5'
+                         }`}
+                       >
+                         {syl}
+                       </button>
+                     )
+                   })}
+                 </div>
+               ) : (
+                 <div className="flex items-center justify-center h-40 text-text-secondary font-medium">
+                   Select an initial above to see syllable options.
+                 </div>
+               )}
+             </div>
+          </div>
+
+          <div className="md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:300ms] group relative overflow-hidden flex flex-col justify-start">
+             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">3. Play Tones</h3>
+             <div className="relative z-10 flex-1 flex flex-col">
+               {selectedSyllable ? (
+                 <div className="space-y-3 mt-2 flex-1">
+                   <p className="text-center text-xl font-medium mb-6 bg-surface/50 py-3 rounded-2xl border border-border/50 shadow-sm">
+                     Syllable: <span className="text-emerald-500 font-black ml-2 text-2xl">{selectedSyllable}</span>
+                   </p>
+                   {[1, 2, 3, 4].map((tone) => {
+                     const tonedText = getToneSyllable(selectedSyllable, tone)
+                     const isActive = isSpeaking && activeTonedSyllable === tonedText
+                     return (
+                       <button
+                         key={tone}
+                         onClick={() => speakSyllable(selectedSyllable, tone)}
+                         className={`w-full p-4 border rounded-2xl flex items-center justify-between transition-all hover:scale-105 active:scale-95 ${
+                           isActive
+                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500 animate-pulse shadow-md shadow-emerald-500/20'
+                             : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-emerald-500/50 hover:bg-emerald-500/5'
+                         }`}
+                       >
+                         <div className="flex flex-col items-start gap-1">
+                           <span className="text-3xl font-black text-text-primary leading-none">{tonedText}</span>
+                           <span className="text-xs text-text-secondary font-bold uppercase tracking-wider">Tone {tone}</span>
+                         </div>
+                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isActive ? 'bg-emerald-500/20 text-emerald-500' : 'bg-surface border border-border text-text-secondary'}`}>
+                           {isActive ? <SpeakerWaveIcon className="w-6 h-6" /> : <SpeakerIcon className="w-6 h-6" />}
+                         </div>
+                       </button>
+                     )
+                   })}
+                 </div>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-center text-text-secondary font-medium py-12">
+                   Select a syllable on the left to play tones.
+                 </div>
+               )}
+             </div>
           </div>
         </div>
       </div>

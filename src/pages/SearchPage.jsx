@@ -124,8 +124,8 @@ function SearchPage() {
 
         {!loading && displayResults.length > 0 && (
           <div className="flex flex-col gap-3">
-            {displayResults.map((result) => (
-              <SearchResultCard key={result.id} result={result} />
+            {displayResults.map((result, index) => (
+              <SearchResultCard key={result.id} result={result} index={index} />
             ))}
           </div>
         )}

@@ -344,58 +344,63 @@ function FlashcardsPage() {
             onClick={() => {
               if (cardPhase === 'idle' && !flipped) setFlipped(true)
             }}
-            className={`flashcard-flipper w-full min-h-64 sm:min-h-80 cursor-pointer ${
-              flipped ? 'is-flipped' : ''
-            }`}
+            className={`flashcard-flipper w-full min-h-[300px] sm:min-h-[400px] cursor-pointer group ${
+              flipped ? 'is-flipped' : 'hover:-translate-y-2'
+            } transition-transform duration-300`}
           >
             {/* Front */}
-            <div className="flashcard-face bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl flex flex-col items-center justify-center p-8">
-              <p className="text-7xl sm:text-8xl font-bold text-text-primary mb-4 select-none">
+            <div className="flashcard-face bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl flex flex-col items-center justify-center p-8 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/20 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+              <p className="text-8xl sm:text-9xl font-black text-text-primary mb-6 select-none drop-shadow-sm relative z-10 group-hover:scale-105 transition-transform duration-300">
                 {card.simplified}
               </p>
-              <p className="text-sm text-text-secondary">Tap to reveal</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface/50 px-4 py-2 rounded-full border border-border/50 relative z-10 shadow-sm">Tap to reveal</p>
             </div>
 
             {/* Back */}
-            <div className="flashcard-face flashcard-face--back bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl flex flex-col items-center justify-center p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <p className="text-2xl text-primary">{card.pinyin}</p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    speak()
-                  }}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-surface/80 backdrop-blur-xl border border-border/50 text-text-secondary hover:text-primary hover:border-primary transition-all"
-                >
-                  <SpeakerIcon className="w-5 h-5" />
-                </button>
+            <div className="flashcard-face flashcard-face--back bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl flex flex-col items-center justify-center p-8 shadow-xl shadow-primary/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-100 rounded-3xl"></div>
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="flex items-center gap-4 mb-6">
+                  <p className="text-3xl sm:text-4xl font-bold text-primary drop-shadow-sm">{card.pinyin}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      speak()
+                    }}
+                    className="flex items-center justify-center w-12 h-12 rounded-full bg-surface/80 backdrop-blur-xl border border-border/50 text-text-secondary hover:text-primary hover:border-primary hover:shadow-md hover:shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                  >
+                    <SpeakerIcon className="w-6 h-6" />
+                  </button>
+                </div>
+                <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-3 bg-surface inline-block px-3 py-1 rounded-full border border-border shadow-sm">Definition</h3>
+                <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{card.definition || 'No definition available'}</p>
               </div>
-              <p className="text-xl text-text-primary text-center">{card.definition || 'No definition available'}</p>
             </div>
           </div>
         </div>
 
         {/* Action buttons */}
         {flipped && cardPhase === 'idle' && (
-          <div className="flex gap-4 animate-fade-in">
+          <div className="flex gap-4 animate-fade-in [animation-delay:100ms]">
             <button
               onClick={() => handleResult(0)}
               disabled={animating}
-              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-red-500 text-red-400 rounded-xl font-semibold text-lg hover:bg-red-500 hover:bg-opacity-10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-red-500/50 text-red-400 rounded-2xl font-bold text-lg hover:border-red-500 hover:bg-red-500/10 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Forgot
             </button>
             <button
               onClick={handleSkip}
               disabled={animating}
-              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-border/50 text-text-secondary rounded-xl font-semibold text-lg hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-border/50 text-text-secondary rounded-2xl font-bold text-lg hover:border-text-primary hover:text-text-primary hover:-translate-y-1 hover:shadow-lg transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Skip
             </button>
             <button
               onClick={() => handleResult(4)}
               disabled={animating}
-              className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-semibold text-lg hover:bg-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-primary text-text-primary rounded-2xl font-bold text-lg hover:bg-primary-hover hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/30 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Remembered
             </button>

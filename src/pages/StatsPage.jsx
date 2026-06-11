@@ -40,76 +40,78 @@ function StatsPage() {
         <h1 className="text-3xl font-bold mb-8">Study Statistics</h1>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 h-32 animate-pulse" />)}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:auto-rows-[160px]">
+            {[1, 2, 3, 4].map(i => <div key={i} className={`bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 animate-pulse ${i === 4 ? 'col-span-2 md:col-span-4' : 'col-span-2 md:col-span-1 md:row-span-1'}`} />)}
           </div>
         ) : error ? (
-          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-8 text-center">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 text-center animate-fade-in [animation-delay:100ms]">
             <p className="text-red-400 mb-4">Failed to load statistics</p>
-            <button onClick={fetchStats} className="px-4 py-2 bg-primary text-text-primary rounded-lg font-medium">Retry</button>
+            <button onClick={fetchStats} className="px-6 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">Retry</button>
           </div>
         ) : stats && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
-                    <ClockIcon className="w-6 h-6" />
-                  </div>
-                  <span className="text-sm font-bold text-text-secondary uppercase tracking-wider">Current Streak</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:auto-rows-[160px]">
+            {/* Current Streak */}
+            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 animate-fade-in [animation-delay:100ms] flex flex-col justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                  <ClockIcon className="w-6 h-6" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-text-primary">{stats.streak}</span>
-                  <span className="text-text-secondary font-medium">days</span>
-                </div>
+                <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Streak</span>
               </div>
-
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <FlashcardIcon className="w-6 h-6" />
-                  </div>
-                  <span className="text-sm font-bold text-text-secondary uppercase tracking-wider">Total Cards</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-text-primary">{stats.totalCards}</span>
-                  <span className="text-text-secondary font-medium">learned</span>
-                </div>
-              </div>
-
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                    <HeartIcon className="w-6 h-6" />
-                  </div>
-                  <span className="text-sm font-bold text-text-secondary uppercase tracking-wider">HSK Progress</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-text-primary">
-                    {stats.hskProgress ? stats.hskProgress.reduce((acc, curr) => acc + curr.count, 0) : 0}
-                  </span>
-                  <span className="text-text-secondary font-medium">HSK words</span>
-                </div>
+              <div className="flex items-baseline gap-2 mt-4">
+                <span className="text-5xl font-black text-text-primary">{stats.streak}</span>
+                <span className="text-text-secondary font-medium">days</span>
               </div>
             </div>
 
-            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6">
-              <h3 className="text-lg font-bold mb-6">Mastery Breakdown</h3>
+            {/* Total Cards */}
+            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 animate-fade-in [animation-delay:150ms] flex flex-col justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                  <FlashcardIcon className="w-6 h-6" />
+                </div>
+                <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Total</span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-4">
+                <span className="text-5xl font-black text-text-primary">{stats.totalCards}</span>
+                <span className="text-text-secondary font-medium">cards</span>
+              </div>
+            </div>
+
+            {/* HSK Progress */}
+            <div className="col-span-2 md:col-span-2 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 animate-fade-in [animation-delay:200ms] flex flex-col justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
+                  <HeartIcon className="w-6 h-6" />
+                </div>
+                <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">HSK Progress</span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-4">
+                <span className="text-5xl font-black text-text-primary">
+                  {stats.hskProgress ? stats.hskProgress.reduce((acc, curr) => acc + curr.count, 0) : 0}
+                </span>
+                <span className="text-text-secondary font-medium">words learned</span>
+              </div>
+            </div>
+
+            {/* Mastery Breakdown */}
+            <div className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in [animation-delay:250ms] flex flex-col justify-center min-h-[200px]">
+              <h3 className="text-lg font-bold mb-6 text-text-primary">Mastery Breakdown</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-black text-primary">{stats.newCards}</div>
+                <div className="text-center group hover:-translate-y-1 transition-transform">
+                  <div className="text-4xl font-black text-primary mb-1 group-hover:scale-110 transition-transform">{stats.newCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Due/New</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-amber-500">{stats.learningCards}</div>
+                <div className="text-center group hover:-translate-y-1 transition-transform">
+                  <div className="text-4xl font-black text-amber-500 mb-1 group-hover:scale-110 transition-transform">{stats.learningCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Learning</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-emerald-500">{stats.masteredCards}</div>
+                <div className="text-center group hover:-translate-y-1 transition-transform">
+                  <div className="text-4xl font-black text-emerald-500 mb-1 group-hover:scale-110 transition-transform">{stats.masteredCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Mastered</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-text-primary">{stats.streak}</div>
+                <div className="text-center group hover:-translate-y-1 transition-transform">
+                  <div className="text-4xl font-black text-text-primary mb-1 group-hover:scale-110 transition-transform">{stats.streak}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Streak</div>
                 </div>
               </div>
