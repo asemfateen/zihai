@@ -28,7 +28,13 @@ export function useSpeechRecognition() {
 
       rec.onerror = (event) => {
         console.error('Speech recognition error:', event.error)
-        setError(event.error)
+        let friendlyError = event.error
+        if (event.error === 'network') {
+          friendlyError = 'Network error. Chrome requires an internet connection for speech recognition.'
+        } else if (event.error === 'not-allowed') {
+          friendlyError = 'Microphone access denied. Please allow microphone access in your browser.'
+        }
+        setError(friendlyError)
         setIsListening(false)
       }
 

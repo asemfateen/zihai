@@ -155,7 +155,7 @@ function PronunciationSection({ word }) {
 
           {error && (
             <div className="text-center text-sm text-rose-500 font-medium py-2">
-              Error: {error === 'not-allowed' ? 'Microphone access denied.' : error}
+              {error}
             </div>
           )}
 
