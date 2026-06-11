@@ -30,7 +30,7 @@ export function useSpeechRecognition() {
         console.error('Speech recognition error:', event.error)
         let friendlyError = event.error
         if (event.error === 'network') {
-          friendlyError = 'Network error. Chrome requires an internet connection for speech recognition.'
+          friendlyError = 'Network error. Browsers like Brave block speech recognition for privacy, or you are offline.'
         } else if (event.error === 'not-allowed') {
           friendlyError = 'Microphone access denied. Please allow microphone access in your browser.'
         }
