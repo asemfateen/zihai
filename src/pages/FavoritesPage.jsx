@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { HeartIcon } from '../components/Icons'
+import { cleanDefinition } from '../utils/text'
 
 function FavoritesPage() {
   const navigate = useNavigate()
@@ -137,7 +138,7 @@ function FavoritesPage() {
                   className="flex-1 text-text-secondary text-base sm:text-lg line-clamp-2"
                   title={word.english_definition || 'No definition available'}
                 >
-                  {word.english_definition || 'No definition available'}
+                  {cleanDefinition(word.english_definition) || 'No definition available'}
                 </div>
                 <button
                   onClick={(e) => removeFavorite(word.id, e)}

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { CheckIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon, PlayIcon, SpeakerIcon, SpeakerWaveIcon } from '../components/Icons'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
+import { cleanDefinition } from '../utils/text'
 
 function HSKPage() {
   const navigate = useNavigate()
@@ -189,7 +190,7 @@ function HSKPage() {
                         className="text-sm text-text-secondary line-clamp-2"
                         title={word.english_definition || 'No definition available'}
                       >
-                        {word.english_definition}
+                        {cleanDefinition(word.english_definition)}
                       </p>
                     </div>
 

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import { cleanDefinition } from '../utils/text'
 
 function SearchResultCard({ result, index = 0 }) {
   const navigate = useNavigate()
@@ -40,7 +41,7 @@ function SearchResultCard({ result, index = 0 }) {
         className="flex-1 text-text-secondary text-base sm:text-lg line-clamp-2"
         title={result.definition || 'No definition available'}
       >
-        {result.definition || 'No definition available'}
+        {cleanDefinition(result.definition) || 'No definition available'}
       </div>
     </div>
   )
