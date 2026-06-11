@@ -154,6 +154,47 @@ input, button, svg, path, polyline, circle, rect, line {
   inset: 0;
 }
 
+/* Web Speech API overrides (Chrome spell-out fix) */
+.speech-hidden {
+  display: inline-block;
+  font-size: 0;
+  line-height: 0;
+}
+
+/* 
+ * ----------------------------------------------------
+ * NATIVE APP VIEW TRANSITIONS
+ * ---------------------------------------------------- 
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out, scale-down;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in, scale-up;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes scale-down {
+  from { transform: scale(1); }
+  to { transform: scale(0.98); }
+}
+
+@keyframes scale-up {
+  from { transform: scale(1.02); }
+  to { transform: scale(1); }
+}
+
 .flashcard-face--back {
   transform: rotateY(180deg);
 }

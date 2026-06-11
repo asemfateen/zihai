@@ -163,7 +163,7 @@ function Navbar() {
   return (
     <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
       <div className="flex-shrink-0">
-        <Link to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
+        <Link viewTransition to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
           字海 Zihai
         </Link>
       </div>
