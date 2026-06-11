@@ -63,6 +63,8 @@ if (!JWT_SECRET) {
 const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
+db.pragma('synchronous = NORMAL')
+db.pragma('cache_size = -16000')
 db.pragma('foreign_keys = ON')
 
 const app = express()
@@ -175,7 +177,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     word_id INTEGER NOT NULL,
     created_at TEXT DEFAULT (datetime('now')),
     UNIQUE(user_id, word_id)
@@ -183,7 +185,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS search_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     query TEXT NOT NULL,
     searched_at TEXT DEFAULT (datetime('now')),
     UNIQUE(user_id, query)
@@ -191,7 +193,7 @@ db.exec(`
 
    CREATE TABLE IF NOT EXISTS flashcard_progress (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
-     user_id INTEGER NOT NULL,
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
      word_id INTEGER NOT NULL,
      added_at TEXT DEFAULT (datetime('now')),
      ease_factor REAL DEFAULT 2.5,
@@ -205,7 +207,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS password_resets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token TEXT NOT NULL,
     expires_at TEXT NOT NULL,
     used INTEGER DEFAULT 0,
@@ -213,6 +215,7 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+  CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);
   CREATE INDEX IF NOT EXISTS idx_favorites_user_word ON favorites(user_id, word_id);
   CREATE INDEX IF NOT EXISTS idx_flashcard_due ON flashcard_progress(user_id, next_review_date);
   CREATE INDEX IF NOT EXISTS idx_search_history_user ON search_history(user_id, searched_at);
