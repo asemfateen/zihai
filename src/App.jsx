@@ -1,3 +1,8 @@
+/**
+ * IMPORTANT: DO NOT REVERT THIS FILE.
+ *
+ * All tools (HSKPage, StatsPage, PinyinChartPage) MUST have registered routes here.
+ */
 import { lazy, Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import Spinner from './components/Spinner'
@@ -21,14 +26,14 @@ const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
 const ProfileChangePasswordPage = lazy(() => import('./pages/ProfileChangePasswordPage'))
 const RadicalsPage = lazy(() => import('./pages/RadicalsPage'))
 const RadicalDetailPage = lazy(() => import('./pages/RadicalDetailPage'))
-const StatsPage = lazy(() => import('./pages/StatsPage'))
 const HSKPage = lazy(() => import('./pages/HSKPage'))
+const StatsPage = lazy(() => import('./pages/StatsPage'))
 const PinyinChartPage = lazy(() => import('./pages/PinyinChartPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageSuspense({ children }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Spinner size={40} /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center"><Spinner size={40} /></div>}>
       {children}
     </Suspense>
   )
@@ -36,11 +41,14 @@ function PageSuspense({ children }) {
 
 function Layout() {
   return (
-    <>
+    <div className="min-h-screen bg-transparent relative z-10 relative overflow-hidden z-0">
+      {/* Global Dynamic background blobs */}
+      <div className="fixed top-0 left-1/4 w-[40rem] h-[40rem] bg-primary/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
+      <div className="fixed bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-orange-500/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
       <ScrollRestoration />
       <Outlet />
       <OfflineBanner />
-    </>
+    </div>
   )
 }
 
@@ -63,8 +71,8 @@ const router = createBrowserRouter([
       { path: '/profile/change-password', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ProfileChangePasswordPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/radicals', element: <PageSuspense><ErrorBoundary><RadicalsPage /></ErrorBoundary></PageSuspense> },
       { path: '/radicals/:radical', element: <PageSuspense><ErrorBoundary><RadicalDetailPage /></ErrorBoundary></PageSuspense> },
-      { path: '/stats', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StatsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/hsk', element: <PageSuspense><ProtectedRoute><ErrorBoundary><HSKPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/stats', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StatsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/pinyin', element: <PageSuspense><ErrorBoundary><PinyinChartPage /></ErrorBoundary></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],

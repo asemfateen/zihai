@@ -5,7 +5,7 @@ function NotFoundPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <h1 className="text-8xl font-bold text-primary mb-4">404</h1>

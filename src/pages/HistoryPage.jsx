@@ -68,7 +68,7 @@ function HistoryPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
@@ -80,7 +80,7 @@ function HistoryPage() {
                 <button
                   onClick={() => setShowConfirm(false)}
                   disabled={clearing}
-                  className="px-4 py-2 text-sm text-text-secondary border border-border rounded-lg hover:border-primary transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm text-text-secondary border border-border/50 rounded-lg hover:border-primary transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -95,7 +95,7 @@ function HistoryPage() {
             ) : (
               <button
                 onClick={() => setShowConfirm(true)}
-                className="px-4 py-2 text-sm text-text-secondary border border-border rounded-lg hover:text-red-400 hover:border-red-400 transition-colors"
+                className="px-4 py-2 text-sm text-text-secondary border border-border/50 rounded-lg hover:text-red-400 hover:border-red-400 transition-colors"
               >
                 Clear History
               </button>
@@ -112,7 +112,7 @@ function HistoryPage() {
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5">
+              <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-8 h-8 rounded-full" />
                   <div className="skeleton h-5 w-40" />
@@ -143,7 +143,7 @@ function HistoryPage() {
         )}
 
         {!loading && !error && history.length > 0 && (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="flex flex-col gap-3">
             {history.map((item, index) => (
               <div
                 key={item.id}
@@ -151,9 +151,8 @@ function HistoryPage() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(item.query) } }}
                 role="button"
                 tabIndex={0}
-                className={`flex items-center justify-between px-5 py-4 hover:bg-surface cursor-pointer transition-colors ${
-                  index !== history.length - 1 ? 'border-b border-border' : ''
-                }`}
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                className="flex items-center justify-between px-5 py-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
               >
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-4 h-4 text-text-secondary flex-shrink-0" />

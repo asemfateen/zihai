@@ -23,7 +23,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-text-primary mb-4">Something went wrong</h1>
             <p className="text-text-secondary text-lg mb-8">An unexpected error occurred. Please try refreshing the page.</p>
@@ -36,7 +36,7 @@ class ErrorBoundary extends Component {
               </button>
               <Link
                 to="/"
-                className="inline-block px-6 py-3 bg-surface border border-border text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+                className="inline-block px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
               >
                 Go back home
               </Link>

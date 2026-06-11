@@ -3,7 +3,15 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, ChevronRightIcon } from './Icons'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon } from './Icons'
+
+function ChevronDownIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
 
 function Navbar() {
   const navigate = useNavigate()
@@ -15,6 +23,8 @@ function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false)
+  const [mobileExploreOpen, setMobileExploreOpen] = useState(false)
   const [searchError, setSearchError] = useState(null)
   const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const debounceRef = useRef(null)
@@ -22,7 +32,7 @@ function Navbar() {
   const inputRef = useRef(null)
   const containerRef = useRef(null)
   const mobileMenuRef = useRef(null)
-  const toolsDropdownRef = useRef(null)
+  const exploreDropdownRef = useRef(null)
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -32,8 +42,8 @@ function Navbar() {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
         setMobileMenuOpen(false)
       }
-      if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(e.target)) {
-        setShowToolsDropdown(false)
+      if (exploreDropdownRef.current && !exploreDropdownRef.current.contains(e.target)) {
+        setExploreDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -152,32 +162,26 @@ function Navbar() {
   }
 
   return (
-    <nav className="bg-surface border-b border-border sticky top-0 z-50 px-4 py-3 sm:py-3.5">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        
-        {/* Top Header Row for mobile / Logo Row for desktop */}
-        <div className="flex items-center justify-between w-full sm:w-auto flex-shrink-0">
-          <Link to="/" className="text-xl font-bold text-primary no-underline tracking-wide hover:scale-102 transition-transform">
-            字海 Zihai
-          </Link>
+    <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <div className="flex-shrink-0">
+        <Link to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
+          字海 Zihai
+        </Link>
+      </div>
 
-          {/* Theme & Menu toggle ONLY on mobile top row */}
-          <div className="flex sm:hidden items-center gap-1.5">
-            <button
-              onClick={toggleTheme}
-              className="p-2.5 border border-border rounded-xl text-text-secondary hover:text-primary hover:border-primary transition-all active:scale-95"
-              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {dark ? <SunIcon className="w-4.5 h-4.5" /> : <MoonIcon className="w-4.5 h-4.5" />}
-            </button>
-            <button
-              onClick={() => setMobileMenuOpen(prev => !prev)}
-              className="p-2.5 text-text-secondary border border-border rounded-xl hover:text-primary hover:border-primary transition-all active:scale-95"
-            >
-              {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
+      <div ref={containerRef} className="flex-1 max-w-md mx-2 sm:mx-4 relative">
+        <form onSubmit={handleSubmit}>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search characters, pinyin, or definitions..."
+            value={query}
+            onChange={handleSearch}
+            onKeyDown={handleKeyDown}
+            aria-label="Search characters, pinyin, or definitions"
+            className="w-full px-3 sm:px-4 py-2 bg-card/80 backdrop-blur-md text-text-primary border border-border/50 rounded-lg outline-none focus:border-primary transition-all placeholder:text-text-secondary text-sm sm:text-base focus:ring-2 focus:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+          />
+        </form>
 
         {/* Centered Google-like Search Bar */}
         <div ref={containerRef} className="w-full sm:flex-1 sm:max-w-md relative mx-auto">
@@ -292,65 +296,125 @@ function Navbar() {
             )}
           </div>
 
-          {user && (
+        {showDropdown && searchError && suggestions.length === 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
+            {searchError}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop nav */}
+      <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+        <div ref={exploreDropdownRef} className="relative">
+          <button
+            onClick={() => setExploreDropdownOpen(prev => !prev)}
+            className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
+              exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+            }`}
+          >
+            <GridIcon className="w-4 h-4" />
+            Explore Tools
+            <ChevronDownIcon className={`w-3 h-3 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {exploreDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50 animate-fade-in">
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/radicals'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <GridIcon className="w-4 h-4 text-text-secondary" />
+                Radicals
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/flashcards'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <FlashcardIcon className="w-4 h-4 text-text-secondary" />
+                Flashcards
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/hsk'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/hsk' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <DashboardIcon className="w-4 h-4 text-text-secondary" />
+                HSK Levels
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/pinyin'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <SpeakerIcon className="w-4 h-4 text-text-secondary" />
+                Pinyin Chart
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/history'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/history' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <ClockIcon className="w-4 h-4 text-text-secondary" />
+                History
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/favorites'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/favorites' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <HeartIcon className="w-4 h-4 text-text-secondary" />
+                Favorites
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/stats'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/stats' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <UserIcon className="w-4 h-4 text-text-secondary" />
+                Stats
+              </button>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+        </button>
+        {user ? (
+          <>
             <button
-              onClick={() => navigate('/flashcards')}
-              className={`px-3 py-2 border rounded-lg transition-all flex items-center gap-1.5 text-sm font-medium ${
-                location.pathname === '/flashcards'
+              onClick={() => navigate('/profile')}
+              className={`p-2 border rounded-lg transition-colors cursor-pointer ${
+                location.pathname === '/profile'
                   ? 'text-primary border-primary bg-primary/5'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
             >
-              <FlashcardIcon className="w-4 h-4" />
-              Flashcards
+              <UserIcon className="w-4 h-4" />
             </button>
-          )}
-
-          {/* Desktop Theme Switcher */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 border border-border rounded-lg transition-all text-text-secondary hover:text-primary hover:border-primary hover:scale-105 active:scale-95"
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
-          </button>
-
-          {user ? (
-            <>
-              <button
-                onClick={() => navigate('/profile')}
-                className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
-                  location.pathname === '/profile'
-                    ? 'text-primary border-primary'
-                    : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-                }`}
-              >
-                <UserIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-all hover:scale-105 active:scale-95"
-              >
-                <LogoutIcon className="w-4 h-4" />
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-all text-sm font-semibold hover:scale-105 active:scale-95"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-all text-sm font-semibold hover:scale-105 active:scale-95"
-              >
-                Register
-              </button>
-            </>
-          )}
-        </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors cursor-pointer"
+            >
+              <LogoutIcon className="w-4 h-4" />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-colors text-sm cursor-pointer"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors text-sm cursor-pointer"
+            >
+              Register
+            </button>
+          </>
+        )}
       </div>
 
       {/* Mobile hamburger menu content */}
@@ -358,10 +422,8 @@ function Navbar() {
         {mobileMenuOpen && user && (
           <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
-              onClick={() => handleNav('/hsk')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/hsk' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               HSK Levels
             </button>
@@ -381,46 +443,80 @@ function Navbar() {
             >
               Pinyin Chart
             </button>
+            <div className="border-t border-border" />
+            
             <button
-              onClick={() => handleNav('/flashcards')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/flashcards' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
+              onClick={() => setMobileExploreOpen(prev => !prev)}
+              className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              <FlashcardIcon className="w-4 h-4 text-text-secondary" />
-              Flashcards
+              <span className="flex items-center gap-3">
+                <GridIcon className="w-4 h-4 text-text-secondary" />
+                Explore Tools
+              </span>
+              <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? 'rotate-180' : ''}`} />
             </button>
-            <button
-              onClick={() => handleNav('/radicals')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/radicals' || location.pathname.startsWith('/radicals/') ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
-            >
-              <GridIcon className="w-4 h-4 text-text-secondary" />
-              Radicals
-            </button>
-            <button
-              onClick={() => handleNav('/history')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/history' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
-            >
-              <ClockIcon className="w-4 h-4 text-text-secondary" />
-              History
-            </button>
-            <button
-              onClick={() => handleNav('/favorites')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/favorites' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
-            >
-              <HeartIcon className="w-4 h-4 text-text-secondary" />
-              Favorites
-            </button>
+
+            {mobileExploreOpen && (
+              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
+                <button
+                  onClick={() => handleNav('/radicals')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <GridIcon className="w-4 h-4 text-text-secondary" />
+                  Radicals
+                </button>
+                <button
+                  onClick={() => handleNav('/flashcards')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <FlashcardIcon className="w-4 h-4 text-text-secondary" />
+                  Flashcards
+                </button>
+                <button
+                  onClick={() => handleNav('/hsk')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/hsk' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <DashboardIcon className="w-4 h-4 text-text-secondary" />
+                  HSK Levels
+                </button>
+                <button
+                  onClick={() => handleNav('/pinyin')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <SpeakerIcon className="w-4 h-4 text-text-secondary" />
+                  Pinyin Chart
+                </button>
+                <button
+                  onClick={() => handleNav('/history')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/history' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <ClockIcon className="w-4 h-4 text-text-secondary" />
+                  History
+                </button>
+                <button
+                  onClick={() => handleNav('/favorites')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/favorites' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <HeartIcon className="w-4 h-4 text-text-secondary" />
+                  Favorites
+                </button>
+                <button
+                  onClick={() => handleNav('/stats')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/stats' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <UserIcon className="w-4 h-4 text-text-secondary" />
+                  Stats
+                </button>
+              </div>
+            )}
+
+            <div className="border-t border-border" />
             <button
               onClick={() => handleNav('/profile')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/profile' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm cursor-pointer ${
+                location.pathname === '/profile'
+                  ? 'text-primary bg-surface font-semibold'
+                  : 'text-text-primary hover:bg-surface'
               }`}
             >
               <UserIcon className="w-4 h-4 text-text-secondary" />
@@ -429,7 +525,7 @@ function Navbar() {
             <div className="border-t border-border" />
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-surface transition-colors text-sm"
+              className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               <LogoutIcon className="w-4 h-4" />
               Logout
@@ -440,29 +536,90 @@ function Navbar() {
         {mobileMenuOpen && !user && (
           <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
-              onClick={() => handleNav('/radicals')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              <GridIcon className="w-4 h-4 text-text-secondary" />
-              Radicals
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
+              {dark ? 'Light Mode' : 'Dark Mode'}
             </button>
+            <div className="border-t border-border" />
+            
             <button
-              onClick={() => handleNav('/pinyin')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
+              onClick={() => setMobileExploreOpen(prev => !prev)}
+              className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              Pinyin Chart
+              <span className="flex items-center gap-3">
+                <GridIcon className="w-4 h-4 text-text-secondary" />
+                Explore Tools
+              </span>
+              <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? 'rotate-180' : ''}`} />
             </button>
+
+            {mobileExploreOpen && (
+              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
+                <button
+                  onClick={() => handleNav('/radicals')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <GridIcon className="w-4 h-4 text-text-secondary" />
+                  Radicals
+                </button>
+                <button
+                  onClick={() => handleNav('/flashcards')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <FlashcardIcon className="w-4 h-4 text-text-secondary" />
+                  Flashcards
+                </button>
+                <button
+                  onClick={() => handleNav('/hsk')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/hsk' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <DashboardIcon className="w-4 h-4 text-text-secondary" />
+                  HSK Levels
+                </button>
+                <button
+                  onClick={() => handleNav('/pinyin')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <SpeakerIcon className="w-4 h-4 text-text-secondary" />
+                  Pinyin Chart
+                </button>
+                <button
+                  onClick={() => handleNav('/history')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/history' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <ClockIcon className="w-4 h-4 text-text-secondary" />
+                  History
+                </button>
+                <button
+                  onClick={() => handleNav('/favorites')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/favorites' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <HeartIcon className="w-4 h-4 text-text-secondary" />
+                  Favorites
+                </button>
+                <button
+                  onClick={() => handleNav('/stats')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/stats' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <UserIcon className="w-4 h-4 text-text-secondary" />
+                  Stats
+                </button>
+              </div>
+            )}
+
             <div className="border-t border-border" />
             <button
               onClick={() => handleNav('/login')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left cursor-pointer"
             >
               <UserIcon className="w-4 h-4 text-text-secondary" />
               Login
             </button>
             <button
               onClick={() => handleNav('/register')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-surface transition-colors text-sm text-left font-medium"
+              className="w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-surface transition-colors text-sm text-left font-medium cursor-pointer"
             >
               <PlusIcon className="w-4 h-4" />
               Register

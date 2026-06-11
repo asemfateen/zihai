@@ -5,7 +5,7 @@ function Spinner({ size = 40, className = '' }) {
         width: size,
         height: size,
       }}
-      className={`rounded-full border-3 border-border border-t-primary animate-spin ${className}`}
+      className={`rounded-full border-3 border-border/50 border-t-primary animate-spin ${className}`}
       role="status"
       aria-label="Loading"
     />

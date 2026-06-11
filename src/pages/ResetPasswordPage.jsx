@@ -56,14 +56,14 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Set New Password</h1>
+          <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">Set New Password</h1>
           <p className="text-text-secondary">Choose a new password for your account</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-2xl shadow-primary/20">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
@@ -78,7 +78,7 @@ function ResetPasswordPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="w-full px-4 py-2.5 pr-12 bg-surface border border-border rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 pr-12 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                 placeholder="At least 6 characters"
                 />
                 <button
@@ -104,7 +104,7 @@ function ResetPasswordPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                 placeholder="Re-enter your password"
               />
             </div>
