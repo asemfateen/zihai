@@ -8,6 +8,8 @@ export function useHanziWriter(word) {
   const [writersReady, setWritersReady] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [quizStates, setQuizStates] = useState({})
+  const [activeQuizIndex, setActiveQuizIndex] = useState(-1)
   const writerRefs = useRef({})
   const writersRef = useRef({})
   const strokeCountsRef = useRef({})
@@ -37,6 +39,8 @@ export function useHanziWriter(word) {
     let readyFired = false
 
     writersRef.current = {}
+    setQuizStates({})
+    setActiveQuizIndex(-1)
 
     chars.forEach((char, i) => {
       const container = writerRefs.current[i]
@@ -63,10 +67,10 @@ export function useHanziWriter(word) {
             showOutline: true,
             strokeAnimationSpeed: 1,
             delayBetweenStrokes: 300,
-            strokeColor: '#c0392b',
-            outlineColor: '#2a2a2a',
-            drawingColor: '#c0392b',
-            radicalColor: '#e74c3c',
+            strokeColor: '#3b82f6', // Premium blue
+            outlineColor: '#334155', // slate-700
+            drawingColor: '#10b981', // emerald-500
+            radicalColor: '#f43f5e', // rose-500
             showCharacter: false,
           })
           writersRef.current[i] = writer
@@ -115,7 +119,10 @@ export function useHanziWriter(word) {
     return () => {
       rafIds.forEach((id) => cancelAnimationFrame(id))
       Object.values(writersRef.current).forEach((writer) => {
-        if (writer && typeof writer.pauseAnimation === 'function') writer.pauseAnimation()
+        if (writer) {
+          if (typeof writer.pauseAnimation === 'function') writer.pauseAnimation()
+          if (typeof writer.cancelQuiz === 'function') writer.cancelQuiz()
+        }
       })
       writersRef.current = {}
       strokeCountsRef.current = {}
@@ -130,6 +137,11 @@ export function useHanziWriter(word) {
       setIsPaused(false)
       setIsPlaying(true)
       activeCharIndexRef.current = startIndex
+
+      // Cancel any active quiz
+      if (activeQuizIndex !== -1) {
+        cancelQuiz(activeQuizIndex)
+      }
 
       Object.values(writersRef.current).forEach((w) => {
         if (w && typeof w.pauseAnimation === 'function') w.pauseAnimation()
@@ -170,7 +182,7 @@ export function useHanziWriter(word) {
 
       animateNext()
     },
-    [word, writersReady],
+    [word, writersReady, activeQuizIndex],
   )
 
   const pause = useCallback(() => {
@@ -204,6 +216,95 @@ export function useHanziWriter(word) {
     }
   }, [isPlaying, isPaused, pause, resume, playFromIndex])
 
+  const startQuiz = useCallback((charIndex) => {
+    const writer = writersRef.current[charIndex]
+    if (!writer) return
+
+    // Stop any animations
+    if (isPlaying) {
+      Object.values(writersRef.current).forEach((w) => {
+        if (w && typeof w.pauseAnimation === 'function') w.pauseAnimation()
+      })
+      setIsPlaying(false)
+      setIsPaused(false)
+    }
+
+    // Cancel other quizzes
+    Object.keys(writersRef.current).forEach((idx) => {
+      const idxNum = parseInt(idx, 10)
+      if (idxNum !== charIndex) {
+        const otherWriter = writersRef.current[idxNum]
+        if (otherWriter && typeof otherWriter.cancelQuiz === 'function') {
+          otherWriter.cancelQuiz()
+        }
+      }
+    })
+
+    setActiveQuizIndex(charIndex)
+    setQuizStates((prev) => ({
+      ...prev,
+      [charIndex]: {
+        completed: false,
+        mistakes: 0,
+        totalStrokes: strokeCountsRef.current[charIndex] || 0,
+        activeStroke: 0
+      }
+    }))
+
+    writer.quiz({
+      onStrokeCorrect: (strokeData) => {
+        setQuizStates((prev) => {
+          const current = prev[charIndex] || { mistakes: 0 }
+          return {
+            ...prev,
+            [charIndex]: {
+              ...current,
+              activeStroke: strokeData.strokeNum + 1,
+            }
+          }
+        })
+      },
+      onStrokeIncorrect: (strokeData) => {
+        setQuizStates((prev) => {
+          const current = prev[charIndex] || { mistakes: 0 }
+          return {
+            ...prev,
+            [charIndex]: {
+              ...current,
+              mistakes: strokeData.mistakes,
+            }
+          }
+        })
+      },
+      onComplete: (summary) => {
+        setQuizStates((prev) => {
+          const current = prev[charIndex] || { mistakes: 0 }
+          return {
+            ...prev,
+            [charIndex]: {
+              ...current,
+              completed: true,
+              mistakes: summary.mistakes,
+            }
+          }
+        })
+      }
+    })
+  }, [isPlaying])
+
+  const cancelQuiz = useCallback((charIndex) => {
+    const writer = writersRef.current[charIndex]
+    if (writer && typeof writer.cancelQuiz === 'function') {
+      writer.cancelQuiz()
+    }
+    setActiveQuizIndex(-1)
+    setQuizStates((prev) => {
+      const copy = { ...prev }
+      delete copy[charIndex]
+      return copy
+    })
+  }, [])
+
   return {
     writerRefs,
     supportedChars,
@@ -214,5 +315,9 @@ export function useHanziWriter(word) {
     pause,
     resume,
     togglePlay,
+    quizStates,
+    activeQuizIndex,
+    startQuiz,
+    cancelQuiz,
   }
 }

@@ -11,6 +11,8 @@ import API_BASE, { fetchWithTimeout } from '../api'
 import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon } from '../components/Icons'
 import ExampleSentenceCard from '../components/ExampleSentenceCard'
 import RADICAL_MAP from '../data/radicals'
+import PronunciationSection from '../components/PronunciationSection'
+import CustomListsModal from '../components/CustomListsModal'
 
 function WordPage() {
   const { query } = useParams()
@@ -22,6 +24,7 @@ function WordPage() {
   const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
+  const [isListModalOpen, setIsListModalOpen] = useState(false)
 
   useEffect(() => {
     if (!word || !user) return
@@ -252,6 +255,22 @@ function WordPage() {
                 )}
               </button>
 
+              <button
+                onClick={() => {
+                  if (!user) {
+                    navigate('/login')
+                    return
+                  }
+                  setIsListModalOpen(true)
+                }}
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0"
+                title="Add to custom list"
+              >
+                <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+              </button>
+
               {word.hsk_level && (
                 <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl text-sm font-bold shadow-sm">
                   HSK {word.hsk_level}
@@ -298,6 +317,11 @@ function WordPage() {
             </div>
           )}
 
+          {/* Pronunciation Practice Section */}
+          <div className="md:col-span-12 animate-fade-in [animation-delay:350ms]">
+             <PronunciationSection word={word} />
+          </div>
+
           {/* Stroke Order Section wrapper */}
           <div className="md:col-span-12 animate-fade-in [animation-delay:400ms]">
              <StrokeOrderSection word={word} />
@@ -305,6 +329,14 @@ function WordPage() {
 
         </div>
       </div>
+
+      {word && (
+        <CustomListsModal
+          wordId={word.id}
+          isOpen={isListModalOpen}
+          onClose={() => setIsListModalOpen(false)}
+        />
+      )}
     </div>
   )
 }

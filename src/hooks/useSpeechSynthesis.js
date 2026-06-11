@@ -58,10 +58,17 @@ export function useSpeechSynthesis() {
 
     window.speechSynthesis.cancel()
 
-    // If we have a tone, we could try to find a toned character for browser too,
-    // but browser synthesis is usually better with raw pinyin than no context.
-    // However, let's just use what we have.
-    const utterance = new SpeechSynthesisUtterance(text)
+    // If text is purely pinyin (letters), it will be spelled out by the browser. 
+    // We should try to provide a character or let the browser do its best if we can't.
+    // In this app, the backend usually resolves characters. But if it fails, we fall back to this.
+    // The browser doesn't do tones for raw pinyin well, but we can't load the whole dict here.
+    // However, if the text is just letters, it's a known limitation of the fallback.
+    let speechText = text
+    if (/^[a-z]+$/i.test(text)) {
+      console.warn('Browser TTS fallback received raw pinyin. It may spell the letters in English.')
+    }
+
+    const utterance = new SpeechSynthesisUtterance(speechText)
     utterance.lang = 'zh-CN'
     utterance.rate = 0.8
     if (chineseVoice) utterance.voice = chineseVoice
