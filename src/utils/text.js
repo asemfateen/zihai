@@ -55,5 +55,6 @@ export function cleanDefinition(def) {
     return def
   }
 
-  return uniqueParts.join('; ')
+  // Limit to at most 3 unique parts for card lists
+  return uniqueParts.slice(0, 3).join('; ')
 }
