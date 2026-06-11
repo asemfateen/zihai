@@ -36,7 +36,12 @@ function SearchResultCard({ result, index = 0 }) {
           </span>
         )}
       </div>
-      <div className="flex-1 text-text-secondary text-base sm:text-lg">{result.definition || 'No definition available'}</div>
+      <div
+        className="flex-1 text-text-secondary text-base sm:text-lg line-clamp-2"
+        title={result.definition || 'No definition available'}
+      >
+        {result.definition || 'No definition available'}
+      </div>
     </div>
   )
 }

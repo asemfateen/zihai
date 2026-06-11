@@ -133,7 +133,12 @@ function FavoritesPage() {
                   </div>
                   <div className="text-sm text-primary mt-1">{word.pinyin}</div>
                 </div>
-                <div className="flex-1 text-text-secondary text-base sm:text-lg">{word.english_definition || 'No definition available'}</div>
+                <div
+                  className="flex-1 text-text-secondary text-base sm:text-lg line-clamp-2"
+                  title={word.english_definition || 'No definition available'}
+                >
+                  {word.english_definition || 'No definition available'}
+                </div>
                 <button
                   onClick={(e) => removeFavorite(word.id, e)}
                   disabled={removing === word.id}

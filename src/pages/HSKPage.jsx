@@ -185,7 +185,12 @@ function HSKPage() {
                         </span>
                         <span className="text-sm font-semibold text-primary">{word.pinyin}</span>
                       </div>
-                      <p className="text-sm text-text-secondary line-clamp-2">{word.english_definition}</p>
+                      <p
+                        className="text-sm text-text-secondary line-clamp-2"
+                        title={word.english_definition || 'No definition available'}
+                      >
+                        {word.english_definition}
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-end gap-2 mt-4 opacity-70 group-hover:opacity-100 transition-opacity">
