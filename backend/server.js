@@ -585,6 +585,33 @@ app.get('/api/dev-reset-link/:token', (req, res) => {
   res.json({ resetUrl: `${frontendUrl}/reset-password/${req.params.token}` })
 })
 
+function resolveDefinition(def) {
+  if (!def) return def
+  const match = def.trim().match(/^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/)
+  if (match) {
+    const target = match[1]
+    let targetRow = db.prepare('SELECT definition FROM cedict_words WHERE simplified = ? OR traditional = ?').get(target, target)
+    if (!targetRow) {
+      targetRow = db.prepare('SELECT definition FROM characters WHERE simplified = ? OR traditional = ?').get(target, target)
+    }
+    if (targetRow && targetRow.definition && !targetRow.definition.startsWith('see ')) {
+      return targetRow.definition
+    }
+  }
+  return def
+}
+
+function resolveRow(row) {
+  if (!row) return row
+  if (row.definition) {
+    row.definition = resolveDefinition(row.definition)
+  }
+  if (row.english_definition) {
+    row.english_definition = resolveDefinition(row.english_definition)
+  }
+  return row
+}
+
 app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok' })
 })
@@ -679,7 +706,10 @@ app.get('/api/search', (req, res) => {
     return res.status(500).json({ error: 'Search query failed' })
   }
 
-  rows.forEach(r => { r.pinyin = convertNumberedPinyin(r.pinyin) })
+  rows.forEach(r => {
+    r.pinyin = convertNumberedPinyin(r.pinyin)
+    resolveRow(r)
+  })
   res.json(rows)
 })
 
@@ -716,11 +746,54 @@ app.get('/api/radicals/:radical', (req, res) => {
       ORDER BY (CASE WHEN hsk_level > 0 THEN 1 ELSE 0 END) DESC, hsk_level ASC, LENGTH(simplified)
       LIMIT ? OFFSET ?
     `).all(radical, limit, offset)
-    words.forEach(w => { w.pinyin = convertNumberedPinyin(w.pinyin) })
+    words.forEach(w => {
+      w.pinyin = convertNumberedPinyin(w.pinyin)
+      resolveRow(w)
+    })
     res.json({ radical: radicalInfo, words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     console.error('Radical detail query failed:', err.message)
     return res.status(500).json({ error: 'Failed to fetch radical details' })
+  }
+})
+
+app.get('/api/hsk/:level', (req, res) => {
+  const level = parseInt(req.params.level, 10)
+  if (isNaN(level) || level < 1 || level > 6) {
+    return res.status(400).json({ error: 'Invalid HSK level' })
+  }
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit, 10) || 50), 100)
+  const offset = (page - 1) * limit
+  try {
+    const totalRow = db.prepare(`
+      SELECT (SELECT COUNT(*) FROM characters WHERE hsk_level = ?) +
+             (SELECT COUNT(*) FROM cedict_words WHERE hsk_level = ?) AS cnt
+    `).get(level, level)
+    const total = totalRow ? totalRow.cnt : 0
+
+    const words = db.prepare(`
+      SELECT id, character, traditional, pinyin, pinyin_display, english_definition, hsk_level, is_word
+      FROM (
+        SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, definition AS english_definition, hsk_level, 1 as is_word
+        FROM cedict_words WHERE hsk_level = ?
+        UNION ALL
+        SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, definition AS english_definition, hsk_level, 0 as is_word
+        FROM characters WHERE hsk_level = ?
+      )
+      ORDER BY length(character) ASC, character ASC
+      LIMIT ? OFFSET ?
+    `).all(level, level, limit, offset)
+
+    words.forEach(w => {
+      w.pinyin = convertNumberedPinyin(w.pinyin)
+      resolveRow(w)
+    })
+
+    res.json({ words, total, page, limit, totalPages: Math.ceil(total / limit) })
+  } catch (err) {
+    console.error('HSK list query failed:', err.message)
+    return res.status(500).json({ error: 'Failed to fetch HSK vocabulary' })
   }
 })
 
@@ -759,6 +832,7 @@ app.get('/api/word/:query', (req, res) => {
   }
 
   if (!item) return res.status(404).json({ error: 'Word not found' })
+  item = resolveRow(item)
   item.pinyin = convertNumberedPinyin(item.pinyin)
   res.json({ ...item, examples: [] })
 })
@@ -817,7 +891,7 @@ app.get('/api/favorites', requireAuth, (req, res) => {
     WHERE f.user_id = ?
     ORDER BY f.created_at DESC
   `).all(req.user.id)
-  res.json(rows)
+  res.json(rows.map(resolveRow))
 })
 
 const FLASHCARD_STATIC_ROUTES = {
@@ -834,7 +908,7 @@ app.get('/api/flashcards/due', requireAuth, (req, res) => {
     WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
     ORDER BY fp.next_review_date ASC
   `).all(req.user.id)
-  res.json(rows)
+  res.json(rows.map(resolveRow))
 })
 
 app.get('/api/flashcards/indeck/:wordId', requireAuth, (req, res) => {
