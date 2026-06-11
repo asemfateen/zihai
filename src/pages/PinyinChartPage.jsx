@@ -90,7 +90,7 @@ function PinyinChartPage() {
   const speakSyllable = (syllable, tone) => {
     const toned = getToneSyllable(syllable, tone)
     setActiveTonedSyllable(toned)
-    speakTTS(toned)
+    speakTTS(syllable, tone)
   }
 
   const validFinals = VALID_COMBINATIONS[selectedInitial] || []

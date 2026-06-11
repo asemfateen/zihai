@@ -10,6 +10,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import crypto from 'crypto'
 import os from 'os'
+import fs from 'fs'
+import { EdgeTTS } from 'node-edge-tts'
 import rateLimit from 'express-rate-limit'
 import nodemailer from 'nodemailer'
 import { normalizePinyin, searchNormalizePinyin, splitPinyin, generatePinyinAlternatives } from './pinyinUtils.js'
@@ -614,6 +616,123 @@ function resolveRow(row) {
 
 app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok' })
+})
+
+app.get('/api/tts', async (req, res) => {
+  let text = (req.query.text || '').trim()
+  let toneParam = parseInt(req.query.tone, 10)
+  if (isNaN(toneParam)) toneParam = null
+
+  if (!text) return res.status(400).json({ error: 'Text is required' })
+  if (text.length > 200) return res.status(400).json({ error: 'Text too long' })
+
+  // If text is pinyin, try to find a representative character
+  if (/^[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüăĕĭŏŭ1-5\s]+$/i.test(text)) {
+    const toneMarks = {
+      'ā': 1, 'á': 2, 'ǎ': 3, 'à': 4,
+      'ē': 1, 'é': 2, 'ě': 3, 'è': 4,
+      'ī': 1, 'í': 2, 'ǐ': 3, 'ì': 4,
+      'ō': 1, 'ó': 2, 'ǒ': 3, 'ò': 4,
+      'ū': 1, 'ú': 2, 'ǔ': 3, 'ù': 4,
+      'ǖ': 1, 'ǘ': 2, 'ǚ': 3, 'ǜ': 4,
+      'ă': 3, 'ĕ': 3, 'ĭ': 3, 'ŏ': 3, 'ŭ': 3,
+    }
+    const vowelMap = {
+      'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a', 'ă': 'a',
+      'ē': 'e', 'é': 'e', 'ě': 'e', 'è': 'e', 'ĕ': 'e',
+      'ī': 'i', 'í': 'i', 'ǐ': 'i', 'ì': 'i', 'ĭ': 'i',
+      'ō': 'o', 'ó': 'o', 'ǒ': 'o', 'ò': 'o', 'ŏ': 'o',
+      'ū': 'u', 'ú': 'u', 'ǔ': 'u', 'ù': 'u', 'ŭ': 'u',
+      'ǖ': 'v', 'ǘ': 'v', 'ǚ': 'v', 'ǜ': 'v',
+    }
+
+    let tone = toneParam
+    let clean = text.toLowerCase()
+
+    if (tone === null) {
+      for (const [mark, t] of Object.entries(toneMarks)) {
+        if (clean.includes(mark)) {
+          tone = t
+          break
+        }
+      }
+      const matchNum = clean.match(/(\d)$/)
+      if (matchNum) {
+        tone = parseInt(matchNum[1], 10)
+        clean = clean.replace(/\d$/, '')
+      }
+    } else {
+      // If tone is provided, strip any existing marks/numbers from clean
+      clean = clean.replace(/\d$/, '')
+    }
+
+    // Fully strip tone marks for the lookup
+    for (const [mark, replacement] of Object.entries(vowelMap)) {
+      clean = clean.replaceAll(mark, replacement)
+    }
+
+    if (tone !== null) {
+      const numbered = clean + tone
+      const dbNumbered = numbered.replace('v', 'u:')
+
+      // Find a character that has this exact pinyin.
+      // We prioritize characters where this is the ONLY pronunciation to force clear tones.
+      let charRow = db.prepare(`
+        SELECT simplified FROM characters
+        WHERE (' ' || lower(replace(pinyin, 'u:', 'v')) || ' ') LIKE ?
+        ORDER BY
+          (CASE WHEN lower(replace(pinyin, 'u:', 'v')) = ? OR lower(replace(pinyin, 'u:', 'v')) = (? || ' ' || ?) THEN 0 ELSE 1 END) ASC,
+          (CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END) ASC,
+          hsk_level ASC,
+          length(pinyin) ASC
+        LIMIT 1
+      `).get(`% ${numbered.toLowerCase()} %`, numbered.toLowerCase(), numbered.toLowerCase(), numbered.toLowerCase())
+
+      if (charRow) {
+        text = charRow.simplified
+      }
+    }
+  }
+
+  // Use Edge TTS (Neural Xiaoxiao) for much more natural sound
+  const tts = new EdgeTTS({
+    voice: 'zh-CN-XiaoxiaoNeural',
+    lang: 'zh-CN',
+    outputFormat: 'audio-24khz-96kbitrate-mono-mp3',
+    rate: '-10%' // Slightly slower for better clarity of tones
+  })
+
+  const tmpFile = path.join(os.tmpdir(), `zihai-tts-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`)
+
+  try {
+    await tts.ttsPromise(text, tmpFile)
+    res.set('Content-Type', 'audio/mpeg')
+    res.set('Cache-Control', 'no-cache')
+    const stream = fs.createReadStream(tmpFile)
+    stream.pipe(res)
+    stream.on('end', () => {
+      fs.unlink(tmpFile, () => {})
+    })
+  } catch (edgeErr) {
+    console.error('Edge TTS Error, falling back to Google:', edgeErr.message)
+    // Fallback to Google Translate TTS
+    try {
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=zh-CN&total=1&idx=0&textlen=${text.length}&client=tw-ob&prev=input`
+      const response = await fetch(url, {
+        headers: {
+          'Referer': 'http://translate.google.com/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        },
+      })
+      if (!response.ok) throw new Error(`Google TTS status: ${response.status}`)
+      const buffer = await response.arrayBuffer()
+      res.set('Content-Type', 'audio/mpeg')
+      res.send(Buffer.from(buffer))
+    } catch (googleErr) {
+      console.error('All TTS services failed:', googleErr.message)
+      res.status(502).json({ error: 'All TTS services failed' })
+    }
+  }
 })
 
 app.get('/api/search', (req, res) => {
