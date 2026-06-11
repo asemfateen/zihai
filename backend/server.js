@@ -629,7 +629,7 @@ app.get('/api/search', (req, res) => {
         FROM characters WHERE pinyin_flat LIKE ? OR definition LIKE ?
         ORDER BY is_variant ASC,
           (CASE
-            WHEN pinyin_flat = ? THEN 3
+            WHEN (instr(' ' || replace(replace(replace(replace(replace(pinyin, '1', ''), '2', ''), '3', ''), '4', ''), '5', '') || ' ', ' ' || ? || ' ') > 0) THEN 3
             WHEN definition = ? OR definition LIKE ? OR definition LIKE ? THEN 3
             WHEN pinyin_flat LIKE ? THEN 1
             ELSE 0
@@ -645,7 +645,7 @@ app.get('/api/search', (req, res) => {
         FROM cedict_words WHERE pinyin_flat LIKE ? OR definition LIKE ?
         ORDER BY is_variant ASC,
           (CASE
-            WHEN pinyin_flat = ? THEN 3
+            WHEN (instr(' ' || replace(replace(replace(replace(replace(pinyin, '1', ''), '2', ''), '3', ''), '4', ''), '5', '') || ' ', ' ' || ? || ' ') > 0) THEN 3
             WHEN definition = ? OR definition LIKE ? OR definition LIKE ? THEN 3
             WHEN pinyin_flat LIKE ? THEN 1
             ELSE 0
