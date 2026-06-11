@@ -25,21 +25,35 @@ export function cleanDefinition(def) {
   })
 
   // Filter out empty parts or reference-only metadata
+  const noisePatterns = [
+    'see also',
+    'cl:',
+    'trad. form',
+    'simplified form',
+    'variant of',
+    'erroneously for',
+    'erroneous variant',
+    'abbr. for'
+  ]
+
   const filteredParts = cleanedParts.filter(part => {
     if (!part) return false
     const lower = part.toLowerCase()
-    if (lower.startsWith('see also') || lower.startsWith('cl:')) return false
-    return true
+    return !noisePatterns.some(pattern => lower.includes(pattern))
   })
 
-  // Fall back to original parts or original string if everything got filtered
-  if (filteredParts.length === 0) {
-    const anyCleaned = cleanedParts.filter(p => p.length > 0)
-    if (anyCleaned.length > 0) {
-      return anyCleaned.join('; ')
+  // Deduplicate parts
+  const uniqueParts = []
+  const baseParts = filteredParts.length > 0 ? filteredParts : cleanedParts.filter(p => p.length > 0)
+  for (const part of baseParts) {
+    if (!uniqueParts.includes(part)) {
+      uniqueParts.push(part)
     }
+  }
+
+  if (uniqueParts.length === 0) {
     return def
   }
 
-  return filteredParts.join('; ')
+  return uniqueParts.join('; ')
 }
