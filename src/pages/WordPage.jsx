@@ -11,7 +11,7 @@ import API_BASE, { fetchWithTimeout } from '../api'
 import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon } from '../components/Icons'
 import ExampleSentenceCard from '../components/ExampleSentenceCard'
 import RADICAL_MAP from '../data/radicals'
-import PronunciationSection from '../components/PronunciationSection'
+
 import CustomListsModal from '../components/CustomListsModal'
 
 function WordPage() {
@@ -316,11 +316,6 @@ function WordPage() {
                </div>
             </div>
           )}
-
-          {/* Pronunciation Practice Section */}
-          <div className="md:col-span-12 animate-fade-in [animation-delay:350ms]">
-             <PronunciationSection word={word} />
-          </div>
 
           {/* Stroke Order Section wrapper */}
           <div className="md:col-span-12 animate-fade-in [animation-delay:400ms]">
