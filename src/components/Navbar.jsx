@@ -26,7 +26,6 @@ function Navbar() {
   const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false)
   const [mobileExploreOpen, setMobileExploreOpen] = useState(false)
   const [searchError, setSearchError] = useState(null)
-  const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const debounceRef = useRef(null)
   const abortControllerRef = useRef(null)
   const inputRef = useRef(null)
@@ -183,118 +182,28 @@ function Navbar() {
           />
         </form>
 
-        {/* Centered Google-like Search Bar */}
-        <div ref={containerRef} className="w-full sm:flex-1 sm:max-w-md relative mx-auto">
-          <form onSubmit={handleSubmit} className="w-full">
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search characters, pinyin, or definitions..."
-              value={query}
-              onChange={handleSearch}
-              onKeyDown={handleKeyDown}
-              aria-label="Search characters, pinyin, or definitions"
-              className="w-full px-5 py-3 sm:py-2 bg-card text-text-primary border border-border rounded-full sm:rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-secondary text-base sm:text-sm shadow-sm hover:border-border-hover"
-            />
-          </form>
-
-          {showDropdown && suggestions.length > 0 && (
-            <div
-              className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-y-auto overflow-x-hidden z-50 max-h-72"
-              role="listbox"
-            >
-              {suggestions.map((s, i) => (
-                <div
-                  key={s.id}
-                  onClick={() => handleSelect(s)}
-                  onMouseEnter={() => setFocusedIndex(i)}
-                  role="option"
-                  aria-selected={i === focusedIndex ? 'true' : 'false'}
-                  className={`flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors ${
-                    i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
-                  }`}
-                >
-                  <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
-                  <span className="text-sm text-primary font-medium">{s.pinyin}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {showDropdown && searchError && suggestions.length === 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-red-500/50 rounded-2xl shadow-xl overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
-              {searchError}
-            </div>
-          )}
-        </div>
-
-        {/* Desktop Nav Items */}
-        <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
-          
-          {/* Explore Dropdown */}
-          <div ref={toolsDropdownRef} className="relative">
-            <button
-              onClick={() => setShowToolsDropdown(prev => !prev)}
-              className={`px-3 py-2 border rounded-lg transition-all flex items-center gap-1.5 text-sm font-medium ${
-                showToolsDropdown || ['/radicals', '/pinyin', '/hsk', '/stats', '/history', '/favorites'].some(p => location.pathname.startsWith(p))
-                  ? 'text-primary border-primary bg-primary/5'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <GridIcon className="w-4 h-4" />
-              Explore Tools
-              <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${showToolsDropdown ? 'rotate-90' : 'rotate-0'}`} />
-            </button>
-
-            {showToolsDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 py-1.5 animate-fade-in">
-                <button
-                  onClick={() => { setShowToolsDropdown(false); navigate('/radicals') }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                >
-                  <GridIcon className="w-4 h-4 text-text-secondary" />
-                  Radicals
-                </button>
-                <button
-                  onClick={() => { setShowToolsDropdown(false); navigate('/pinyin') }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                >
-                  <SpeakerIcon className="w-4 h-4 text-text-secondary" />
-                  Pinyin Chart
-                </button>
-                {user && (
-                  <>
-                    <button
-                      onClick={() => { setShowToolsDropdown(false); navigate('/hsk') }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                    >
-                      HSK Levels
-                    </button>
-                    <button
-                      onClick={() => { setShowToolsDropdown(false); navigate('/stats') }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                    >
-                      Stats
-                    </button>
-                    <button
-                      onClick={() => { setShowToolsDropdown(false); navigate('/history') }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                    >
-                      <ClockIcon className="w-4 h-4 text-text-secondary" />
-                      History
-                    </button>
-                    <button
-                      onClick={() => { setShowToolsDropdown(false); navigate('/favorites') }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-surface text-sm text-text-primary transition-colors flex items-center gap-2"
-                    >
-                      <HeartIcon className="w-4 h-4 text-text-secondary" />
-                      Favorites
-                    </button>
-                  </>
-                )}
+        {showDropdown && suggestions.length > 0 && (
+          <div
+            className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
+            role="listbox"
+          >
+            {suggestions.map((s, i) => (
+              <div
+                key={s.id}
+                onClick={() => handleSelect(s)}
+                onMouseEnter={() => setFocusedIndex(i)}
+                role="option"
+                aria-selected={i === focusedIndex ? 'true' : 'false'}
+                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
+                  i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
+                }`}
+              >
+                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
+                <span className="text-sm text-primary">{s.pinyin}</span>
               </div>
-            )}
+            ))}
           </div>
+        )}
 
         {showDropdown && searchError && suggestions.length === 0 && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
@@ -417,31 +326,23 @@ function Navbar() {
         )}
       </div>
 
-      {/* Mobile hamburger menu content */}
+      {/* Mobile hamburger */}
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
+        <button
+          onClick={() => setMobileMenuOpen(prev => !prev)}
+          className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
+        >
+          {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+        </button>
+
         {mobileMenuOpen && user && (
           <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              HSK Levels
-            </button>
-            <button
-              onClick={() => handleNav('/stats')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/stats' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
-            >
-              Stats
-            </button>
-            <button
-              onClick={() => handleNav('/pinyin')}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm ${
-                location.pathname === '/pinyin' ? 'text-primary bg-surface' : 'text-text-primary hover:bg-surface'
-              }`}
-            >
-              Pinyin Chart
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
+              {dark ? 'Light Mode' : 'Dark Mode'}
             </button>
             <div className="border-t border-border" />
             
