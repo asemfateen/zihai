@@ -167,7 +167,33 @@ app.use((err, req, res, next) => {
   next(err)
 })
 
+function recursiveFormatPinyin(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      obj[i] = recursiveFormatPinyin(obj[i]);
+    }
+    return obj;
+  }
+  for (const key of Object.keys(obj)) {
+    if (key === 'pinyin' && typeof obj[key] === 'string') {
+      obj[key] = convertNumberedPinyin(obj[key]);
+    } else if (typeof obj[key] === 'object') {
+      obj[key] = recursiveFormatPinyin(obj[key]);
+    }
+  }
+  return obj;
+}
+
 app.use('/api/', (req, res, next) => {
+  const originalJson = res.json;
+  res.json = function (body) {
+    if (body) {
+      body = recursiveFormatPinyin(body);
+    }
+    return originalJson.call(this, body);
+  };
+  
   if (['/login', '/register', '/forgot-password', '/reset-password', '/ping'].includes(req.path)) {
     return next()
   }
