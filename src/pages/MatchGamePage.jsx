@@ -98,10 +98,10 @@ export default function MatchGamePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10 text-text-primary flex items-center justify-center">
+      <div className="min-h-screen bg-background relative z-10 text-text-primary flex items-center justify-center">
         <Navbar />
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-24 h-24 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl mb-8"></div>
+          <div className="w-24 h-24 bg-card btn-brutal mb-8"></div>
           <div className="text-xl font-bold">Shuffling Cards...</div>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function MatchGamePage() {
 
   if (gameOver) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+      <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
         <Navbar />
         <div className="max-w-2xl mx-auto px-4 py-16 text-center animate-fade-in">
           <h1 className="text-5xl font-black mb-4">You Won!</h1>
@@ -120,13 +120,13 @@ export default function MatchGamePage() {
           <div className="flex justify-center gap-4">
             <button 
               onClick={startNewGame}
-              className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20 transition-all text-lg"
+              className="px-8 py-4 bg-primary text-white rounded-xl font-bold    transition-all text-lg"
             >
               Play Again
             </button>
             <Link 
               to="/"
-              className="px-8 py-4 bg-surface text-text-primary border border-border/50 rounded-2xl font-bold hover:-translate-y-1 hover:shadow-xl transition-all text-lg"
+              className="px-8 py-4 bg-surface text-text-primary btn-brutal font-bold   transition-all text-lg"
             >
               Back to Home
             </Link>
@@ -137,12 +137,12 @@ export default function MatchGamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+    <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         
         {/* Header Bar */}
-        <div className="flex justify-between items-center mb-8 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm">
+        <div className="flex justify-between items-center mb-8 bg-card btn-brutal p-6 ">
            <div>
              <span className="text-text-secondary text-sm font-bold uppercase tracking-wider">Moves</span>
              <div className="text-2xl font-black">{moves}</div>
@@ -166,12 +166,12 @@ export default function MatchGamePage() {
               <div 
                 key={card.id}
                 onClick={() => handleCardClick(index)}
-                className={`relative w-full aspect-square cursor-pointer transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''} ${isMatched ? 'opacity-50 scale-95' : 'hover:-translate-y-1 hover:shadow-lg'}`}
+                className={`relative w-full aspect-square cursor-pointer transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''} ${isMatched ? 'opacity-50 scale-95' : ' '}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Back of Card */}
                 <div 
-                  className="absolute inset-0 backface-hidden bg-primary/10 border-2 border-primary/20 rounded-2xl flex items-center justify-center text-primary/30"
+                  className="absolute inset-0 backface-hidden bg-primary/10 border-2 border-primary/20 rounded-xl flex items-center justify-center text-primary/30"
                   style={{ backfaceVisibility: 'hidden' }}
                 >
                    <span className="text-4xl font-black">?</span>
@@ -179,7 +179,7 @@ export default function MatchGamePage() {
                 
                 {/* Front of Card */}
                 <div 
-                  className={`absolute inset-0 backface-hidden border-2 rounded-2xl flex flex-col items-center justify-center p-2 text-center rotate-y-180 ${isMatched ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-card/90 backdrop-blur-xl border-border/50'}`}
+                  className={`absolute inset-0 backface-hidden border-2 rounded-xl flex flex-col items-center justify-center p-2 text-center rotate-y-180 ${isMatched ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-card border-border/50'}`}
                   style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
                   {card.type === 'hanzi' ? (

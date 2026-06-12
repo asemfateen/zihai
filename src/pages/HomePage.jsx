@@ -28,10 +28,10 @@ function GuestHome() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10">
+    <div className="min-h-screen bg-background relative z-10">
       <Navbar />
       <div className="flex flex-col items-center justify-center px-4 pt-16 sm:pt-24 pb-20 max-w-4xl mx-auto">
-        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent mb-4 tracking-tight drop-shadow-sm text-center">
+        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-text-primary mb-4 tracking-tight drop-shadow-sm text-center">
           字海
         </h1>
         <p className="text-lg sm:text-xl md:text-2xl text-text-secondary mb-8 sm:mb-12 font-light text-center">
@@ -45,7 +45,7 @@ function GuestHome() {
               placeholder="Search characters, pinyin, or definitions..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 px-4 sm:px-5 py-3 bg-card/80 backdrop-blur-md text-text-primary text-base sm:text-lg border border-border/50 rounded-xl outline-none focus:border-primary transition-all placeholder:text-text-secondary focus:ring-2 focus:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+              className="flex-1 px-4 sm:px-5 py-3 bg-card text-text-primary text-base sm:text-lg btn-brutal outline-none focus:border-primary transition-all placeholder:text-text-secondary focus:ring-2 focus:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
             />
             <button
               type="submit"
@@ -100,7 +100,7 @@ function AuthedHome() {
   }, [fetchData])
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 pb-20">
+    <div className="min-h-screen bg-background relative z-10 pb-20">
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -118,9 +118,9 @@ function AuthedHome() {
             onClick={() => navigate('/flashcards')}
             className="col-span-2 md:row-span-2 bg-card btn-brutal p-6 md:p-8 cursor-pointer relative overflow-hidden group flex flex-col justify-between animate-fade-in [animation-delay:100ms] min-h-[200px]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative z-10 flex items-center justify-between">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                 <FlashcardIcon className="w-7 h-7" />
               </div>
               <p className="text-xs font-bold uppercase tracking-widest text-text-primary bg-primary px-3 py-1 border-[3px] border-border rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Due Today</p>
@@ -192,7 +192,7 @@ function AuthedHome() {
             className="col-span-2 md:col-span-2 md:row-span-1 bg-secondary btn-brutal p-6 flex items-center justify-between cursor-pointer group animate-fade-in [animation-delay:350ms] min-h-[120px]"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 group-hover:rotate-3 transition-transform">
                 <HeartIcon className="w-7 h-7" />
               </div>
               <div>
@@ -210,7 +210,7 @@ function AuthedHome() {
             className="col-span-2 md:col-span-2 md:row-span-1 bg-cta btn-brutal p-6 flex items-center justify-between cursor-pointer group animate-fade-in [animation-delay:400ms] min-h-[120px]"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 group-hover:-rotate-3 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 group-hover:-rotate-3 transition-transform">
                 <ClockIcon className="w-7 h-7" />
               </div>
               <div>

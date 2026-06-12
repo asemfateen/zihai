@@ -10,10 +10,6 @@ export default function AchievementsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchAchievements();
-  }, []);
-
   const fetchAchievements = async () => {
     try {
       setLoading(true);
@@ -30,6 +26,10 @@ export default function AchievementsPage() {
     }
   };
 
+  useEffect(() => {
+    fetchAchievements();
+  }, []);
+
   const unlockedCount = achievements.filter(a => a.is_unlocked).length;
   const totalCount = achievements.length;
   const progressPercentage = totalCount === 0 ? 0 : Math.round((unlockedCount / totalCount) * 100);
@@ -42,7 +42,7 @@ export default function AchievementsPage() {
         {/* Header Section */}
         <div className="mb-12 relative">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-4 bg-orange-500/20 text-orange-400 rounded-2xl">
+            <div className="p-4 bg-orange-500/20 text-orange-400 rounded-xl">
               <Trophy size={40} strokeWidth={1.5} />
             </div>
             <div>
@@ -53,7 +53,7 @@ export default function AchievementsPage() {
           
           {/* Global Progress */}
           {!loading && !error && (
-            <div className="bg-card/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 mt-8 max-w-2xl shadow-xl">
+            <div className="bg-card btn-brutal border border-border rounded-xl p-6 mt-8 max-w-2xl ">
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <h2 className="text-lg font-semibold text-text flex items-center gap-2">
@@ -67,7 +67,7 @@ export default function AchievementsPage() {
                   {progressPercentage}%
                 </div>
               </div>
-              <div className="w-full bg-surface/80 rounded-full h-3 overflow-hidden shadow-inner">
+              <div className="w-full bg-surface rounded-full h-3 overflow-hidden ">
                 <div 
                   className="h-full rounded-full bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-500 transition-all duration-1000"
                   style={{ width: `${progressPercentage}%` }}

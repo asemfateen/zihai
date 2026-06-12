@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
+import { cleanDefinition } from '../utils/text'
 import { CheckIcon, SpeakerIcon, XIcon } from '../components/Icons'
 import StrokeOrderSection from '../components/StrokeOrderSection'
 import confetti from 'canvas-confetti'
@@ -199,11 +200,11 @@ function FlashcardsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10">
+      <div className="min-h-screen bg-background relative z-10">
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           <div className="skeleton w-full h-3 rounded-full" />
-          <div className="skeleton w-full min-h-80 rounded-2xl" />
+          <div className="skeleton w-full min-h-80 rounded-xl" />
           <div className="flex gap-4">
             <div className="skeleton flex-1 h-14 rounded-xl" />
             <div className="skeleton flex-1 h-14 rounded-xl" />
@@ -215,7 +216,7 @@ function FlashcardsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10">
+      <div className="min-h-screen bg-background relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <p className="text-lg font-medium text-red-400 mb-2">Something went wrong.</p>
@@ -233,7 +234,7 @@ function FlashcardsPage() {
 
   if (cards.length === 0) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10">
+      <div className="min-h-screen bg-background relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-primary/20">
@@ -254,7 +255,7 @@ function FlashcardsPage() {
 
   if (complete) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10">
+      <div className="min-h-screen bg-background relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6">
@@ -278,7 +279,7 @@ function FlashcardsPage() {
                 setSkippedIds(new Set())
                 setAnimating(false)
               }}
-              className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+              className="px-6 py-3 bg-surface border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
               Review Again
             </button>
@@ -294,7 +295,7 @@ function FlashcardsPage() {
                 setAnimating(false)
                 fetchDueCardsRef.current()
               }}
-              className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+              className="px-6 py-3 bg-surface border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
             >
               Study More
             </button>
@@ -314,11 +315,11 @@ function FlashcardsPage() {
   const card = cards[currentIndex]
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10">
+    <div className="min-h-screen bg-background relative z-10">
       <Navbar />
       <div className="max-w-lg mx-auto px-4 py-6">
         {toast && (
-          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
+          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card btn-brutal  text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
             {toast}
           </div>
         )}
@@ -337,7 +338,7 @@ function FlashcardsPage() {
               <XIcon className="w-5 h-5" />
             </button>
           </div>
-          <div className="w-full h-3 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-surface rounded-full overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
@@ -352,21 +353,21 @@ function FlashcardsPage() {
               if (cardPhase === 'idle' && !flipped) setFlipped(true)
             }}
             className={`flashcard-flipper w-full min-h-[300px] sm:min-h-[400px] cursor-pointer group ${
-              flipped ? 'is-flipped' : 'hover:-translate-y-2'
+              flipped ? 'is-flipped' : ''
             } transition-transform duration-300`}
           >
             {/* Front */}
-            <div className="flashcard-face bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl flex flex-col items-center justify-center p-8 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/20 transition-all duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+            <div className="flashcard-face bg-card btn-brutal flex flex-col items-center justify-center p-8  group- group- transition-all duration-300">
+              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
               <p className="text-8xl sm:text-9xl font-black text-text-primary mb-6 select-none drop-shadow-sm relative z-10 group-hover:scale-105 transition-transform duration-300">
                 {card.character || card.simplified}
               </p>
-              <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface/50 px-4 py-2 rounded-full border border-border/50 relative z-10 shadow-sm">Tap to reveal</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface px-4 py-2 rounded-full border border-border/50 relative z-10 ">Tap to reveal</p>
             </div>
 
             {/* Back */}
-            <div className="flashcard-face flashcard-face--back bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl flex flex-col items-center justify-center p-8 shadow-xl shadow-primary/10">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-100 rounded-3xl"></div>
+            <div className="flashcard-face flashcard-face--back bg-card btn-brutal flex flex-col items-center justify-center p-8  shadow-primary/10">
+              <div className="absolute inset-0 bg-primary/10 opacity-100 rounded-xl"></div>
               <div className="relative z-10 flex flex-col items-center">
                 <div className="flex items-center gap-4 mb-6">
                   <p className="text-3xl sm:text-4xl font-bold text-primary drop-shadow-sm">{card.pinyin}</p>
@@ -375,13 +376,13 @@ function FlashcardsPage() {
                       e.stopPropagation()
                       speak()
                     }}
-                    className="flex items-center justify-center w-12 h-12 rounded-full bg-surface/80 backdrop-blur-xl border border-border/50 text-text-secondary hover:text-primary hover:border-primary hover:shadow-md hover:shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center justify-center w-12 h-12 rounded-full bg-surface border border-border/50 text-text-secondary hover:text-primary hover:border-primary hover:  transition-all hover:scale-105 active:scale-95"
                   >
                     <SpeakerIcon className="w-6 h-6" />
                   </button>
                 </div>
-                <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-3 bg-surface inline-block px-3 py-1 rounded-full border border-border shadow-sm">Definition</h3>
-                <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{card.english_definition || card.definition || 'No definition available'}</p>
+                <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-3 bg-surface inline-block px-3 py-1 rounded-full border border-border ">Definition</h3>
+                <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{cleanDefinition(card.english_definition || card.definition) || 'No definition available'}</p>
               </div>
             </div>
           </div>
@@ -393,21 +394,21 @@ function FlashcardsPage() {
             <button
               onClick={() => handleResult(0)}
               disabled={animating}
-              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-red-500/50 text-red-400 rounded-2xl font-bold text-lg hover:border-red-500 hover:bg-red-500/10 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="flex-1 py-4 bg-surface border-2 border-red-500/50 text-red-400 rounded-xl font-bold text-lg hover:border-red-500 hover:bg-red-500/10   hover:shadow-red-500/20 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Forgot
             </button>
             <button
               onClick={handleSkip}
               disabled={animating}
-              className="flex-1 py-4 bg-surface/80 backdrop-blur-xl border-2 border-border/50 text-text-secondary rounded-2xl font-bold text-lg hover:border-text-primary hover:text-text-primary hover:-translate-y-1 hover:shadow-lg transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="flex-1 py-4 bg-surface border-2 border-border/50 text-text-secondary rounded-xl font-bold text-lg hover:border-text-primary hover:text-text-primary   transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Skip
             </button>
             <button
               onClick={() => handleResult(4)}
               disabled={animating}
-              className="flex-1 py-4 bg-primary text-text-primary rounded-2xl font-bold text-lg hover:bg-primary-hover hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/30 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="flex-1 py-4 bg-primary text-text-primary rounded-xl font-bold text-lg hover:bg-primary-hover   hover:shadow-primary/30 transition-all active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               Remembered
             </button>

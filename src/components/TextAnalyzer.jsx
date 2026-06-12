@@ -55,7 +55,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
   }
 
   const containerClass = cardStyle 
-    ? "bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm animate-fade-in mb-8"
+    ? "bg-card btn-brutal p-6 sm:p-8  animate-fade-in mb-8"
     : "w-full"
 
   return (
@@ -66,7 +66,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
           <p className="text-sm text-text-secondary mb-4 font-medium">Paste Chinese text below to break it down into words, show pinyin, and get English definitions.</p>
           
           <textarea
-            className="w-full h-32 bg-surface/50 border border-border rounded-2xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans text-sm sm:text-base"
+            className="w-full h-32 bg-surface border border-border rounded-xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans text-sm sm:text-base"
             placeholder="Paste Chinese text here..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -76,7 +76,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
             <button
               onClick={handleAnalyze}
               disabled={loading || !text.trim()}
-              className="bg-primary text-text-primary px-5 py-2.5 rounded-2xl font-bold transition-all hover:scale-102 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer text-sm sm:text-base"
+              className="bg-primary text-text-primary px-5 py-2.5 rounded-xl font-bold transition-all hover:scale-102 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer text-sm sm:text-base"
             >
               {loading && <Spinner className="w-4 h-4 text-text-primary animate-spin" />}
               Analyze Text
@@ -87,7 +87,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
       )}
 
       {tokens.length > 0 && (
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm animate-fade-in [animation-delay:100ms] mb-8">
+        <div className="bg-card btn-brutal p-6 sm:p-8  animate-fade-in [animation-delay:100ms] mb-8">
           <div className="flex justify-between items-center mb-6">
             <h4 className="text-lg font-bold text-text-primary">Analysis Result</h4>
             <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
                 onClick={() => setShowEnglish(!showEnglish)}
                 className={`px-3 py-1.5 rounded-xl font-medium text-xs sm:text-sm transition-colors cursor-pointer border ${
                   showEnglish 
-                    ? 'bg-primary border-primary text-white shadow-sm' 
+                    ? 'bg-primary border-primary text-white ' 
                     : 'bg-surface border-border/50 text-text-secondary hover:bg-primary/10 hover:text-primary hover:border-primary/30'
                 }`}
               >
@@ -121,7 +121,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
               return (
                 <div key={idx} className="group relative inline-flex flex-col items-center mx-1 align-bottom cursor-pointer hover:scale-110 transition-transform">
                   {/* Tooltip */}
-                  <div className="absolute bottom-full mb-10 w-48 p-3 bg-surface border border-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none scale-95 group-hover:scale-100">
+                  <div className="absolute bottom-full mb-10 w-48 p-3 bg-surface border border-border rounded-xl  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none scale-95 group-hover:scale-100">
                     <div className="font-bold text-lg mb-1 text-text-primary">{token.text}</div>
                     <div className="text-primary font-medium text-sm mb-1">{token.pinyin}</div>
                     <div className="text-xs text-text-secondary line-clamp-3">{token.definition || 'No definition found'}</div>

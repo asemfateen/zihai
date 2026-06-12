@@ -5,6 +5,7 @@ import API_BASE, { fetchWithTimeout } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import confetti from 'canvas-confetti'
+import { cleanDefinition } from '../utils/text'
 
 export default function QuizPage() {
   const { user } = useAuth()
@@ -77,10 +78,10 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10 text-text-primary flex items-center justify-center">
+      <div className="min-h-screen bg-background relative z-10 text-text-primary flex items-center justify-center">
         <Navbar />
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-32 h-32 bg-card/80 backdrop-blur-xl border border-border/50 rounded-full mb-8"></div>
+          <div className="w-32 h-32 bg-card btn-brutal border border-border/50 rounded-full mb-8"></div>
           <div className="text-xl font-bold">Generating Quiz...</div>
         </div>
       </div>
@@ -89,7 +90,7 @@ export default function QuizPage() {
 
   if (gameOver) {
     return (
-      <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+      <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
         <Navbar />
         <div className="max-w-2xl mx-auto px-4 py-16 text-center animate-fade-in">
           <h1 className="text-5xl font-black mb-4">Quiz Complete!</h1>
@@ -98,13 +99,13 @@ export default function QuizPage() {
           <div className="flex justify-center gap-4">
             <button 
               onClick={startQuiz}
-              className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20 transition-all text-lg"
+              className="px-8 py-4 bg-primary text-white rounded-xl font-bold    transition-all text-lg"
             >
               Play Again
             </button>
             <Link 
               to="/"
-              className="px-8 py-4 bg-surface text-text-primary border border-border/50 rounded-2xl font-bold hover:-translate-y-1 hover:shadow-xl transition-all text-lg"
+              className="px-8 py-4 bg-surface text-text-primary btn-brutal font-bold   transition-all text-lg"
             >
               Back to Home
             </Link>
@@ -118,12 +119,12 @@ export default function QuizPage() {
   if (!q) return null
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+    <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8">
         
         {/* Header Bar */}
-        <div className="flex justify-between items-center mb-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm">
+        <div className="flex justify-between items-center mb-12 bg-card btn-brutal p-6 ">
            <div>
              <span className="text-text-secondary text-sm font-bold uppercase tracking-wider">Question</span>
              <div className="text-2xl font-black">{currentIndex + 1} / {questions.length}</div>
@@ -139,7 +140,7 @@ export default function QuizPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-12 text-center mb-8 shadow-lg">
+        <div className="bg-card btn-brutal p-12 text-center mb-8 ">
           <div className="text-2xl text-primary font-bold mb-4">{q.pinyin}</div>
           <div className="text-8xl font-black">{q.character}</div>
         </div>
@@ -147,10 +148,10 @@ export default function QuizPage() {
         {/* Options */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {q.options.map((opt, i) => {
-            let btnClass = "bg-surface border border-border/50 text-text-primary hover:border-primary/50 hover:bg-primary/5 hover:-translate-y-1 hover:shadow-md"
+            let btnClass = "bg-surface border border-border/50 text-text-primary hover:border-primary/50 hover:bg-primary/5  hover:"
             if (selectedOption !== null) {
               if (opt === q.answer) {
-                btnClass = "bg-emerald-500 border-emerald-600 text-white scale-105 shadow-xl shadow-emerald-500/20 z-10"
+                btnClass = "bg-emerald-500 border-emerald-600 text-white scale-105  shadow-emerald-500/20 z-10"
               } else if (opt === selectedOption) {
                 btnClass = "bg-rose-500 border-rose-600 text-white opacity-50"
               } else {
@@ -163,9 +164,9 @@ export default function QuizPage() {
                 key={i}
                 disabled={selectedOption !== null}
                 onClick={() => handleSelect(opt)}
-                className={`p-6 rounded-3xl text-left font-medium transition-all duration-300 ${btnClass}`}
+                className={`p-6 rounded-xl text-left font-medium transition-all duration-300 ${btnClass}`}
               >
-                {opt}
+                {cleanDefinition(opt)}
               </button>
             )
           })}

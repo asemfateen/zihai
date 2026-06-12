@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"node backend/server.js\"",
     "start": "node backend/server.js",
+    "start:prod": "NODE_ENV=production node backend/server.js",
     "seed": "node backend/seed_stories.js",
     "build": "vite build",
     "preview": "vite preview",
@@ -15,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.10.0",
     "canvas-confetti": "^1.9.4",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

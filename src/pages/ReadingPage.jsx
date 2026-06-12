@@ -33,14 +33,14 @@ function ReadingPage() {
   }, {})
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+    <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Graded Reading</h1>
         
         {loading ? (
            <div className="animate-pulse flex flex-col gap-4">
-             {[1,2,3].map(i => <div key={i} className="h-24 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl" />)}
+             {[1,2,3].map(i => <div key={i} className="h-24 bg-card btn-brutal" />)}
            </div>
         ) : stories.length === 0 ? (
           <p className="text-text-secondary">No stories available.</p>
@@ -59,7 +59,7 @@ function ReadingPage() {
                     <Link
                       key={story.id}
                       to={`/reading/${story.id}`}
-                      className="group bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 block"
+                      className="group bg-card btn-brutal p-6 transition-all    hover:border-primary/50 block"
                       style={{ animationDelay: `${i * 100}ms` }}
                     >
                       <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{story.title}</h3>

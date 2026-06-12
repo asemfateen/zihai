@@ -75,7 +75,7 @@ function SearchPage() {
   }, [q, user, saveHistory])
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10">
+    <div className="min-h-screen bg-background relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h2 className="text-xl text-text-secondary mb-6 break-words">
@@ -85,7 +85,7 @@ function SearchPage() {
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
+              <div key={i} className="bg-card btn-brutal p-5">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-14 h-14 rounded-lg" />
                   <div className="flex-1 space-y-2">

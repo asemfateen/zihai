@@ -41,7 +41,7 @@ const AchievementsPage = lazy(() => import('./pages/AchievementsPage'))
 
 function PageSuspense({ children }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center"><Spinner size={40} /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-background relative z-10 flex items-center justify-center"><Spinner size={40} /></div>}>
       {children}
     </Suspense>
   )
@@ -49,7 +49,7 @@ function PageSuspense({ children }) {
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-transparent relative z-10 relative overflow-hidden z-0">
+    <div className="min-h-screen bg-background relative z-10 relative overflow-hidden z-0">
       {/* Neubrutalism solid background relies on index.css, no blobs needed */}
       <CommandPalette />
       <ScrollRestoration />

@@ -126,3 +126,19 @@ CREATE TABLE IF NOT EXISTS reading_stories (
   hsk_level INTEGER NOT NULL,
   content TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS custom_lists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS custom_list_words (
+  list_id INTEGER NOT NULL,
+  word_id INTEGER NOT NULL,
+  added_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (list_id, word_id),
+  FOREIGN KEY (list_id) REFERENCES custom_lists(id) ON DELETE CASCADE
+);

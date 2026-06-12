@@ -110,11 +110,11 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-background/60 backdrop-blur-md transition-opacity duration-300"
+        className="absolute inset-0 bg-background/90 transition-opacity duration-300"
       />
 
       {/* Modal Content */}
-      <div className="relative bg-card/90 backdrop-blur-2xl border border-border/50 rounded-3xl p-6 w-full max-w-md shadow-2xl overflow-hidden animate-fade-in">
+      <div className="relative bg-card btn-brutal p-6 w-full max-w-md  overflow-hidden animate-fade-in">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-text-primary">Add to Vocabulary List</h3>
           <button
@@ -145,7 +145,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
             lists.map(list => (
               <label
                 key={list.id}
-                className="flex items-center gap-3 p-3 bg-surface/40 hover:bg-surface/80 border border-border/30 rounded-2xl cursor-pointer transition-all duration-200"
+                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface border border-border/30 rounded-xl cursor-pointer transition-all duration-200"
               >
                 <input
                   type="checkbox"
@@ -176,14 +176,14 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
               value={newListName}
               onChange={e => setNewListName(e.target.value)}
               required
-              className="w-full px-4 py-2 bg-surface/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full px-4 py-2 bg-surface btn-brutal text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <input
               type="text"
               placeholder="Description (optional)"
               value={newListDesc}
               onChange={e => setNewListDesc(e.target.value)}
-              className="w-full px-4 py-2 bg-surface/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full px-4 py-2 bg-surface btn-brutal text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <button
               type="submit"

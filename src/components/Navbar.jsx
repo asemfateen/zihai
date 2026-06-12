@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../hooks/useTheme'
-import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
+import { HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
 
 function ChevronDownIcon(props) {
   return (
@@ -30,7 +28,6 @@ function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
-  const { dark, toggle: toggleTheme } = useTheme()
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
@@ -174,7 +171,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between px-3 sm:px-6 py-4 bg-card border-b-[3px] border-border sticky top-0 z-50 transition-colors">
+    <nav className="flex items-center justify-between px-3 sm:px-6 py-4 bg-card btn-brutal border-b-[3px] border-border sticky top-0 z-50 transition-colors">
       <div className="flex-shrink-0">
         <Link viewTransition to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
           字海 Zihai
@@ -197,7 +194,7 @@ function Navbar() {
 
         {showDropdown && suggestions.length > 0 && (
           <div
-            className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
+            className="absolute top-full left-0 right-0 mt-1 bg-card btn-brutal border border-border rounded-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
             role="listbox"
           >
             {suggestions.map((s, i) => (
@@ -219,7 +216,7 @@ function Navbar() {
         )}
 
         {showDropdown && searchError && suggestions.length === 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-card btn-brutal border border-red-400 rounded-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
             {searchError}
           </div>
         )}
@@ -242,7 +239,7 @@ function Navbar() {
           </button>
 
           {exploreDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-card border-[3px] border-border rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-2 z-50">
+            <div className="absolute right-0 mt-3 w-56 bg-card btn-brutal border-[3px] border-border rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-2 z-50">
               <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/radicals'); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
@@ -330,13 +327,7 @@ function Navbar() {
             </div>
           )}
         </div>
-        <button
-          onClick={toggleTheme}
-          className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
-          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
-        </button>
+
         {user ? (
           <>
             <button
@@ -348,16 +339,6 @@ function Navbar() {
               }`}
             >
               <UserIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              className={`p-2 border rounded-lg transition-colors cursor-pointer ${
-                location.pathname === '/settings'
-                  ? 'text-primary border-primary bg-primary/5'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
-              }`}
-            >
-              <span className="w-4 h-4 flex items-center justify-center text-xs">⚙️</span>
             </button>
             <button
               onClick={handleLogout}
@@ -394,16 +375,7 @@ function Navbar() {
         </button>
 
         {mobileMenuOpen && user && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
-            >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
-            </button>
-            <div className="border-t border-border" />
-            
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
@@ -416,7 +388,7 @@ function Navbar() {
             </button>
 
             {mobileExploreOpen && (
-              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
+              <div className="bg-surface border-t border-border/50 py-1 pl-4">
                 <button
                   onClick={() => handleNav('/radicals')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
@@ -514,16 +486,7 @@ function Navbar() {
         )}
 
         {mobileMenuOpen && !user && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
-            >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
-            </button>
-            <div className="border-t border-border" />
-            
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
@@ -536,7 +499,7 @@ function Navbar() {
             </button>
 
             {mobileExploreOpen && (
-              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
+              <div className="bg-surface border-t border-border/50 py-1 pl-4">
                 <button
                   onClick={() => handleNav('/radicals')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}

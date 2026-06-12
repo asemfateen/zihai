@@ -61,9 +61,9 @@ export default function CommandPalette() {
     <dialog 
       ref={dialogRef}
       onClick={handleClose}
-      className="backdrop:bg-background/80 backdrop:backdrop-blur-sm bg-transparent w-full max-w-2xl mt-[10vh] mx-auto p-4 rounded-3xl outline-none"
+      className="backdrop:bg-background/90 bg-transparent w-full max-w-2xl mt-[10vh] mx-auto p-4 rounded-xl outline-none"
     >
-      <div className="bg-card/90 backdrop-blur-xl border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="bg-card btn-brutal border border-border rounded-xl overflow-hidden flex flex-col">
         <div className="flex items-center px-4 border-b border-border/50">
           <SearchIcon className="w-5 h-5 text-text-secondary" />
           <input 

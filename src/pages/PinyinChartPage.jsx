@@ -96,18 +96,18 @@ function PinyinChartPage() {
   const validFinals = VALID_COMBINATIONS[selectedInitial] || []
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
+    <div className="min-h-screen bg-background relative z-10 text-text-primary">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="mb-8 animate-fade-in">
-          <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-primary via-blue-500 to-emerald-500 bg-clip-text text-transparent drop-shadow-sm">Pinyin Sound Chart</h1>
+          <h1 className="text-4xl sm:text-5xl font-black mb-4 text-text-primary drop-shadow-sm">Pinyin Sound Chart</h1>
           <p className="text-lg text-text-secondary font-medium">Click any initial, combine with a final, and tap tones to hear correct pronunciations.</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] group relative overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">1. Select Initials</h3>
+          <div className="md:col-span-12 bg-card btn-brutal p-6 sm:p-8     transition-all animate-fade-in [animation-delay:100ms] group relative overflow-hidden">
+             <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 ">1. Select Initials</h3>
              <div className="flex flex-wrap gap-2.5 relative z-10">
                {INITIALS.map((init) => (
                  <button
@@ -116,10 +116,10 @@ function PinyinChartPage() {
                      setSelectedInitial(init.value)
                      setSelectedSyllable(null)
                    }}
-                   className={`px-5 py-3 rounded-2xl text-sm font-bold transition-all border ${
+                   className={`px-5 py-3 rounded-xl text-sm font-bold transition-all border ${
                      selectedInitial === init.value
-                       ? 'bg-primary border-primary text-text-primary shadow-md shadow-primary/20 scale-105'
-                       : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-secondary hover:border-primary/50 hover:bg-surface hover:-translate-y-0.5'
+                       ? 'bg-primary border-primary text-text-primary  shadow-primary/20 scale-105'
+                       : 'bg-surface border-border/50 text-text-secondary hover:border-primary/50 hover:bg-surface hover:-translate-y-0.5'
                    }`}
                  >
                    {init.label || 'None'}
@@ -128,9 +128,9 @@ function PinyinChartPage() {
              </div>
           </div>
 
-          <div className="md:col-span-8 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:200ms] group relative overflow-hidden min-h-[300px]">
+          <div className="md:col-span-8 bg-card btn-brutal p-6 sm:p-8   hover:shadow-blue-500/10  transition-all animate-fade-in [animation-delay:200ms] group relative overflow-hidden min-h-[300px]">
              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">2. Combines into Syllable</h3>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 ">2. Combines into Syllable</h3>
              <div className="relative z-10">
                {validFinals.length > 0 ? (
                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -140,10 +140,10 @@ function PinyinChartPage() {
                        <button
                          key={fn}
                          onClick={() => setSelectedSyllable(syl)}
-                         className={`p-4 rounded-2xl text-lg font-bold transition-all border text-center ${
+                         className={`p-4 rounded-xl text-lg font-bold transition-all border text-center ${
                            selectedSyllable === syl
-                             ? 'bg-blue-500/20 border-blue-500 text-blue-500 shadow-md shadow-blue-500/20 scale-105'
-                             : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-blue-500/50 hover:bg-surface hover:-translate-y-0.5'
+                             ? 'bg-blue-500/20 border-blue-500 text-blue-500  shadow-blue-500/20 scale-105'
+                             : 'bg-surface border-border/50 text-text-primary hover:border-blue-500/50 hover:bg-surface hover:-translate-y-0.5'
                          }`}
                        >
                          {syl}
@@ -159,13 +159,13 @@ function PinyinChartPage() {
              </div>
           </div>
 
-          <div className="md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:300ms] group relative overflow-hidden flex flex-col justify-start">
+          <div className="md:col-span-4 bg-card btn-brutal p-6 sm:p-8   hover:shadow-emerald-500/10  transition-all animate-fade-in [animation-delay:300ms] group relative overflow-hidden flex flex-col justify-start">
              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 shadow-sm">3. Play Tones</h3>
+             <h3 className="text-xs uppercase font-black text-text-secondary tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border relative z-10 ">3. Play Tones</h3>
              <div className="relative z-10 flex-1 flex flex-col">
                {selectedSyllable ? (
                  <div className="space-y-3 mt-2 flex-1">
-                   <p className="text-center text-xl font-medium mb-6 bg-surface/50 py-3 rounded-2xl border border-border/50 shadow-sm">
+                   <p className="text-center text-xl font-medium mb-6 bg-surface py-3 rounded-xl border border-border/50 ">
                      Syllable: <span className="text-emerald-500 font-black ml-2 text-2xl">{selectedSyllable}</span>
                    </p>
                    {[1, 2, 3, 4].map((tone) => {
@@ -175,10 +175,10 @@ function PinyinChartPage() {
                        <button
                          key={tone}
                          onClick={() => speakSyllable(selectedSyllable, tone)}
-                         className={`w-full p-4 border rounded-2xl flex items-center justify-between transition-all hover:scale-105 active:scale-95 ${
+                         className={`w-full p-4 border rounded-xl flex items-center justify-between transition-all hover:scale-105 active:scale-95 ${
                            isActive
-                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500 animate-pulse shadow-md shadow-emerald-500/20'
-                             : 'bg-surface/80 backdrop-blur-xl border-border/50 text-text-primary hover:border-emerald-500/50 hover:bg-emerald-500/5'
+                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500 animate-pulse  shadow-emerald-500/20'
+                             : 'bg-surface border-border/50 text-text-primary hover:border-emerald-500/50 hover:bg-emerald-500/5'
                          }`}
                        >
                          <div className="flex flex-col items-start gap-1">

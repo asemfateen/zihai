@@ -129,6 +129,19 @@ export function useHanziWriter(word) {
     }
   }, [word])
 
+  const cancelQuiz = useCallback((charIndex) => {
+    const writer = writersRef.current[charIndex]
+    if (writer && typeof writer.cancelQuiz === 'function') {
+      writer.cancelQuiz()
+    }
+    setActiveQuizIndex(-1)
+    setQuizStates((prev) => {
+      const copy = { ...prev }
+      delete copy[charIndex]
+      return copy
+    })
+  }, [])
+
   const playFromIndex = useCallback(
     (startIndex) => {
       if (!word || !writersReady) return
@@ -291,19 +304,6 @@ export function useHanziWriter(word) {
       }
     })
   }, [isPlaying])
-
-  const cancelQuiz = useCallback((charIndex) => {
-    const writer = writersRef.current[charIndex]
-    if (writer && typeof writer.cancelQuiz === 'function') {
-      writer.cancelQuiz()
-    }
-    setActiveQuizIndex(-1)
-    setQuizStates((prev) => {
-      const copy = { ...prev }
-      delete copy[charIndex]
-      return copy
-    })
-  }, [])
 
   return {
     writerRefs,

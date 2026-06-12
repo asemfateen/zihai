@@ -44,7 +44,7 @@ function StrokeOrderSection({ word }) {
   )
 
   return (
-    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 mb-6 shadow-xl relative overflow-hidden transition-all duration-300">
+    <div className="bg-card btn-brutal p-6 mb-6  relative overflow-hidden transition-all duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-bold text-text-primary">Stroke Order & Practice</h2>
@@ -54,7 +54,7 @@ function StrokeOrderSection({ word }) {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex bg-surface/80 p-1 rounded-xl border border-border/50 self-start sm:self-auto">
+        <div className="flex bg-surface p-1 rounded-xl border border-border/50 self-start sm:self-auto">
           <button
             onClick={() => {
               setMode('learn')
@@ -96,9 +96,9 @@ function StrokeOrderSection({ word }) {
                   onKeyDown={(e) => handleBoxKeyDown(e, i)}
                   role="button"
                   tabIndex={0}
-                  className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 bg-surface/40 backdrop-blur-md rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer relative ${
+                  className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 bg-surface rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer relative ${
                     isPracticing
-                      ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/10'
+                      ? 'border-primary ring-2 ring-primary/40  shadow-primary/10'
                       : quiz?.completed
                       ? 'border-emerald-500/50 bg-emerald-500/5'
                       : 'border-border/50 hover:border-text-secondary/50 hover:-translate-y-0.5'
@@ -108,14 +108,14 @@ function StrokeOrderSection({ word }) {
                 {/* Overlay guides for quiz state */}
                 {isPracticing && !quiz?.completed && (
                   <div className="absolute top-2 right-2 flex gap-1 pointer-events-none">
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary/20 text-primary border border-primary/20 rounded-md backdrop-blur-sm">
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary/20 text-primary border border-primary/20 rounded-md ">
                       Draw
                     </span>
                   </div>
                 )}
 
                 {quiz?.completed && (
-                  <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[1px] rounded-2xl flex items-center justify-center pointer-events-none animate-fade-in">
+                  <div className="absolute inset-0 bg-emerald-500/10  rounded-xl flex items-center justify-center pointer-events-none animate-fade-in">
                     <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
@@ -164,7 +164,7 @@ function StrokeOrderSection({ word }) {
           writersReady && (
             <button
               onClick={togglePlay}
-              className="px-5 py-2 bg-primary text-text-primary rounded-xl hover:bg-primary-hover transition-all hover:scale-105 active:scale-95 font-semibold flex items-center gap-2 text-sm sm:text-base shadow-lg shadow-primary/20"
+              className="px-5 py-2 bg-primary text-text-primary rounded-xl hover:bg-primary-hover transition-all hover:scale-105 active:scale-95 font-semibold flex items-center gap-2 text-sm sm:text-base  shadow-primary/20"
             >
               {isPlaying && !isPaused ? (
                 <>
@@ -188,7 +188,7 @@ function StrokeOrderSection({ word }) {
                 <span>Practicing character {activeQuizIndex + 1}</span>
                 <button
                   onClick={() => cancelQuiz(activeQuizIndex)}
-                  className="px-3 py-1 bg-surface/80 border border-border/50 text-text-primary hover:bg-surface rounded-lg text-xs font-semibold"
+                  className="px-3 py-1 bg-surface border border-border/50 text-text-primary hover:bg-surface rounded-lg text-xs font-semibold"
                 >
                   Exit Practice
                 </button>

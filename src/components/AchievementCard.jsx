@@ -9,7 +9,7 @@ export default function AchievementCard({ achievement }) {
   const percentage = Math.min(100, Math.max(0, (current_progress / requirement_value) * 100));
 
   return (
-    <div className={`relative overflow-hidden transition-all duration-300 hover:-translate-y-2 group rounded-3xl p-6 border ${is_unlocked ? 'bg-card/90 border-orange-500/30 hover:shadow-[0_0_30px_rgba(249,115,22,0.2)]' : 'bg-card/40 border-white/5 grayscale-[50%] opacity-80'}`}>
+    <div className={`relative overflow-hidden transition-all duration-300  group rounded-xl p-6 border ${is_unlocked ? 'bg-card border-orange-500/30 hover:shadow-[0_0_30px_rgba(249,115,22,0.2)]' : 'bg-card border-white/5 grayscale-[50%] opacity-80'}`}>
       
       {/* Background glow for unlocked */}
       {is_unlocked && (
@@ -17,7 +17,7 @@ export default function AchievementCard({ achievement }) {
       )}
 
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-2xl ${is_unlocked ? 'bg-orange-500/20 text-orange-400' : 'bg-surface/50 text-muted'}`}>
+        <div className={`p-3 rounded-xl ${is_unlocked ? 'bg-orange-500/20 text-orange-400' : 'bg-surface text-muted'}`}>
           <IconComponent size={28} strokeWidth={1.5} />
         </div>
         {is_unlocked && (

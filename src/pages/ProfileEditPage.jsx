@@ -59,12 +59,12 @@ function ProfileEditPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10">
+    <div className="min-h-screen bg-background relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate('/profile')}
-          className="mb-6 px-3 py-2 text-sm text-text-secondary border border-border/50 rounded-lg hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-3 py-2 text-sm text-text-secondary btn-brutal hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back to Profile
@@ -79,7 +79,7 @@ function ProfileEditPage() {
           </div>
         ) : (
           <form onSubmit={handleSaveProfile} className="mb-10">
-            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5 mb-4">
+            <div className="bg-card btn-brutal p-5 mb-4">
               <label className="block text-sm font-medium text-text-secondary mb-2">Display Name</label>
               <input
                 type="text"
@@ -87,7 +87,7 @@ function ProfileEditPage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your display name"
                 maxLength={50}
-                className="w-full px-3 py-2 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
+                className="w-full px-3 py-2 bg-surface btn-brutal text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary"
               />
               <p className="text-xs text-text-secondary mt-1">Maximum 50 characters</p>
             </div>
@@ -112,7 +112,7 @@ function ProfileEditPage() {
         <div className="border-t border-border/50 pt-8">
           <button
             onClick={() => navigate('/profile/change-password')}
-            className="flex items-center justify-between w-full px-4 py-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl hover:bg-surface/80 backdrop-blur-xl transition-colors"
+            className="flex items-center justify-between w-full px-4 py-3 bg-card btn-brutal hover:bg-surface transition-colors"
           >
             <span className="text-text-primary text-sm font-medium">Change Password</span>
             <svg className="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

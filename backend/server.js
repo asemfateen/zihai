@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
+import compression from 'compression'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -114,6 +115,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: false,
 }))
+app.use(compression())
 
 const localIps = []
 try {
@@ -237,7 +239,7 @@ db.exec(`
      lapses INTEGER DEFAULT 0,
      state INTEGER DEFAULT 0,
      last_review_date TEXT,
-     next_review_date TEXT DEFAULT (date('now')),
+     next_review_date TEXT DEFAULT (datetime('now')),
      correct_count INTEGER DEFAULT 0,
      incorrect_count INTEGER DEFAULT 0,
      UNIQUE(user_id, word_id)
@@ -300,7 +302,7 @@ try {
            lapses INTEGER DEFAULT 0,
            state INTEGER DEFAULT 0,
            last_review_date TEXT,
-           next_review_date TEXT DEFAULT (date('now')),
+           next_review_date TEXT DEFAULT (datetime('now')),
            correct_count INTEGER DEFAULT 0,
            incorrect_count INTEGER DEFAULT 0,
            UNIQUE(user_id, word_id)
@@ -446,10 +448,10 @@ function requireAuth(req, res, next) {
   }
   try {
     req.user = jwt.verify(token, JWT_SECRET)
-    next()
   } catch {
     return res.status(401).json({ error: 'Invalid token' })
   }
+  next()
 }
 
 function sanitizeEmail(email) {
@@ -527,7 +529,7 @@ app.get('/api/profile', requireAuth, (req, res) => {
   `).get(req.user.id).total
   const flashcards_due = db.prepare(`
     SELECT COUNT(*) as count FROM flashcard_progress
-    WHERE user_id = ? AND next_review_date <= date('now')
+    WHERE user_id = ? AND next_review_date <= datetime('now')
   `).get(req.user.id).count
   res.json({
     email: user.email,
@@ -605,9 +607,9 @@ app.get('/api/stats', requireAuth, (req, res) => {
     `).all(req.user.id)
 
     const totalCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ?').get(req.user.id).count
-    const newCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND next_review_date <= date(\'now\')').get(req.user.id).count
-    const learningCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND repetition > 0 AND repetition < 5').get(req.user.id).count
-    const masteredCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND repetition >= 5').get(req.user.id).count
+    const newCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND reps = 0').get(req.user.id).count
+    const learningCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND reps > 0 AND reps < 5').get(req.user.id).count
+    const masteredCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND reps >= 5').get(req.user.id).count
 
     const hskProgress = db.prepare(`
       SELECT hsk_level, COUNT(*) as count
@@ -692,7 +694,7 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   `).get(req.user.id, today).count
   const flashcards_due = db.prepare(`
     SELECT COUNT(*) as count FROM flashcard_progress
-    WHERE user_id = ? AND next_review_date <= date('now')
+    WHERE user_id = ? AND next_review_date <= datetime('now')
   `).get(req.user.id).count
   const favorites_count = db.prepare('SELECT COUNT(*) as count FROM favorites WHERE user_id = ?').get(req.user.id).count
   const recent_searches = db.prepare(`
@@ -1392,11 +1394,12 @@ app.post('/api/flashcards/import', requireAuth, (req, res) => {
         if (wordRow) {
           try {
             db.prepare(`
-              INSERT INTO flashcard_progress (user_id, word_id, ease_factor, interval_days, repetition, next_review_date)
-              VALUES (?, ?, 2.5, 0, 0, date('now'))
+              INSERT INTO flashcard_progress (user_id, word_id, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, next_review_date)
+              VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, datetime('now'))
             `).run(req.user.id, wordRow.id)
             imported++
           } catch (e) {
+            console.error('Import error for word_id:', wordRow.id, e.message)
             // Probably unique constraint (already in flashcards)
           }
         }
@@ -1450,7 +1453,7 @@ app.get('/api/quiz/generate', requireAuth, (req, res) => {
         SELECT w.id, w.simplified as character, w.pinyin, w.definition
         FROM flashcard_progress fp
         JOIN cedict_words w ON w.id = fp.word_id
-        WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
+        WHERE fp.user_id = ? AND fp.next_review_date <= datetime('now')
         ORDER BY RANDOM() LIMIT 10
       `).all(req.user.id)
 
@@ -1499,12 +1502,12 @@ const FLASHCARD_STATIC_ROUTES = {
 
 app.get('/api/flashcards/due', requireAuth, (req, res) => {
   const rows = db.prepare(`
-    SELECT fp.id AS progress_id, fp.ease_factor, fp.interval_days, fp.repetition, fp.next_review_date,
+    SELECT fp.id AS progress_id, fp.stability, fp.difficulty, fp.elapsed_days, fp.scheduled_days, fp.reps, fp.lapses, fp.state, fp.next_review_date,
          fp.correct_count, fp.incorrect_count,
          w.id, w.simplified AS character, w.pinyin, w.definition AS english_definition, w.hsk_level
     FROM flashcard_progress fp
     JOIN cedict_words w ON w.id = fp.word_id
-    WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
+    WHERE fp.user_id = ? AND fp.next_review_date <= datetime('now')
     ORDER BY fp.next_review_date ASC
   `).all(req.user.id)
   res.json(rows.map(resolveRow))
@@ -1521,7 +1524,7 @@ app.post('/api/flashcards/:wordId/init', requireAuth, (req, res) => {
   }
   db.prepare(`
     INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, added_at, next_review_date)
-    VALUES (?, ?, datetime('now'), date('now'))
+    VALUES (?, ?, datetime('now'), datetime('now'))
   `).run(req.user.id, req.params.wordId)
   res.json({ message: 'Initialized' })
 })
@@ -1532,7 +1535,7 @@ app.post('/api/flashcards/:wordId/add', requireAuth, (req, res) => {
   }
   db.prepare(`
     INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, added_at, next_review_date)
-    VALUES (?, ?, datetime('now'), date('now'))
+    VALUES (?, ?, datetime('now'), datetime('now'))
   `).run(req.user.id, req.params.wordId)
   res.json({ message: 'Added to flashcards' })
 })
@@ -1557,7 +1560,7 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
   if (!entry) {
     db.prepare(`
       INSERT INTO flashcard_progress (user_id, word_id, next_review_date) 
-      VALUES (?, ?, date('now'))
+      VALUES (?, ?, datetime('now'))
     `).run(req.user.id, wordId)
     entry = db.prepare(`
       SELECT * FROM flashcard_progress
@@ -1572,7 +1575,7 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
   else if (quality === 5) rating = Rating.Easy
 
   const card = {
-    due: new Date(entry.next_review_date),
+    due: new Date(entry.next_review_date + 'Z'),
     stability: entry.stability || 0,
     difficulty: entry.difficulty || 0,
     elapsed_days: entry.elapsed_days || 0,
@@ -1580,7 +1583,7 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
     reps: entry.reps || 0,
     lapses: entry.lapses || 0,
     state: entry.state || 0,
-    last_review: entry.last_review_date ? new Date(entry.last_review_date) : undefined
+    last_review: entry.last_review_date ? new Date(entry.last_review_date + 'Z') : undefined
   }
 
   // Handle empty cards properly for FSRS
@@ -1594,7 +1597,8 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
   const incorrect_count = entry.incorrect_count + (quality < 3 ? 1 : 0)
 
   // SQLite doesn't have native Date, so we format due date as YYYY-MM-DD HH:MM:SS
-  const next_due_iso = next_card.due.toISOString()
+  const next_due_iso = next_card.due.toISOString().slice(0, 19).replace('T', ' ')
+  const now_iso = now.toISOString().slice(0, 19).replace('T', ' ')
 
   db.prepare(`
     UPDATE flashcard_progress
@@ -1604,7 +1608,7 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
     WHERE user_id = ? AND word_id = ?
   `).run(
     next_card.stability, next_card.difficulty, next_card.elapsed_days, next_card.scheduled_days,
-    next_card.reps, next_card.lapses, next_card.state, now.toISOString(), next_due_iso,
+    next_card.reps, next_card.lapses, next_card.state, now_iso, next_due_iso,
     correct_count, incorrect_count, req.user.id, wordId
   )
 
@@ -1662,54 +1666,7 @@ app.post('/api/flashcards', (req, res) => {
   }
 })
 
-app.get('/api/decks/:id/review', (req, res) => {
-  try {
-    const flashcards = db.prepare(`
-      SELECT id, deck_id, item_id, item_type, box_level, next_review, created_at
-      FROM flashcards WHERE deck_id = ? AND next_review <= CURRENT_TIMESTAMP
-      ORDER BY next_review ASC
-    `).all(req.params.id)
 
-    const enriched = flashcards.map(fc => {
-      const table = fc.item_type === 'character' ? 'characters' : 'cedict_words'
-      const row = db.prepare(`SELECT simplified, pinyin, definition FROM ${table} WHERE id = ?`).get(fc.item_id)
-      return { ...fc, ...(row || {}) }
-    })
-
-    res.json(enriched)
-  } catch (err) {
-    console.error('Failed to fetch review cards:', err.message)
-    res.status(500).json({ error: 'Failed to fetch review cards' })
-  }
-})
-
-app.post('/api/flashcards/:id/grade', (req, res) => {
-  const { score } = req.body
-  if (!score || !['correct', 'incorrect'].includes(score)) {
-    return res.status(400).json({ error: 'score must be "correct" or "incorrect"' })
-  }
-  try {
-    const card = db.prepare('SELECT id, box_level FROM flashcards WHERE id = ?').get(req.params.id)
-    if (!card) return res.status(404).json({ error: 'Flashcard not found' })
-
-    let newBox
-    let interval
-    if (score === 'incorrect') {
-      newBox = 1
-      interval = '+1 day'
-    } else {
-      newBox = Math.min(card.box_level + 1, 5)
-      const gaps = { 2: '+3 days', 3: '+7 days', 4: '+14 days' }
-      interval = gaps[newBox] || '+30 days'
-    }
-
-    db.prepare('UPDATE flashcards SET box_level = ?, next_review = datetime(\'now\', ?) WHERE id = ?').run(newBox, interval, req.params.id)
-    res.json({ message: 'Graded', box_level: newBox })
-  } catch (err) {
-    console.error('Failed to grade flashcard:', err.message)
-    res.status(500).json({ error: 'Failed to grade flashcard' })
-  }
-})
 
 // Achievements Endpoint
 app.get('/api/achievements', requireAuth, (req, res) => {
@@ -1771,7 +1728,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' })
 })
 
-const shutdown = () => {
+// --------------------------------------------------------
+// Production Frontend Serving
+// --------------------------------------------------------
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../dist')
+  app.use(express.static(distPath))
+
+  app.use((req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+}
+
+// --------------------------------------------------------
+// Graceful Shutdown
+// --------------------------------------------------------
+function shutdown() {
   console.log('Shutting down gracefully...')
   try { db.close() } catch {}
   process.exit(0)

@@ -52,12 +52,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
+    <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
         <h1 className="text-3xl font-bold mb-8">Data Settings</h1>
 
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 mb-8 shadow-sm">
+        <div className="bg-card btn-brutal p-8 mb-8 ">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <span className="text-emerald-500">📥</span> Import Flashcards
           </h2>
@@ -66,12 +66,12 @@ export default function SettingsPage() {
           </p>
 
           <div className="mb-4">
-            <label className="block text-sm font-bold text-text-secondary mb-2 cursor-pointer border-2 border-dashed border-border/50 rounded-2xl p-4 text-center hover:bg-surface/50 transition-colors">
+            <label className="block text-sm font-bold text-text-secondary mb-2 cursor-pointer border-2 border-dashed border-border/50 rounded-xl p-4 text-center hover:bg-surface transition-colors">
               <input type="file" accept=".txt,.csv" className="hidden" onChange={handleFileUpload} />
               Click here to upload a file (.txt, .csv)
             </label>
             <textarea
-              className="w-full h-32 bg-surface border border-border/50 rounded-2xl p-4 focus:border-primary focus:outline-none resize-none font-mono text-sm mt-2"
+              className="w-full h-32 bg-surface btn-brutal p-4 focus:border-primary focus:outline-none resize-none font-mono text-sm mt-2"
               placeholder="Or paste text here..."
               value={importText}
               onChange={e => setImportText(e.target.value)}
@@ -82,7 +82,7 @@ export default function SettingsPage() {
             <button
               onClick={handleImport}
               disabled={importing || !importText.trim()}
-              className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 transition-all flex items-center gap-2"
+              className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:-translate-y-0.5  disabled:opacity-50 transition-all flex items-center gap-2"
             >
               {importing && <Spinner className="w-4 h-4 text-white animate-spin" />}
               Import Data
@@ -95,7 +95,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-sm">
+        <div className="bg-card btn-brutal p-8 ">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <span className="text-blue-500">📤</span> Export Flashcards
           </h2>
@@ -104,7 +104,7 @@ export default function SettingsPage() {
           </p>
           <button
             onClick={handleExport}
-            className="px-6 py-2.5 bg-surface border border-border/50 text-text-primary rounded-xl font-bold hover:bg-primary/5 hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-lg transition-all"
+            className="px-6 py-2.5 bg-surface border border-border/50 text-text-primary rounded-xl font-bold hover:bg-primary/5 hover:border-primary/50 hover:-translate-y-0.5  transition-all"
           >
             Export to CSV
           </button>
