@@ -174,7 +174,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+    <nav className="flex items-center justify-between px-3 sm:px-6 py-4 bg-card border-b-[3px] border-border sticky top-0 z-50 transition-colors">
       <div className="flex-shrink-0">
         <Link viewTransition to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
           字海 Zihai
@@ -191,7 +191,7 @@ function Navbar() {
             onChange={handleSearch}
             onKeyDown={handleKeyDown}
             aria-label="Search characters, pinyin, or definitions"
-            className="w-full px-3 sm:px-4 py-2 bg-card/80 backdrop-blur-md text-text-primary border border-border/50 rounded-lg outline-none focus:border-primary transition-all placeholder:text-text-secondary text-sm sm:text-base focus:ring-2 focus:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+            className="w-full px-4 sm:px-5 py-2.5 bg-surface text-text-primary border-[3px] border-border rounded-lg outline-none focus:shadow-brutal transition-all placeholder:text-text-secondary text-sm sm:text-base font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-2px] focus:translate-y-[-2px]"
           />
         </form>
 
@@ -230,10 +230,10 @@ function Navbar() {
         <div ref={exploreDropdownRef} className="relative">
           <button
             onClick={() => setExploreDropdownOpen(prev => !prev)}
-            className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
+            className={`px-4 py-2.5 btn-brutal flex items-center gap-1.5 text-sm font-bold cursor-pointer ${
               exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
-                ? 'text-primary border-primary bg-primary/5'
-                : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+                ? 'text-text-primary bg-primary'
+                : 'text-text-primary bg-surface'
             }`}
           >
             <GridIcon className="w-4 h-4" />
@@ -242,7 +242,7 @@ function Navbar() {
           </button>
 
           {exploreDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50 animate-fade-in">
+            <div className="absolute right-0 mt-3 w-56 bg-card border-[3px] border-border rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-2 z-50">
               <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/radicals'); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
@@ -370,13 +370,13 @@ function Navbar() {
           <>
             <button
               onClick={() => navigate('/login')}
-              className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-colors text-sm cursor-pointer"
+              className="px-5 py-2.5 btn-brutal bg-surface text-text-primary font-bold text-sm cursor-pointer"
             >
               Login
             </button>
             <button
               onClick={() => navigate('/register')}
-              className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors text-sm cursor-pointer"
+              className="px-5 py-2.5 btn-brutal bg-primary text-text-primary font-bold text-sm cursor-pointer"
             >
               Register
             </button>

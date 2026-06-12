@@ -50,9 +50,7 @@ function PageSuspense({ children }) {
 function Layout() {
   return (
     <div className="min-h-screen bg-transparent relative z-10 relative overflow-hidden z-0">
-      {/* Global Dynamic background blobs */}
-      <div className="fixed top-0 left-1/4 w-[40rem] h-[40rem] bg-primary/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
-      <div className="fixed bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-orange-500/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
+      {/* Neubrutalism solid background relies on index.css, no blobs needed */}
       <CommandPalette />
       <ScrollRestoration />
       <Outlet />
