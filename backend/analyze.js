@@ -11,11 +11,13 @@ app.post('/api/analyze', apiLimiter, (req, res) => {
     let i = 0;
 
     const getWord = db.prepare(`
-      SELECT id, simplified, pinyin, definition, hsk_level, 'word' as type
-      FROM cedict_words WHERE simplified = ?
-      UNION ALL
-      SELECT id, simplified, pinyin, definition, hsk_level, 'char' as type
-      FROM characters WHERE simplified = ?
+      SELECT * FROM (
+        SELECT id, simplified, pinyin, definition, hsk_level, 'word' as type
+        FROM cedict_words WHERE simplified = ? OR traditional = ?
+        UNION ALL
+        SELECT id, simplified, pinyin, definition, hsk_level, 'char' as type
+        FROM characters WHERE simplified = ? OR traditional = ?
+      )
       ORDER BY (CASE WHEN type = 'word' THEN 0 ELSE 1 END) ASC, (CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END) ASC, hsk_level ASC
       LIMIT 1
     `);
@@ -27,9 +29,9 @@ app.post('/api/analyze', apiLimiter, (req, res) => {
         const substr = text.substring(i, i + len);
         
         // Skip DB lookup for multi-char non-Chinese strings (speed optimization)
-        if (len > 1 && !/[\\u4e00-\\u9fa5]/.test(substr)) continue;
+        if (len > 1 && !/[\u4e00-\u9fa5]/.test(substr)) continue;
 
-        const row = getWord.get(substr, substr);
+        const row = getWord.get(substr, substr, substr, substr);
         if (row) {
           tokens.push({
             text: substr,
@@ -48,7 +50,7 @@ app.post('/api/analyze', apiLimiter, (req, res) => {
 
       if (!matched) {
         const char = text[i];
-        const isChinese = /[\\u4e00-\\u9fa5]/.test(char);
+        const isChinese = /[\u4e00-\u9fa5]/.test(char);
         
         // Combine consecutive non-Chinese characters into single tokens
         if (!isChinese && tokens.length > 0 && !tokens[tokens.length - 1].isChinese) {

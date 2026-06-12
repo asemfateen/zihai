@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon } from './Icons'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
 
 function ChevronDownIcon(props) {
   return (
@@ -218,7 +218,7 @@ function Navbar() {
           <button
             onClick={() => setExploreDropdownOpen(prev => !prev)}
             className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
-              exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
+              exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
                 ? 'text-primary border-primary bg-primary/5'
                 : 'text-text-secondary border-border hover:text-primary hover:border-primary'
             }`}
@@ -257,6 +257,13 @@ function Navbar() {
               >
                 <SpeakerIcon className="w-4 h-4 text-text-secondary" />
                 Pinyin Chart
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/analyzer'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <FileIcon className="w-4 h-4 text-text-secondary" />
+                Text Analyzer
               </button>
               <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/history'); }}
@@ -388,6 +395,13 @@ function Navbar() {
                   Pinyin Chart
                 </button>
                 <button
+                  onClick={() => handleNav('/analyzer')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <FileIcon className="w-4 h-4 text-text-secondary" />
+                  Text Analyzer
+                </button>
+                <button
                   onClick={() => handleNav('/history')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/history' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
                 >
@@ -485,6 +499,13 @@ function Navbar() {
                 >
                   <SpeakerIcon className="w-4 h-4 text-text-secondary" />
                   Pinyin Chart
+                </button>
+                <button
+                  onClick={() => handleNav('/analyzer')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <FileIcon className="w-4 h-4 text-text-secondary" />
+                  Text Analyzer
                 </button>
                 <button
                   onClick={() => handleNav('/history')}

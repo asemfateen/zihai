@@ -29,6 +29,7 @@ const RadicalDetailPage = lazy(() => import('./pages/RadicalDetailPage'))
 const HSKPage = lazy(() => import('./pages/HSKPage'))
 const StatsPage = lazy(() => import('./pages/StatsPage'))
 const PinyinChartPage = lazy(() => import('./pages/PinyinChartPage'))
+const AnalyzerPage = lazy(() => import('./pages/AnalyzerPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageSuspense({ children }) {
@@ -74,6 +75,7 @@ const router = createBrowserRouter([
       { path: '/hsk', element: <PageSuspense><ProtectedRoute><ErrorBoundary><HSKPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/stats', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StatsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/pinyin', element: <PageSuspense><ErrorBoundary><PinyinChartPage /></ErrorBoundary></PageSuspense> },
+      { path: '/analyzer', element: <PageSuspense><ErrorBoundary><AnalyzerPage /></ErrorBoundary></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },

@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar'
 import { fetchWithTimeout } from '../api'
 import Spinner from '../components/Spinner'
 import { Link } from 'react-router-dom'
-import { BookmarkIcon, PlayIcon } from '../components/Icons'
+import { PlayIcon } from '../components/Icons'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 
 function AnalyzerPage() {
