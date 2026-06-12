@@ -13,7 +13,7 @@ function NotFoundPage() {
         <p className="text-text-secondary mb-8 text-center">The page you are looking for doesn't exist or has been moved.</p>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-3 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-all hover:scale-105 font-medium"
+          className="px-6 py-3 bg-primary text-text-primary btn-brutal    font-medium"
         >
           Go Home
         </button>

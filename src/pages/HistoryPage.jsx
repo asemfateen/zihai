@@ -80,14 +80,14 @@ function HistoryPage() {
                 <button
                   onClick={() => setShowConfirm(false)}
                   disabled={clearing}
-                  className="px-4 py-2 text-sm text-text-secondary btn-brutal hover:border-primary transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm text-text-secondary btn-brutal hover:border-primary  disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleClear}
                   disabled={clearing}
-                  className="px-4 py-2 text-sm text-red-400 border border-red-400 rounded-lg hover:bg-red-400 hover:bg-opacity-10 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm text-red-400 border border-red-400 btn-brutal hover:bg-red-400 hover:bg-opacity-10  disabled:opacity-50"
                 >
                   {clearing ? 'Clearing...' : 'Clear'}
                 </button>
@@ -95,7 +95,7 @@ function HistoryPage() {
             ) : (
               <button
                 onClick={() => setShowConfirm(true)}
-                className="px-4 py-2 text-sm text-text-secondary btn-brutal hover:text-red-400 hover:border-red-400 transition-colors"
+                className="px-4 py-2 text-sm text-text-secondary btn-brutal hover:text-red-400 hover:border-red-400 "
               >
                 Clear History
               </button>
@@ -104,7 +104,7 @@ function HistoryPage() {
         </div>
 
         {clearError && (
-          <div className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 rounded-lg text-red-400 text-sm text-center">
+          <div className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 btn-brutal text-red-400 text-sm text-center">
             Failed to clear history. Please try again.
           </div>
         )}
@@ -128,7 +128,7 @@ function HistoryPage() {
             <p className="text-sm mt-1 mb-4">Please try again.</p>
             <button
               onClick={() => { setLoading(true); setError(false); fetchHistory() }}
-              className="px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+              className="px-5 py-2 bg-primary text-text-primary btn-brutal   font-medium"
             >
               Retry
             </button>
@@ -152,7 +152,7 @@ function HistoryPage() {
                 role="button"
                 tabIndex={0}
                 style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
-                className="flex items-center justify-between px-5 py-4 bg-card btn-brutal hover:border-primary    transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
+                className="flex items-center justify-between px-5 py-4 bg-card btn-brutal hover:border-primary     duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
               >
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-4 h-4 text-text-secondary flex-shrink-0" />

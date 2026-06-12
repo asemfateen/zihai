@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
+import { cleanDefinition } from '../utils/text'
 
 function ChevronDownIcon(props) {
   return (
@@ -208,8 +209,17 @@ function Navbar() {
                   i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
                 }`}
               >
-                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
-                <span className="text-sm text-primary">{s.pinyin}</span>
+                <div className="flex-shrink-0 w-12 sm:w-16">
+                  <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
+                </div>
+                <div className="flex-shrink-0 w-24 sm:w-32">
+                  <span className="text-sm text-primary">{s.pinyin}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-text-secondary truncate block">
+                    {cleanDefinition(s.definition || s.english_definition) || 'No definition available'}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

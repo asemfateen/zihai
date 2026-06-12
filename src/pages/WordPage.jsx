@@ -117,7 +117,7 @@ function WordPage() {
         <Navbar />
         <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
           <div className="flex flex-col items-center space-y-4 mb-8">
-            <div className="skeleton w-24 h-24 rounded-xl" />
+            <div className="skeleton w-24 h-24 btn-brutal" />
             <div className="skeleton w-40 h-8" />
             <div className="skeleton w-16 h-6 rounded-full" />
           </div>
@@ -132,8 +132,8 @@ function WordPage() {
           <div className="bg-card btn-brutal p-5">
             <div className="skeleton w-28 h-4 mb-4" />
             <div className="flex gap-4 justify-center">
-              <div className="skeleton w-28 h-28 rounded-lg" />
-              <div className="skeleton w-28 h-28 rounded-lg" />
+              <div className="skeleton w-28 h-28 btn-brutal" />
+              <div className="skeleton w-28 h-28 btn-brutal" />
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ function WordPage() {
           <p className="text-text-secondary mb-8 text-center">The word you are looking for doesn't exist or has been moved.</p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-all hover:scale-105 font-medium"
+            className="px-6 py-3 bg-primary text-text-primary btn-brutal    font-medium"
           >
             Go Home
           </button>
@@ -166,7 +166,7 @@ function WordPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface btn-brutal hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface btn-brutal hover:text-primary hover:border-primary  flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back
@@ -181,7 +181,7 @@ function WordPage() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           
           {/* Main Hero Card - Bento Style */}
-          <div className="md:col-span-12 bg-card btn-brutal p-8 sm:p-12     transition-all animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="md:col-span-12 bg-card btn-brutal p-8 sm:p-12      animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             
             <div className="flex gap-2 justify-center flex-wrap mb-6 relative z-10">
@@ -190,7 +190,7 @@ function WordPage() {
                   key={i}
                   onClick={() => navigate(`/search?q=${encodeURIComponent(char)}`)}
                   aria-label={`Search for character ${char}`}
-                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-text-primary hover:text-primary transition-transform hover:scale-110 cursor-pointer drop-shadow-sm"
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-text-primary hover:text-primary transition-transform  cursor-pointer drop-shadow-sm"
                 >
                   {char}
                 </button>
@@ -202,9 +202,9 @@ function WordPage() {
               {speechSupported ? (
                 <button
                   onClick={speak}
-                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all  ${
+                  className={`flex items-center justify-center w-12 h-12 rounded-full   ${
                     isSpeaking
-                      ? 'bg-primary text-text-primary scale-110 animate-pulse shadow-primary/30'
+                      ? 'bg-primary text-text-primary scale-110 animate-pulse '
                       : 'bg-surface text-text-secondary hover:text-primary hover:border-primary border border-border/50 '
                   }`}
                   title='Listen to pronunciation'
@@ -226,7 +226,7 @@ function WordPage() {
               <button
                 onClick={() => toggleFavorite(navigate)}
                 disabled={favoriteLoading}
-                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal transition-all   hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
+                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal    hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {favoriteLoading ? (
@@ -239,9 +239,9 @@ function WordPage() {
               <button
                 onClick={inDeck ? removeFromDeck : addToDeck}
                 disabled={addingToDeck}
-                className={`flex items-center justify-center w-14 h-14 rounded-xl transition-all   active:translate-y-0 disabled:opacity-50 ${
+                className={`flex items-center justify-center w-14 h-14 btn-brutal    active:translate-y-0 disabled:opacity-50 ${
                   inDeck
-                    ? 'bg-primary/20 border border-primary/50 text-primary shadow-primary/20'
+                    ? 'bg-primary/20 border border-primary/50 text-primary '
                     : 'bg-surface border border-border/50 text-text-secondary hover:text-primary hover:border-primary/50 '
                 }`}
                 title={inDeck ? 'Remove from deck' : 'Study this word'}
@@ -257,14 +257,14 @@ function WordPage() {
 
               <button
                 onClick={() => setShowListsModal(true)}
-                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal transition-all   hover:text-primary hover:border-primary/50  active:translate-y-0 text-text-secondary"
+                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal    hover:text-primary hover:border-primary/50  active:translate-y-0 text-text-secondary"
                 title="Add to Custom List"
               >
                 <PlusIcon className="w-7 h-7" />
               </button>
 
               {word.hsk_level && (
-                <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-xl text-sm font-bold ">
+                <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 btn-brutal text-sm font-bold ">
                   HSK {word.hsk_level}
                 </span>
               )}
@@ -272,7 +272,7 @@ function WordPage() {
               {word.radical && RADICAL_MAP[word.radical] && (
                 <button
                   onClick={() => navigate(`/radicals/${word.radical}`)}
-                  className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-xl text-sm font-bold   hover: hover:shadow-emerald-500/20 transition-all flex items-center gap-2"
+                  className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 btn-brutal text-sm font-bold   hover: hover:shadow-emerald-500/20  flex items-center gap-2"
                 >
                   <span className="text-lg">{RADICAL_MAP[word.radical]}</span>
                   <span>Radical {word.radical}</span>
@@ -282,7 +282,7 @@ function WordPage() {
           </div>
 
           {/* Definition Tile */}
-          <div className="md:col-span-12 bg-card btn-brutal p-8     transition-all animate-fade-in [animation-delay:200ms] group relative overflow-hidden flex flex-col justify-center min-h-[140px]">
+          <div className="md:col-span-12 bg-card btn-brutal p-8      animate-fade-in [animation-delay:200ms] group relative overflow-hidden flex flex-col justify-center min-h-[140px]">
              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
              <div className="relative z-10">
                <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4 bg-surface inline-block px-4 py-1.5 rounded-full border border-border ">Definition</h2>
@@ -292,7 +292,7 @@ function WordPage() {
 
           {/* Examples Tile */}
           {word.examples && word.examples.length > 0 && (
-            <div className="md:col-span-12 bg-card btn-brutal p-8   hover:shadow-purple-500/10  transition-all animate-fade-in [animation-delay:300ms] group relative overflow-hidden">
+            <div className="md:col-span-12 bg-card btn-brutal p-8   hover:shadow-purple-500/10   animate-fade-in [animation-delay:300ms] group relative overflow-hidden">
                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                <div className="relative z-10">
                  <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border ">Example Sentences</h2>

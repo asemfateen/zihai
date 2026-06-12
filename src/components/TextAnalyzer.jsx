@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { fetchWithTimeout } from '../api'
 import Spinner from './Spinner'
 import { Link } from 'react-router-dom'
-import { PlayIcon } from './Icons'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
+import { cleanDefinition } from '../utils/text'
 
 export default function TextAnalyzer({ cardStyle = true, initialText = '', readOnly = false }) {
   const [text, setText] = useState(initialText)
@@ -124,7 +124,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
                   <div className="absolute bottom-full mb-10 w-48 p-3 bg-surface border border-border rounded-xl  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none scale-95 group-hover:scale-100">
                     <div className="font-bold text-lg mb-1 text-text-primary">{token.text}</div>
                     <div className="text-primary font-medium text-sm mb-1">{token.pinyin}</div>
-                    <div className="text-xs text-text-secondary line-clamp-3">{token.definition || 'No definition found'}</div>
+                    <div className="text-xs text-text-secondary line-clamp-3">{cleanDefinition(token.definition) || 'No definition found'}</div>
                     {token.hsk_level > 0 && (
                       <div className="mt-2 text-[10px] uppercase font-bold tracking-widest bg-surface-hover inline-block px-2 py-0.5 rounded text-text-secondary">
                         HSK {token.hsk_level}
@@ -146,10 +146,9 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
                     {token.text}
                   </Link>
                   
-                  {/* Inline English Definition */}
                   {showEnglish && token.definition && (
                     <span className="text-[10px] md:text-xs text-text-secondary mt-1 leading-tight text-center max-w-[80px] break-words line-clamp-2">
-                      {token.definition.split('/').filter(Boolean).slice(0, 2).join(', ')}
+                      {cleanDefinition(token.definition)}
                     </span>
                   )}
                 </div>

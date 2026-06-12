@@ -63,7 +63,7 @@ function ResetPasswordPage() {
           <p className="text-text-secondary">Choose a new password for your account</p>
         </div>
 
-        <div className="bg-card btn-brutal p-8  shadow-primary/20">
+        <div className="bg-card btn-brutal p-8  ">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
@@ -78,13 +78,13 @@ function ResetPasswordPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="w-full px-4 py-2.5 pr-12 bg-surface btn-brutal text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 pr-12 bg-surface btn-brutal text-text-primary outline-none focus:border-primary  placeholder:text-text-secondary"
                 placeholder="At least 6 characters"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary "
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -104,19 +104,19 @@ function ResetPasswordPage() {
                 required
                 minLength={6}
                 autoComplete="new-password"
-                className="w-full px-4 py-2.5 bg-surface btn-brutal text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 bg-surface btn-brutal text-text-primary outline-none focus:border-primary  placeholder:text-text-secondary"
                 placeholder="Re-enter your password"
               />
             </div>
 
             {error && (
-              <div role="alert" className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 rounded-lg text-red-400 text-sm">
+              <div role="alert" className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 btn-brutal text-red-400 text-sm">
                 {error}
               </div>
             )}
 
             {success && (
-              <div role="status" className="mb-4 px-4 py-2.5 bg-green-500/10 border border-green-500 border-opacity-30 rounded-lg text-green-400 text-sm">
+              <div role="status" className="mb-4 px-4 py-2.5 bg-green-500/10 border border-green-500 border-opacity-30 btn-brutal text-green-400 text-sm">
                 {success} Redirecting to login...
               </div>
             )}
@@ -124,7 +124,7 @@ function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading || !!success}
-              className="w-full py-2.5 bg-primary text-text-primary font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-primary text-text-primary font-medium btn-brutal   disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>

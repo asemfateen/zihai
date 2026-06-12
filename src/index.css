@@ -22,6 +22,31 @@
   color-scheme: light; /* Neubrutalism is usually light mode, force it */
 }
 
+/* Custom Brutalist Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-left: 2px solid var(--color-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border: 2px solid var(--color-border);
+  border-right: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-surface);
+}
+
 html {
   background-color: var(--color-background);
   color: var(--color-text-primary);

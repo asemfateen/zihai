@@ -30,13 +30,13 @@ class ErrorBoundary extends Component {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={this.handleRetry}
-                className="px-6 py-3 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+                className="px-6 py-3 bg-primary text-text-primary btn-brutal   font-medium"
               >
                 Try again
               </button>
               <Link
                 to="/"
-                className="inline-block px-6 py-3 bg-surface border border-border/50 text-text-primary rounded-lg hover:border-primary transition-colors font-medium"
+                className="inline-block px-6 py-3 bg-surface border border-border/50 text-text-primary btn-brutal hover:border-primary  font-medium"
               >
                 Go back home
               </Link>

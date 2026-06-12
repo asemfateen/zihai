@@ -87,7 +87,7 @@ function SearchPage() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="bg-card btn-brutal p-5">
                 <div className="flex items-center gap-4">
-                  <div className="skeleton w-14 h-14 rounded-lg" />
+                  <div className="skeleton w-14 h-14 btn-brutal" />
                   <div className="flex-1 space-y-2">
                     <div className="skeleton h-5 w-32" />
                     <div className="skeleton h-4 w-48" />
@@ -109,7 +109,7 @@ function SearchPage() {
                 abortRef.current = controller
                 fetchSearchResults(q, controller.signal)
               }}
-              className="px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+              className="px-5 py-2 bg-primary text-text-primary btn-brutal   font-medium"
             >
               Retry
             </button>

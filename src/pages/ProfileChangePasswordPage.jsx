@@ -61,7 +61,7 @@ function ProfileChangePasswordPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate('/profile/edit')}
-          className="mb-6 px-3 py-2 text-sm text-text-secondary btn-brutal hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-3 py-2 text-sm text-text-secondary btn-brutal hover:text-primary hover:border-primary  flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back to Edit Profile
@@ -111,7 +111,7 @@ function ProfileChangePasswordPage() {
           <button
             type="submit"
             disabled={changing || !currentPassword || !newPassword || !confirmPassword}
-            className="px-5 py-2.5 bg-primary text-text-primary rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-primary text-text-primary btn-brutal text-sm font-medium   disabled:opacity-50"
           >
             {changing ? 'Changing...' : 'Change Password'}
           </button>

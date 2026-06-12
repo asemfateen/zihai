@@ -64,7 +64,7 @@ function RadicalDetailPage() {
           <p className="text-sm mt-1">Please try again later.</p>
           <button
             onClick={() => setPage(1)}
-            className="mt-4 px-5 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors font-medium"
+            className="mt-4 px-5 py-2 bg-primary text-text-primary btn-brutal   font-medium"
           >
             Retry
           </button>
@@ -81,17 +81,17 @@ function RadicalDetailPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface btn-brutal hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface btn-brutal hover:text-primary hover:border-primary  flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Radicals
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
-          <div className="md:col-span-12 bg-card btn-brutal p-8 sm:p-10     transition-all animate-fade-in [animation-delay:100ms] relative overflow-hidden group flex items-center gap-6">
+          <div className="md:col-span-12 bg-card btn-brutal p-8 sm:p-10      animate-fade-in [animation-delay:100ms] relative overflow-hidden group flex items-center gap-6">
             <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             
-            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary/10 rounded-xl flex items-center justify-center group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300 relative z-10 border border-primary/20">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary/10 btn-brutal flex items-center justify-center group- group-hover:rotate-3 transition-transform duration-300 relative z-10 border border-primary/20">
               <span className="text-6xl sm:text-7xl font-black text-primary drop-shadow-sm">{radicalInfo.character}</span>
             </div>
             
@@ -121,17 +121,17 @@ function RadicalDetailPage() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card btn-brutal rounded-xl hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
+              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card btn-brutal hover:border-primary hover:text-primary  hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
             >
               Previous
             </button>
-            <span className="text-sm font-bold text-text-secondary px-4 py-2 bg-surface rounded-xl border border-border/50">
+            <span className="text-sm font-bold text-text-secondary px-4 py-2 bg-surface btn-brutal border border-border/50">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card btn-brutal rounded-xl hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
+              className="px-4 py-2 text-sm font-bold border border-border/50 bg-card btn-brutal hover:border-primary hover:text-primary  hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-text-secondary"
             >
               Next
             </button>

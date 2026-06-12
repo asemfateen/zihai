@@ -47,14 +47,14 @@ function StatsPage() {
         ) : error ? (
           <div className="bg-card btn-brutal p-8 text-center animate-fade-in [animation-delay:100ms]">
             <p className="text-red-400 mb-4">Failed to load statistics</p>
-            <button onClick={fetchStats} className="px-6 py-2 bg-primary text-white rounded-xl font-bold  shadow-primary/20 hover:bg-primary-hover transition-all">Retry</button>
+            <button onClick={fetchStats} className="px-6 py-2 bg-primary text-white btn-brutal font-bold    ">Retry</button>
           </div>
         ) : stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:auto-rows-[160px]">
             {/* Current Streak */}
-            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card btn-brutal p-6    hover:shadow-orange-500/10 transition-all duration-300 animate-fade-in [animation-delay:100ms] flex flex-col justify-between group">
+            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card btn-brutal p-6    hover:shadow-orange-500/10  duration-300 animate-fade-in [animation-delay:100ms] flex flex-col justify-between group">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <div className="w-12 h-12 btn-brutal bg-orange-500/10 flex items-center justify-center text-orange-500 group- group-hover:rotate-6 transition-transform">
                   <ClockIcon className="w-6 h-6" />
                 </div>
                 <div className="flex flex-col">
@@ -71,9 +71,9 @@ function StatsPage() {
             </div>
 
             {/* Total Cards */}
-            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card btn-brutal p-6     transition-all duration-300 animate-fade-in [animation-delay:150ms] flex flex-col justify-between group">
+            <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card btn-brutal p-6      duration-300 animate-fade-in [animation-delay:150ms] flex flex-col justify-between group">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <div className="w-12 h-12 btn-brutal bg-primary/10 flex items-center justify-center text-primary group- group-hover:rotate-6 transition-transform">
                   <FlashcardIcon className="w-6 h-6" />
                 </div>
                 <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Total</span>
@@ -85,9 +85,9 @@ function StatsPage() {
             </div>
 
             {/* HSK Progress */}
-            <div className="col-span-2 md:col-span-2 md:row-span-1 bg-card btn-brutal p-6    hover:shadow-emerald-500/10 transition-all duration-300 animate-fade-in [animation-delay:200ms] flex flex-col justify-between group">
+            <div className="col-span-2 md:col-span-2 md:row-span-1 bg-card btn-brutal p-6    hover:shadow-emerald-500/10  duration-300 animate-fade-in [animation-delay:200ms] flex flex-col justify-between group">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
+                <div className="w-12 h-12 btn-brutal bg-emerald-500/10 flex items-center justify-center text-emerald-500 group- group-hover:-rotate-6 transition-transform">
                   <HeartIcon className="w-6 h-6" />
                 </div>
                 <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">HSK Progress</span>
@@ -101,29 +101,29 @@ function StatsPage() {
             </div>
 
             {/* Heatmap Activity */}
-            <div className="col-span-2 md:col-span-4 bg-card btn-brutal p-6   hover:shadow-emerald-500/5 transition-all duration-300 animate-fade-in [animation-delay:220ms] flex flex-col justify-center min-h-[220px]">
+            <div className="col-span-2 md:col-span-4 bg-card btn-brutal p-6   hover:shadow-emerald-500/5  duration-300 animate-fade-in [animation-delay:220ms] flex flex-col justify-center min-h-[220px]">
               <h3 className="text-lg font-bold mb-4 text-text-primary">Review Activity</h3>
               <ActivityHeatmap data={stats.heatmap || []} />
             </div>
 
             {/* Mastery Breakdown */}
-            <div className="col-span-2 md:col-span-4 bg-card btn-brutal p-6   hover:shadow-primary/5 transition-all duration-300 animate-fade-in [animation-delay:250ms] flex flex-col justify-center min-h-[200px]">
+            <div className="col-span-2 md:col-span-4 bg-card btn-brutal p-6   hover:  duration-300 animate-fade-in [animation-delay:250ms] flex flex-col justify-center min-h-[200px]">
               <h3 className="text-lg font-bold mb-6 text-text-primary">Mastery Breakdown</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="text-center group  transition-transform">
-                  <div className="text-4xl font-black text-primary mb-1 group-hover:scale-110 transition-transform">{stats.newCards}</div>
+                  <div className="text-4xl font-black text-primary mb-1 group- transition-transform">{stats.newCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Due/New</div>
                 </div>
                 <div className="text-center group  transition-transform">
-                  <div className="text-4xl font-black text-amber-500 mb-1 group-hover:scale-110 transition-transform">{stats.learningCards}</div>
+                  <div className="text-4xl font-black text-amber-500 mb-1 group- transition-transform">{stats.learningCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Learning</div>
                 </div>
                 <div className="text-center group  transition-transform">
-                  <div className="text-4xl font-black text-emerald-500 mb-1 group-hover:scale-110 transition-transform">{stats.masteredCards}</div>
+                  <div className="text-4xl font-black text-emerald-500 mb-1 group- transition-transform">{stats.masteredCards}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Mastered</div>
                 </div>
                 <div className="text-center group  transition-transform">
-                  <div className="text-4xl font-black text-text-primary mb-1 group-hover:scale-110 transition-transform">{stats.longestStreak}</div>
+                  <div className="text-4xl font-black text-text-primary mb-1 group- transition-transform">{stats.longestStreak}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Best Streak</div>
                 </div>
               </div>

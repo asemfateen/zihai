@@ -119,14 +119,14 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
           <h3 className="text-lg font-bold text-text-primary">Add to Vocabulary List</h3>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-text-primary transition-colors text-xl font-bold"
+            className="text-text-secondary hover:text-text-primary  text-xl font-bold"
           >
             &times;
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">
+          <div className="mb-4 text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 btn-brutal px-3 py-2">
             {error}
           </div>
         )}
@@ -145,7 +145,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
             lists.map(list => (
               <label
                 key={list.id}
-                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface border border-border/30 rounded-xl cursor-pointer transition-all duration-200"
+                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface border border-border/30 btn-brutal cursor-pointer  duration-200"
               >
                 <input
                   type="checkbox"
@@ -188,7 +188,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
             <button
               type="submit"
               disabled={!newListName.trim()}
-              className="w-full py-2 bg-primary text-text-primary rounded-xl text-sm font-semibold hover:bg-primary-hover transition-all active:scale-[98%] disabled:opacity-50"
+              className="w-full py-2 bg-primary text-text-primary btn-brutal text-sm font-semibold   active:scale-[98%] disabled:opacity-50"
             >
               Create &amp; Add Word
             </button>

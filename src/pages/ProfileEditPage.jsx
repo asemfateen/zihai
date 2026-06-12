@@ -64,7 +64,7 @@ function ProfileEditPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate('/profile')}
-          className="mb-6 px-3 py-2 text-sm text-text-secondary btn-brutal hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-3 py-2 text-sm text-text-secondary btn-brutal hover:text-primary hover:border-primary  flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back to Profile
@@ -102,7 +102,7 @@ function ProfileEditPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 bg-primary text-text-primary rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 bg-primary text-text-primary btn-brutal text-sm font-medium   disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -112,7 +112,7 @@ function ProfileEditPage() {
         <div className="border-t border-border/50 pt-8">
           <button
             onClick={() => navigate('/profile/change-password')}
-            className="flex items-center justify-between w-full px-4 py-3 bg-card btn-brutal hover:bg-surface transition-colors"
+            className="flex items-center justify-between w-full px-4 py-3 bg-card btn-brutal hover:bg-surface "
           >
             <span className="text-text-primary text-sm font-medium">Change Password</span>
             <svg className="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
