@@ -67,6 +67,26 @@ if (!JWT_SECRET) {
 }
 
 const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
+
+// If the user specified a persistent volume DB_PATH, and it doesn't exist yet,
+// we must copy the pre-populated zihai.db from the repository to the new location.
+const embeddedDbPath = path.join(__dirname, 'zihai.db')
+if (DB_PATH !== embeddedDbPath) {
+  if (!fs.existsSync(DB_PATH) || fs.statSync(DB_PATH).size < 1000) {
+    console.log(`Initializing persistent database at ${DB_PATH} from ${embeddedDbPath}`)
+    
+    // Ensure the target directory exists
+    const targetDir = path.dirname(DB_PATH)
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true })
+    }
+    
+    // Copy the populated database over
+    fs.copyFileSync(embeddedDbPath, DB_PATH)
+    console.log('Database copy successful.')
+  }
+}
+
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
 db.pragma('synchronous = NORMAL')
