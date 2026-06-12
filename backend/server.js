@@ -1357,7 +1357,7 @@ app.get('/api/quiz/generate', requireAuth, (req, res) => {
       return {
         id: word.id,
         character: word.character,
-        pinyin: word.pinyin,
+        pinyin: convertNumberedPinyin(word.pinyin),
         options,
         answer: word.definition
       }
