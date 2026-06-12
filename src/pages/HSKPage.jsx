@@ -132,7 +132,7 @@ function HSKPage() {
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-end">
                             <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
-                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
                           </div>
                         </div>
                       )}
@@ -153,7 +153,7 @@ function HSKPage() {
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-center">
                             <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
-                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
                           </div>
                         </div>
                     </div>
@@ -165,7 +165,7 @@ function HSKPage() {
                           <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary transition-colors">{lvl.name}</h2>
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-start">
-                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
                             <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
                           </div>
                         </div>
@@ -188,7 +188,7 @@ function HSKPage() {
               </button>
               <h2 className="text-2xl font-bold text-text-primary tracking-tight">HSK {selectedLevel} Lexicon</h2>
               <button
-                onClick={() => navigate(`/flashcards?hsk=${selectedLevel}`)}
+                onClick={() => navigate(`/quiz?hsk=${selectedLevel}`)}
                 className="px-4 py-2 bg-primary text-text-primary rounded-lg font-semibold hover:bg-primary-hover transition-colors flex items-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20"
               >
                 <PlayIcon className="w-4.5 h-4.5" />

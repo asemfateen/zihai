@@ -1311,23 +1311,35 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/quiz/generate', requireAuth, (req, res) => {
   try {
-    // Fetch up to 10 words (mix of due flashcards and random words)
-    let words = db.prepare(`
-      SELECT w.id, w.simplified as character, w.pinyin, w.definition
-      FROM flashcard_progress fp
-      JOIN cedict_words w ON w.id = fp.word_id
-      WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
-      ORDER BY RANDOM() LIMIT 10
-    `).all(req.user.id)
+    let words = []
+    const hskLevel = parseInt(req.query.hsk, 10)
 
-    if (words.length < 10) {
-      const extra = db.prepare(`
+    if (!isNaN(hskLevel) && hskLevel > 0) {
+      words = db.prepare(`
         SELECT id, simplified as character, pinyin, definition
         FROM cedict_words
-        WHERE hsk_level > 0 AND id NOT IN (${words.map(w => w.id).join(',') || '0'})
-        ORDER BY RANDOM() LIMIT ?
-      `).all(10 - words.length)
-      words = words.concat(extra)
+        WHERE hsk_level = ?
+        ORDER BY RANDOM() LIMIT 10
+      `).all(hskLevel)
+    } else {
+      // Fetch up to 10 words (mix of due flashcards and random words)
+      words = db.prepare(`
+        SELECT w.id, w.simplified as character, w.pinyin, w.definition
+        FROM flashcard_progress fp
+        JOIN cedict_words w ON w.id = fp.word_id
+        WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
+        ORDER BY RANDOM() LIMIT 10
+      `).all(req.user.id)
+
+      if (words.length < 10) {
+        const extra = db.prepare(`
+          SELECT id, simplified as character, pinyin, definition
+          FROM cedict_words
+          WHERE hsk_level > 0 AND id NOT IN (${words.map(w => w.id).join(',') || '0'})
+          ORDER BY RANDOM() LIMIT ?
+        `).all(10 - words.length)
+        words = words.concat(extra)
+      }
     }
 
     // For each word, get 3 distractors

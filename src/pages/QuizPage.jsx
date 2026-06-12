@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -17,6 +17,7 @@ export default function QuizPage() {
   const [selectedOption, setSelectedOption] = useState(null)
   
   const { speak } = useSpeechSynthesis()
+  const [searchParams] = useSearchParams()
 
   const startQuiz = async () => {
     setLoading(true)
@@ -26,7 +27,9 @@ export default function QuizPage() {
     setStreak(0)
     setSelectedOption(null)
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/quiz/generate`, { credentials: 'include' })
+      const hsk = searchParams.get('hsk')
+      const url = hsk ? `${API_BASE}/api/quiz/generate?hsk=${hsk}` : `${API_BASE}/api/quiz/generate`
+      const res = await fetchWithTimeout(url, { credentials: 'include' })
       if (res.ok) setQuestions(await res.json())
     } catch (err) {
       console.error('Failed to load quiz:', err)
