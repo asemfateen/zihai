@@ -8,8 +8,9 @@ import { useWordFavorite } from '../hooks/useWordFavorite'
 import { useToast } from '../hooks/useToast'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import API_BASE, { fetchWithTimeout } from '../api'
-import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon } from '../components/Icons'
+import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, SpeakerWaveIcon, SpeakerMuteIcon, PlusIcon } from '../components/Icons'
 import ExampleSentenceCard from '../components/ExampleSentenceCard'
+import CustomListsModal from '../components/CustomListsModal'
 import RADICAL_MAP from '../data/radicals'
 
 function WordPage() {
@@ -22,6 +23,7 @@ function WordPage() {
   const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
+  const [showListsModal, setShowListsModal] = useState(false)
 
   useEffect(() => {
     if (!word || !user) return
@@ -252,6 +254,13 @@ function WordPage() {
                 )}
               </button>
 
+              <button
+                onClick={() => setShowListsModal(true)}
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:text-primary hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0 text-text-secondary"
+                title="Add to Custom List"
+              >
+                <PlusIcon className="w-7 h-7" />
+              </button>
 
               {word.hsk_level && (
                 <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl text-sm font-bold shadow-sm">
@@ -307,6 +316,11 @@ function WordPage() {
         </div>
       </div>
 
+      <CustomListsModal
+        wordId={word.id}
+        isOpen={showListsModal}
+        onClose={() => setShowListsModal(false)}
+      />
     </div>
   )
 }

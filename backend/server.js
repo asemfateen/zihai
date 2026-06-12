@@ -1262,6 +1262,68 @@ app.get('/api/favorites', requireAuth, (req, res) => {
 })
 
 // Custom lists endpoints
+app.get('/api/lists', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT cl.id, cl.name, cl.description, cl.created_at, COUNT(clw.word_id) as word_count
+    FROM custom_lists cl
+    LEFT JOIN custom_list_words clw ON clw.list_id = cl.id
+    WHERE cl.user_id = ?
+    GROUP BY cl.id
+    ORDER BY cl.name ASC
+  `).all(req.user.id)
+  res.json(rows)
+})
+
+app.post('/api/lists', requireAuth, (req, res) => {
+  const name = sanitizeString(req.body.name || '')
+  const description = sanitizeString(req.body.description || '')
+  if (!name) return res.status(400).json({ error: 'List name required' })
+  const result = db.prepare('INSERT INTO custom_lists (user_id, name, description) VALUES (?, ?, ?)').run(req.user.id, name, description)
+  res.json({ id: result.lastInsertRowid, name, description })
+})
+
+app.delete('/api/lists/:id', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM custom_lists WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id)
+  res.json({ message: 'List deleted' })
+})
+
+app.get('/api/lists/:id/words', requireAuth, (req, res) => {
+  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
+  if (!list) return res.status(404).json({ error: 'List not found' })
+  const rows = db.prepare(`
+    SELECT w.id, w.simplified AS character, w.pinyin, w.definition AS english_definition, w.hsk_level
+    FROM custom_list_words clw
+    JOIN cedict_words w ON w.id = clw.word_id
+    WHERE clw.list_id = ?
+    ORDER BY clw.added_at DESC
+  `).all(req.params.id)
+  res.json(rows.map(resolveRow))
+})
+
+app.post('/api/lists/:id/words', requireAuth, (req, res) => {
+  const wordId = parseInt(req.body.wordId, 10)
+  if (isNaN(wordId)) return res.status(400).json({ error: 'Invalid word ID' })
+  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
+  if (!list) return res.status(404).json({ error: 'List not found' })
+  db.prepare('INSERT OR IGNORE INTO custom_list_words (list_id, word_id) VALUES (?, ?)').run(req.params.id, wordId)
+  res.json({ message: 'Word added to list' })
+})
+
+app.delete('/api/lists/:id/words/:wordId', requireAuth, (req, res) => {
+  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
+  if (!list) return res.status(404).json({ error: 'List not found' })
+  db.prepare('DELETE FROM custom_list_words WHERE list_id = ? AND word_id = ?').run(req.params.id, req.params.wordId)
+  res.json({ message: 'Word removed from list' })
+})
+
+app.get('/api/words/:wordId/lists', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT list_id FROM custom_list_words clw
+    JOIN custom_lists cl ON cl.id = clw.list_id
+    WHERE cl.user_id = ? AND clw.word_id = ?
+  `).all(req.user.id, req.params.wordId)
+  res.json(rows.map(r => r.list_id))
+})
 
 // Stories endpoints
 app.get('/api/stories', requireAuth, (req, res) => {
