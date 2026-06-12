@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Award, Flame } from 'lucide-react';
-import api from '../api';
+import API_BASE, { fetchWithTimeout } from '../api';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import AchievementCard from '../components/AchievementCard';
@@ -17,7 +17,9 @@ export default function AchievementsPage() {
   const fetchAchievements = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/achievements');
+      const res = await fetchWithTimeout(`${API_BASE}/api/achievements`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
       setAchievements(data);
       setError(null);
     } catch (err) {

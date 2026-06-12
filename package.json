@@ -23,6 +23,7 @@
     "hanzi-writer": "^3.7.3",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.18.0",
     "node-edge-tts": "^1.2.10",
     "nodemailer": "^6.10.0",
     "prop-types": "^15.8.1",
