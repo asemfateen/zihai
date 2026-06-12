@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zihai Setup</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #171717;
+      color: #fff;
+      margin: 0;
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      color: #10b981;
+    }
+    p {
+      font-size: 14px;
+      color: #a3a3a3;
+      line-height: 1.4;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      background: #262626;
+      color: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #10b981;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #059669;
+    }
+    #status {
+      margin-top: 12px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h2>Zihai Dictionary</h2>
+  <div id="login-container">
+    <p>Please enter your Zihai account email and password to connect the extension.</p>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="login-btn">Connect to Zihai</button>
+  </div>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

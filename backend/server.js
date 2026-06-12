@@ -17,6 +17,9 @@ import nodemailer from 'nodemailer'
 import { normalizePinyin, searchNormalizePinyin, splitPinyin, generatePinyinAlternatives } from './pinyinUtils.js'
 import { convertNumberedPinyin } from './utils/pinyin.js'
 import RADICALS from './radicals.js'
+import { fsrs, Rating, createEmptyCard } from 'ts-fsrs'
+
+const f = fsrs()
 
 function generateCsrfToken() {
   return crypto.randomBytes(32).toString('hex')
@@ -131,6 +134,7 @@ app.use(cors({
       /https:\/\/zihai-.*\.vercel\.app$/,
       /https?:\/\/.*\.railway\.app$/,
       /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]):\d+$/,
+      /^chrome-extension:\/\/[a-z]{32}$/
     ]
     for (const ip of localIps) {
       allowed.push(new RegExp(`^https?:\\/\\/${ip.replace(/\./g, '\\.')}:\\d+$`))
@@ -199,9 +203,14 @@ db.exec(`
      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
      word_id INTEGER NOT NULL,
      added_at TEXT DEFAULT (datetime('now')),
-     ease_factor REAL DEFAULT 2.5,
-     interval_days INTEGER DEFAULT 0,
-     repetition INTEGER DEFAULT 0,
+     stability REAL DEFAULT 0,
+     difficulty REAL DEFAULT 0,
+     elapsed_days INTEGER DEFAULT 0,
+     scheduled_days INTEGER DEFAULT 0,
+     reps INTEGER DEFAULT 0,
+     lapses INTEGER DEFAULT 0,
+     state INTEGER DEFAULT 0,
+     last_review_date TEXT,
      next_review_date TEXT DEFAULT (date('now')),
      correct_count INTEGER DEFAULT 0,
      incorrect_count INTEGER DEFAULT 0,
@@ -233,36 +242,63 @@ db.exec(`
     definitions TEXT NOT NULL
   );
 
-  CREATE TABLE IF NOT EXISTS custom_lists (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    description TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
-  );
 
-  CREATE TABLE IF NOT EXISTS custom_list_words (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    list_id INTEGER NOT NULL REFERENCES custom_lists(id) ON DELETE CASCADE,
-    word_id INTEGER NOT NULL,
-    added_at TEXT DEFAULT (datetime('now')),
-    UNIQUE(list_id, word_id)
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_custom_lists_user ON custom_lists(user_id);
-  CREATE INDEX IF NOT EXISTS idx_custom_list_words_list ON custom_list_words(list_id);
 `)
 
+// FSRS Migration
 try {
-  db.exec('ALTER TABLE flashcard_progress ADD COLUMN repetition INTEGER DEFAULT 0')
-} catch {
-  // Column already exists
-}
-
-try {
-  db.exec('ALTER TABLE flashcard_progress ADD COLUMN added_at TEXT')
-} catch {
-  // Column already exists
+  const tableInfo = db.prepare('PRAGMA table_info(flashcard_progress)').all()
+  const hasEaseFactor = tableInfo.some(col => col.name === 'ease_factor')
+  
+  if (hasEaseFactor) {
+    console.log('Migrating flashcard_progress to FSRS schema...')
+    db.transaction(() => {
+      // Create a temporary table with the old data
+      db.exec(`
+        CREATE TABLE flashcard_progress_backup AS SELECT * FROM flashcard_progress;
+        DROP TABLE flashcard_progress;
+      `)
+      
+      // Re-run the table creation from schema above
+      db.exec(`
+         CREATE TABLE IF NOT EXISTS flashcard_progress (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+           word_id INTEGER NOT NULL,
+           added_at TEXT DEFAULT (datetime('now')),
+           stability REAL DEFAULT 0,
+           difficulty REAL DEFAULT 0,
+           elapsed_days INTEGER DEFAULT 0,
+           scheduled_days INTEGER DEFAULT 0,
+           reps INTEGER DEFAULT 0,
+           lapses INTEGER DEFAULT 0,
+           state INTEGER DEFAULT 0,
+           last_review_date TEXT,
+           next_review_date TEXT DEFAULT (date('now')),
+           correct_count INTEGER DEFAULT 0,
+           incorrect_count INTEGER DEFAULT 0,
+           UNIQUE(user_id, word_id)
+         );
+      `)
+      
+      // Copy data back, mapping old 'repetition' to new FSRS 'reps'
+      db.exec(`
+        INSERT INTO flashcard_progress (
+          id, user_id, word_id, added_at,
+          stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, last_review_date, next_review_date, correct_count, incorrect_count
+        )
+        SELECT 
+          id, user_id, word_id, added_at,
+          0, 0, 0, 0, repetition, 0, CASE WHEN repetition > 0 THEN 2 ELSE 0 END, NULL, next_review_date, correct_count, incorrect_count
+        FROM flashcard_progress_backup;
+        
+        DROP TABLE flashcard_progress_backup;
+      `)
+      console.log('FSRS Migration complete.')
+    })()
+  }
+} catch (e) {
+  console.error('Migration error:', e)
 }
 
 try {
@@ -284,6 +320,41 @@ try {
   // Table may already exist
 }
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_word_examples_word ON word_examples(word_id)') } catch {}
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS review_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      word_id INTEGER NOT NULL,
+      correct INTEGER NOT NULL,
+      review_date TEXT DEFAULT (datetime('now'))
+    )
+  `)
+  db.exec('CREATE INDEX IF NOT EXISTS idx_review_log_user_date ON review_log(user_id, review_date)')
+} catch {}
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reading_stories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      hsk_level INTEGER NOT NULL,
+      content TEXT NOT NULL
+    )
+  `)
+
+  const storyCount = db.prepare('SELECT COUNT(*) as c FROM reading_stories').get().c
+  if (storyCount === 0) {
+    const insertStory = db.prepare('INSERT INTO reading_stories (title, hsk_level, content) VALUES (?, ?, ?)')
+    insertStory.run('我的猫 (My Cat)', 1, '我有一个猫。它很大。它喜欢吃鱼。我爱我的猫。')
+    insertStory.run('买苹果 (Buying Apples)', 1, '今天我去商店。我买三个苹果。一个苹果五块钱。')
+    insertStory.run('北京的天气 (Beijing Weather)', 2, '北京的秋天很漂亮。天气不冷也不热。很多旅游的人来北京。')
+    insertStory.run('周末计划 (Weekend Plans)', 3, '这个周末我打算跟朋友一起去看电影。看完电影以后，我们要去一家新开的中国饭馆吃晚饭。')
+  }
+} catch (err) {
+  console.error('Failed to init reading_stories', err)
+}
 
 // Radicals table
 db.exec(`
@@ -409,33 +480,68 @@ app.get('/api/profile', requireAuth, (req, res) => {
 
 app.get('/api/stats', requireAuth, (req, res) => {
   try {
+    // Combine dates from review_log and search_history for streak calculation
     const historyDates = db.prepare(`
-      SELECT DISTINCT date(searched_at) as date FROM search_history
-      WHERE user_id = ? ORDER BY date DESC
-    `).all(req.user.id).map(r => r.date)
+      SELECT DISTINCT date(activity_date) as date FROM (
+        SELECT searched_at as activity_date FROM search_history WHERE user_id = ?
+        UNION
+        SELECT review_date as activity_date FROM review_log WHERE user_id = ?
+      ) ORDER BY date DESC
+    `).all(req.user.id, req.user.id).map(r => r.date)
 
-    let streak = 0
+    let currentStreak = 0
+    let longestStreak = 0
     if (historyDates.length > 0) {
+      let currentRun = 1
+      longestStreak = 1
       const todayStr = new Date().toISOString().slice(0, 10)
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
       const yesterdayStr = yesterday.toISOString().slice(0, 10)
 
       if (historyDates[0] === todayStr || historyDates[0] === yesterdayStr) {
-        streak = 1
+        currentStreak = 1
         let lastDate = new Date(historyDates[0])
         for (let i = 1; i < historyDates.length; i++) {
           const currentDate = new Date(historyDates[i])
           const diffDays = Math.round((lastDate - currentDate) / (1000 * 60 * 60 * 24))
           if (diffDays === 1) {
-            streak++
+            currentStreak++
+            currentRun++
+            lastDate = currentDate
+            longestStreak = Math.max(longestStreak, currentRun)
+          } else if (diffDays > 1) {
+            currentRun = 1
+            lastDate = currentDate
+            // don't break, continue calculating longest streak
+          }
+        }
+      } else {
+        // Find longest streak overall
+        let lastDate = new Date(historyDates[0])
+        for (let i = 1; i < historyDates.length; i++) {
+          const currentDate = new Date(historyDates[i])
+          const diffDays = Math.round((lastDate - currentDate) / (1000 * 60 * 60 * 24))
+          if (diffDays === 1) {
+            currentRun++
+            longestStreak = Math.max(longestStreak, currentRun)
             lastDate = currentDate
           } else if (diffDays > 1) {
-            break
+            currentRun = 1
+            lastDate = currentDate
           }
         }
       }
     }
+
+    // Heatmap data: counts per day over last 365 days
+    const heatmap = db.prepare(`
+      SELECT date(review_date) as date, COUNT(*) as count
+      FROM review_log
+      WHERE user_id = ? AND review_date >= date('now', '-365 days')
+      GROUP BY date(review_date)
+      ORDER BY date(review_date) ASC
+    `).all(req.user.id)
 
     const totalCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ?').get(req.user.id).count
     const newCards = db.prepare('SELECT COUNT(*) as count FROM flashcard_progress WHERE user_id = ? AND next_review_date <= date(\'now\')').get(req.user.id).count
@@ -456,8 +562,21 @@ app.get('/api/stats', requireAuth, (req, res) => {
       ORDER BY hsk_level ASC
     `).all(req.user.id)
 
+    // Compute Badges
+    const badges = []
+    if (longestStreak >= 3) badges.push({ id: 'streak_3', name: '3-Day Streak', icon: '🔥', color: 'orange-500' })
+    if (longestStreak >= 7) badges.push({ id: 'streak_7', name: '7-Day Streak', icon: '🔥', color: 'rose-500' })
+    if (longestStreak >= 30) badges.push({ id: 'streak_30', name: '30-Day Streak', icon: '👑', color: 'amber-500' })
+    
+    if (totalCards >= 50) badges.push({ id: 'vocab_50', name: 'Vocab Novice', icon: '🌱', color: 'emerald-500' })
+    if (totalCards >= 500) badges.push({ id: 'vocab_500', name: 'Vocab Master', icon: '🌳', color: 'emerald-600' })
+    
+    if (masteredCards >= 100) badges.push({ id: 'master_100', name: 'Memory Champion', icon: '🧠', color: 'indigo-500' })
+
     res.json({
-      streak,
+      streak: currentStreak,
+      longestStreak,
+      heatmap,
       totalCards,
       newCards,
       learningCards,
@@ -636,6 +755,22 @@ app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok' })
 })
 
+const analyzeGetWord = db.prepare(`
+  SELECT id, simplified, pinyin, definition, hsk_level, 'word' as type
+  FROM cedict_words 
+  WHERE simplified = ? OR traditional = ? 
+  ORDER BY CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END ASC, hsk_level ASC 
+  LIMIT 1
+`);
+
+const analyzeGetChar = db.prepare(`
+  SELECT id, simplified, pinyin, definition, hsk_level, 'char' as type
+  FROM characters 
+  WHERE simplified = ? OR traditional = ? 
+  ORDER BY CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END ASC, hsk_level ASC 
+  LIMIT 1
+`);
+
 app.post('/api/analyze', apiLimiter, (req, res) => {
   const text = req.body.text || '';
   if (typeof text !== 'string') return res.status(400).json({ error: 'Text must be a string' });
@@ -647,18 +782,6 @@ app.post('/api/analyze', apiLimiter, (req, res) => {
     const maxLen = 6;
     let i = 0;
 
-    const getWord = db.prepare(`
-      SELECT * FROM (
-        SELECT id, simplified, pinyin, definition, hsk_level, 'word' as type
-        FROM cedict_words WHERE simplified = ? OR traditional = ?
-        UNION ALL
-        SELECT id, simplified, pinyin, definition, hsk_level, 'char' as type
-        FROM characters WHERE simplified = ? OR traditional = ?
-      )
-      ORDER BY (CASE WHEN type = 'word' THEN 0 ELSE 1 END) ASC, (CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END) ASC, hsk_level ASC
-      LIMIT 1
-    `);
-
     while (i < text.length) {
       let matched = false;
       for (let len = maxLen; len > 0; len--) {
@@ -668,7 +791,11 @@ app.post('/api/analyze', apiLimiter, (req, res) => {
         // Skip DB lookup for multi-char non-Chinese strings (speed optimization)
         if (len > 1 && !/[\u4e00-\u9fa5]/.test(substr)) continue;
 
-        const row = getWord.get(substr, substr, substr, substr);
+        let row = analyzeGetWord.get(substr, substr);
+        if (!row && len === 1) {
+          row = analyzeGetChar.get(substr, substr);
+        }
+
         if (row) {
           tokens.push({
             text: substr,
@@ -1109,67 +1236,126 @@ app.get('/api/favorites', requireAuth, (req, res) => {
 })
 
 // Custom lists endpoints
-app.get('/api/lists', requireAuth, (req, res) => {
-  const rows = db.prepare(`
-    SELECT cl.id, cl.name, cl.description, cl.created_at, COUNT(clw.word_id) as word_count
-    FROM custom_lists cl
-    LEFT JOIN custom_list_words clw ON clw.list_id = cl.id
-    WHERE cl.user_id = ?
-    GROUP BY cl.id
-    ORDER BY cl.name ASC
-  `).all(req.user.id)
+
+// Stories endpoints
+app.get('/api/stories', requireAuth, (req, res) => {
+  const rows = db.prepare('SELECT id, title, hsk_level FROM reading_stories ORDER BY hsk_level ASC, id ASC').all()
   res.json(rows)
 })
 
-app.post('/api/lists', requireAuth, (req, res) => {
-  const name = sanitizeString(req.body.name || '')
-  const description = sanitizeString(req.body.description || '')
-  if (!name) return res.status(400).json({ error: 'List name required' })
-  const result = db.prepare('INSERT INTO custom_lists (user_id, name, description) VALUES (?, ?, ?)').run(req.user.id, name, description)
-  res.json({ id: result.lastInsertRowid, name, description })
+app.get('/api/stories/:id', requireAuth, (req, res) => {
+  const story = db.prepare('SELECT * FROM reading_stories WHERE id = ?').get(req.params.id)
+  if (!story) return res.status(404).json({ error: 'Story not found' })
+  res.json(story)
 })
 
-app.delete('/api/lists/:id', requireAuth, (req, res) => {
-  db.prepare('DELETE FROM custom_lists WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id)
-  res.json({ message: 'List deleted' })
+// Flashcard Import/Export
+app.post('/api/flashcards/import', requireAuth, (req, res) => {
+  const { text } = req.body
+  if (!text) return res.status(400).json({ error: 'No text provided' })
+
+  // Simple parser: assumes one character/word per line, ignoring everything else
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l)
+  let imported = 0
+  
+  db.transaction(() => {
+    for (const line of lines) {
+      // Just extract the first sequence of Chinese characters
+      const match = line.match(/([\u4e00-\u9fff]+)/)
+      if (match) {
+        const char = match[1]
+        // Find in cedict
+        const wordRow = db.prepare('SELECT id FROM cedict_words WHERE simplified = ? OR traditional = ? LIMIT 1').get(char, char)
+        if (wordRow) {
+          try {
+            db.prepare(`
+              INSERT INTO flashcard_progress (user_id, word_id, ease_factor, interval_days, repetition, next_review_date)
+              VALUES (?, ?, 2.5, 0, 0, date('now'))
+            `).run(req.user.id, wordRow.id)
+            imported++
+          } catch (e) {
+            // Probably unique constraint (already in flashcards)
+          }
+        }
+      }
+    }
+  })()
+
+  res.json({ message: `Successfully imported ${imported} words into your flashcards.` })
 })
 
-app.get('/api/lists/:id/words', requireAuth, (req, res) => {
-  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  const rows = db.prepare(`
-    SELECT w.id, w.simplified AS character, w.pinyin, w.definition AS english_definition, w.hsk_level
-    FROM custom_list_words clw
-    JOIN cedict_words w ON w.id = clw.word_id
-    WHERE clw.list_id = ?
-    ORDER BY clw.added_at DESC
-  `).all(req.params.id)
-  res.json(rows.map(resolveRow))
+app.get('/api/flashcards/export', requireAuth, (req, res) => {
+  const words = db.prepare(`
+    SELECT w.simplified, w.pinyin, w.definition
+    FROM flashcard_progress fp
+    JOIN cedict_words w ON w.id = fp.word_id
+    WHERE fp.user_id = ?
+  `).all(req.user.id)
+
+  let csv = 'Character,Pinyin,Definition\n'
+  words.forEach(w => {
+    // Escape quotes in definition
+    const def = w.definition.replace(/"/g, '""')
+    csv += `"${w.simplified}","${w.pinyin}","${def}"\n`
+  })
+
+  res.setHeader('Content-Type', 'text/csv')
+  res.setHeader('Content-Disposition', 'attachment; filename=zihai_flashcards.csv')
+  res.send(csv)
 })
 
-app.post('/api/lists/:id/words', requireAuth, (req, res) => {
-  const wordId = parseInt(req.body.wordId, 10)
-  if (isNaN(wordId)) return res.status(400).json({ error: 'Invalid word ID' })
-  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  db.prepare('INSERT OR IGNORE INTO custom_list_words (list_id, word_id) VALUES (?, ?)').run(req.params.id, wordId)
-  res.json({ message: 'Word added to list' })
+// Quiz endpoints
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() })
 })
 
-app.delete('/api/lists/:id/words/:wordId', requireAuth, (req, res) => {
-  const list = db.prepare('SELECT id FROM custom_lists WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
-  if (!list) return res.status(404).json({ error: 'List not found' })
-  db.prepare('DELETE FROM custom_list_words WHERE list_id = ? AND word_id = ?').run(req.params.id, req.params.wordId)
-  res.json({ message: 'Word removed from list' })
-})
+app.get('/api/quiz/generate', requireAuth, (req, res) => {
+  try {
+    // Fetch up to 10 words (mix of due flashcards and random words)
+    let words = db.prepare(`
+      SELECT w.id, w.simplified as character, w.pinyin, w.definition
+      FROM flashcard_progress fp
+      JOIN cedict_words w ON w.id = fp.word_id
+      WHERE fp.user_id = ? AND fp.next_review_date <= date('now')
+      ORDER BY RANDOM() LIMIT 10
+    `).all(req.user.id)
 
-app.get('/api/words/:wordId/lists', requireAuth, (req, res) => {
-  const rows = db.prepare(`
-    SELECT list_id FROM custom_list_words clw
-    JOIN custom_lists cl ON cl.id = clw.list_id
-    WHERE cl.user_id = ? AND clw.word_id = ?
-  `).all(req.user.id, req.params.wordId)
-  res.json(rows.map(r => r.list_id))
+    if (words.length < 10) {
+      const extra = db.prepare(`
+        SELECT id, simplified as character, pinyin, definition
+        FROM cedict_words
+        WHERE hsk_level > 0 AND id NOT IN (${words.map(w => w.id).join(',') || '0'})
+        ORDER BY RANDOM() LIMIT ?
+      `).all(10 - words.length)
+      words = words.concat(extra)
+    }
+
+    // For each word, get 3 distractors
+    const quiz = words.map(word => {
+      const distractors = db.prepare(`
+        SELECT definition FROM cedict_words
+        WHERE id != ? AND hsk_level > 0
+        ORDER BY RANDOM() LIMIT 3
+      `).all(word.id).map(d => d.definition)
+
+      const options = [word.definition, ...distractors]
+      // Shuffle options
+      options.sort(() => Math.random() - 0.5)
+
+      return {
+        id: word.id,
+        character: word.character,
+        pinyin: word.pinyin,
+        options,
+        answer: word.definition
+      }
+    })
+
+    res.json(quiz)
+  } catch (err) {
+    console.error('Failed to generate quiz:', err)
+    res.status(500).json({ error: 'Failed to generate quiz' })
+  }
 })
 
 const FLASHCARD_STATIC_ROUTES = {
@@ -1229,46 +1415,68 @@ app.post('/api/flashcards/:wordId/result', requireAuth, (req, res) => {
   }
 
   let entry = db.prepare(`
-    SELECT *, COALESCE(repetition, 0) as repetition FROM flashcard_progress
+    SELECT * FROM flashcard_progress
     WHERE user_id = ? AND word_id = ?
   `).get(req.user.id, wordId)
+  
   if (!entry) {
-    db.prepare('INSERT INTO flashcard_progress (user_id, word_id, next_review_date) VALUES (?, ?, date(\'now\'))').run(req.user.id, wordId)
+    db.prepare(`
+      INSERT INTO flashcard_progress (user_id, word_id, next_review_date) 
+      VALUES (?, ?, date('now'))
+    `).run(req.user.id, wordId)
     entry = db.prepare(`
-      SELECT *, COALESCE(repetition, 0) as repetition FROM flashcard_progress
+      SELECT * FROM flashcard_progress
       WHERE user_id = ? AND word_id = ?
     `).get(req.user.id, wordId)
   }
 
-  let { ease_factor, interval_days, repetition, correct_count, incorrect_count } = entry
+  // Map 0-5 quality to FSRS 1-4 rating
+  let rating = Rating.Again
+  if (quality === 3) rating = Rating.Hard
+  else if (quality === 4) rating = Rating.Good
+  else if (quality === 5) rating = Rating.Easy
 
-  // SM-2 algorithm
-  ease_factor = ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-  ease_factor = Math.max(1.3, ease_factor)
-
-  if (quality >= 3) {
-    repetition++
-    if (repetition === 1) {
-      interval_days = 1
-    } else if (repetition === 2) {
-      interval_days = 6
-    } else {
-      interval_days = Math.round(interval_days * ease_factor)
-    }
-    correct_count++
-  } else {
-    repetition = 0
-    interval_days = 1
-    incorrect_count++
+  const card = {
+    due: new Date(entry.next_review_date),
+    stability: entry.stability || 0,
+    difficulty: entry.difficulty || 0,
+    elapsed_days: entry.elapsed_days || 0,
+    scheduled_days: entry.scheduled_days || 0,
+    reps: entry.reps || 0,
+    lapses: entry.lapses || 0,
+    state: entry.state || 0,
+    last_review: entry.last_review_date ? new Date(entry.last_review_date) : undefined
   }
+
+  // Handle empty cards properly for FSRS
+  const currentCard = card.state === 0 ? createEmptyCard() : card;
+
+  const now = new Date()
+  const scheduling_cards = f.repeat(currentCard, now)
+  const next_card = scheduling_cards[rating].card
+
+  const correct_count = entry.correct_count + (quality >= 3 ? 1 : 0)
+  const incorrect_count = entry.incorrect_count + (quality < 3 ? 1 : 0)
+
+  // SQLite doesn't have native Date, so we format due date as YYYY-MM-DD HH:MM:SS
+  const next_due_iso = next_card.due.toISOString()
 
   db.prepare(`
     UPDATE flashcard_progress
-    SET ease_factor = ?, interval_days = ?, repetition = ?,
-        next_review_date = date('now', '+' || ? || ' days'),
+    SET stability = ?, difficulty = ?, elapsed_days = ?, scheduled_days = ?,
+        reps = ?, lapses = ?, state = ?, last_review_date = ?, next_review_date = ?,
         correct_count = ?, incorrect_count = ?
     WHERE user_id = ? AND word_id = ?
-  `).run(ease_factor, Math.max(1, interval_days), repetition, Math.max(1, interval_days), correct_count, incorrect_count, req.user.id, wordId)
+  `).run(
+    next_card.stability, next_card.difficulty, next_card.elapsed_days, next_card.scheduled_days,
+    next_card.reps, next_card.lapses, next_card.state, now.toISOString(), next_due_iso,
+    correct_count, incorrect_count, req.user.id, wordId
+  )
+
+  db.prepare(`
+    INSERT INTO review_log (user_id, word_id, correct, review_date)
+    VALUES (?, ?, ?, datetime('now'))
+  `).run(req.user.id, wordId, quality >= 3 ? 1 : 0)
 
   res.json({ message: 'Updated' })
 })

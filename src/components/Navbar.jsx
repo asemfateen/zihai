@@ -266,6 +266,20 @@ function Navbar() {
                 Text Analyzer
               </button>
               <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/reading'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/reading' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">📚</span>
+                Graded Reading
+              </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/quiz'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/quiz' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎮</span>
+                Quiz Mode
+              </button>
+              <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/history'); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/history' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
               >
@@ -307,6 +321,16 @@ function Navbar() {
               }`}
             >
               <UserIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigate('/settings')}
+              className={`p-2 border rounded-lg transition-colors cursor-pointer ${
+                location.pathname === '/settings'
+                  ? 'text-primary border-primary bg-primary/5'
+                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+              }`}
+            >
+              <span className="w-4 h-4 flex items-center justify-center text-xs">⚙️</span>
             </button>
             <button
               onClick={handleLogout}

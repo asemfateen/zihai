@@ -21,12 +21,12 @@ function HSKPage() {
   const [toast, setToast] = useState(null)
 
   const HSK_LEVELS = [
-    { level: 1, name: 'HSK 1', desc: 'Beginner / Breakthrough', color: 'from-blue-500/20 to-blue-600/20', border: 'border-blue-500/30' },
-    { level: 2, name: 'HSK 2', desc: 'Elementary / Tourist', color: 'from-cyan-500/20 to-cyan-600/20', border: 'border-cyan-500/30' },
-    { level: 3, name: 'HSK 3', desc: 'Intermediate / Survival', color: 'from-emerald-500/20 to-emerald-600/20', border: 'border-emerald-500/30' },
-    { level: 4, name: 'HSK 4', desc: 'Upper Intermediate / Conversational', color: 'from-amber-500/20 to-amber-600/20', border: 'border-amber-500/30' },
-    { level: 5, name: 'HSK 5', desc: 'Advanced / Professional', color: 'from-orange-500/20 to-orange-600/20', border: 'border-orange-500/30' },
-    { level: 6, name: 'HSK 6', desc: 'Mastery / Fluent', color: 'from-red-500/20 to-red-600/20', border: 'border-red-500/30' },
+    { level: 1, name: 'Foundation', desc: 'HSK 1 · 150 Words', position: 'left' },
+    { level: 2, name: 'Elementary', desc: 'HSK 2 · 300 Words', position: 'right' },
+    { level: 3, name: 'Intermediate', desc: 'HSK 3 · 600 Words', position: 'left' },
+    { level: 4, name: 'Conversational', desc: 'HSK 4 · 1200 Words', position: 'right' },
+    { level: 5, name: 'Advanced', desc: 'HSK 5 · 2500 Words', position: 'left' },
+    { level: 6, name: 'Mastery', desc: 'HSK 6 · 5000+ Words', position: 'right' },
   ]
 
   const fetchWords = useCallback(async (level, pageNum) => {
@@ -109,40 +109,71 @@ function HSKPage() {
         )}
 
         {selectedLevel === null ? (
-          <div>
-            <h1 className="text-3xl font-bold mb-2">HSK Levels</h1>
-            <p className="text-text-secondary text-sm mb-8">
-              Select an HSK level to browse its full vocabulary list or start a custom review quiz.
-            </p>
+          <div className="flex flex-col items-center">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold mb-3 tracking-tight text-text-primary">The Path to Mastery</h1>
+              <p className="text-text-secondary text-base max-w-lg mx-auto">
+                Follow the skill tree to master Mandarin Chinese, from foundation to absolute fluency.
+              </p>
+            </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:auto-rows-[180px]">
-              {HSK_LEVELS.map((lvl, index) => (
-                <div
-                  key={lvl.level}
-                  className={`col-span-2 md:col-span-1 bg-gradient-to-br ${lvl.color} border border-border/50 rounded-3xl p-6 flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-${lvl.color.split('-')[1]}-500/10 transition-all duration-300 animate-fade-in group bg-card/80 backdrop-blur-xl`}
-                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
-                >
-                  <div>
-                    <h2 className="text-2xl font-bold mb-1 group-hover:scale-105 origin-left transition-transform">{lvl.name}</h2>
-                    <p className="text-xs text-text-secondary mb-4 uppercase font-bold tracking-wider">{lvl.desc}</p>
+            <div className="relative w-full max-w-2xl mx-auto py-8">
+              {/* Central Path Line */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-border/50 transform -translate-x-1/2 rounded-full hidden sm:block"></div>
+
+              <div className="space-y-16 sm:space-y-24 relative">
+                {HSK_LEVELS.map((lvl, index) => (
+                  <div key={lvl.level} className={`flex w-full items-center justify-between animate-fade-in`} style={{ animationDelay: `${(index + 1) * 150}ms` }}>
+                    {/* Left Node */}
+                    <div className={`w-[calc(50%-2rem)] flex ${lvl.position === 'left' ? 'justify-end' : 'justify-end opacity-0 pointer-events-none hidden sm:flex'}`}>
+                      {lvl.position === 'left' && (
+                        <div className="bg-card/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary rounded-3xl p-6 text-right w-full max-w-xs transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group">
+                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary transition-colors">{lvl.name}</h2>
+                          <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
+                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Central Icon */}
+                    <div className="hidden sm:flex relative z-10 w-16 h-16 rounded-full bg-surface border-4 border-card items-center justify-center shadow-xl text-primary font-bold text-xl shadow-primary/10">
+                      {lvl.level}
+                    </div>
+                    
+                    {/* Mobile Center Layout */}
+                    <div className="flex sm:hidden w-full justify-center">
+                       <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-3xl p-6 text-center w-full max-w-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
+                          <div className="w-12 h-12 rounded-full bg-surface border-2 border-primary/30 items-center justify-center text-primary font-bold text-lg mx-auto mb-3 flex">
+                            {lvl.level}
+                          </div>
+                          <h2 className="text-2xl font-bold mb-1 text-text-primary">{lvl.name}</h2>
+                          <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
+                          <div className="flex gap-2 justify-center">
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
+                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                          </div>
+                        </div>
+                    </div>
+
+                    {/* Right Node */}
+                    <div className={`w-[calc(50%-2rem)] flex ${lvl.position === 'right' ? 'justify-start' : 'justify-start opacity-0 pointer-events-none hidden sm:flex'}`}>
+                      {lvl.position === 'right' && (
+                        <div className="bg-card/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary rounded-3xl p-6 text-left w-full max-w-xs transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group">
+                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary transition-colors">{lvl.name}</h2>
+                          <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
+                          <div className="flex gap-2 justify-start">
+                            <button onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={() => navigate(`/flashcards?hsk=${lvl.level}`)}
-                      className="flex-1 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
-                    >
-                      <PlayIcon className="w-3.5 h-3.5" />
-                      Quiz
-                    </button>
-                    <button
-                      onClick={() => handleSelectLevel(lvl.level)}
-                      className="flex-1 py-2 bg-surface border border-border/50 text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm cursor-pointer hover:scale-105 active:scale-95"
-                    >
-                      Browse
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -150,12 +181,12 @@ function HSKPage() {
             <div className="flex items-center justify-between gap-4 mb-6">
               <button
                 onClick={() => setSelectedLevel(null)}
-                className="px-3 py-1.5 bg-card/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg text-sm flex items-center gap-1.5 hover:bg-surface/80 backdrop-blur-xl cursor-pointer"
+                className="px-3 py-1.5 bg-card/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg text-sm flex items-center gap-1.5 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors"
               >
                 <ChevronLeftIcon className="w-4 h-4" />
-                Back to Levels
+                Back to Path
               </button>
-              <h2 className="text-2xl font-bold">HSK {selectedLevel} Vocabulary</h2>
+              <h2 className="text-2xl font-bold text-text-primary tracking-tight">HSK {selectedLevel} Lexicon</h2>
               <button
                 onClick={() => navigate(`/flashcards?hsk=${selectedLevel}`)}
                 className="px-4 py-2 bg-primary text-text-primary rounded-lg font-semibold hover:bg-primary-hover transition-colors flex items-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20"
@@ -168,10 +199,10 @@ function HSKPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {loading ? (
                 <div className="col-span-full py-20 flex justify-center items-center">
-                  <span className="animate-spin text-primary font-bold text-2xl">...</span>
+                  <span className="animate-spin text-primary font-bold text-3xl">🍵</span>
                 </div>
               ) : words.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-text-secondary text-sm bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl">No words found.</div>
+                <div className="col-span-full py-12 text-center text-text-secondary text-sm bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl shadow-sm">No words found in this branch.</div>
               ) : (
                 words.map((word, index) => (
                   <div 
@@ -181,7 +212,7 @@ function HSKPage() {
                   >
                     <div className="space-y-2">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold cursor-pointer hover:text-primary transition-colors" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
+                        <span className="text-3xl font-bold cursor-pointer hover:text-primary transition-colors text-text-primary" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
                           {word.character}
                         </span>
                         <span className="text-sm font-semibold text-primary">{word.pinyin}</span>
@@ -211,7 +242,7 @@ function HSKPage() {
                         disabled={actionLoading[word.id]}
                         className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 ${
                           word.inDeck
-                            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/25'
+                            ? 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/25'
                             : 'bg-surface border-border/50 text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
                         }`}
                       >
@@ -230,21 +261,21 @@ function HSKPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4">
+              <div className="flex justify-center items-center gap-4 py-4">
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer"
+                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors shadow-sm"
                 >
                   <ChevronLeftIcon className="w-5 h-5" />
                 </button>
-                <span className="text-sm text-text-secondary">
-                  Page {page} of {totalPages} ({totalWords} words)
+                <span className="text-sm text-text-secondary font-medium">
+                  Page {page} of {totalPages}
                 </span>
                 <button
                   disabled={page >= totalPages}
                   onClick={() => setPage(p => p + 1)}
-                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer"
+                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors shadow-sm"
                 >
                   <ChevronRightIcon className="w-5 h-5" />
                 </button>

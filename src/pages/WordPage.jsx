@@ -12,8 +12,6 @@ import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, Spea
 import ExampleSentenceCard from '../components/ExampleSentenceCard'
 import RADICAL_MAP from '../data/radicals'
 
-import CustomListsModal from '../components/CustomListsModal'
-
 function WordPage() {
   const { query } = useParams()
   const navigate = useNavigate()
@@ -24,7 +22,6 @@ function WordPage() {
   const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
-  const [isListModalOpen, setIsListModalOpen] = useState(false)
 
   useEffect(() => {
     if (!word || !user) return
@@ -255,21 +252,6 @@ function WordPage() {
                 )}
               </button>
 
-              <button
-                onClick={() => {
-                  if (!user) {
-                    navigate('/login')
-                    return
-                  }
-                  setIsListModalOpen(true)
-                }}
-                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0"
-                title="Add to custom list"
-              >
-                <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
 
               {word.hsk_level && (
                 <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl text-sm font-bold shadow-sm">
@@ -325,13 +307,6 @@ function WordPage() {
         </div>
       </div>
 
-      {word && (
-        <CustomListsModal
-          wordId={word.id}
-          isOpen={isListModalOpen}
-          onClose={() => setIsListModalOpen(false)}
-        />
-      )}
     </div>
   )
 }

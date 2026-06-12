@@ -12,21 +12,25 @@ function ProfilePage() {
   const [profileError, setProfileError] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const [stats, setStats] = useState(null)
+
   const fetchProfile = useCallback(async () => {
     setProfileError(false)
     setLoading(true)
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/profile`, {
-        credentials: 'include',
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setProfile(data)
+      const [resProfile, resStats] = await Promise.all([
+        fetchWithTimeout(`${API_BASE}/api/profile`, { credentials: 'include' }),
+        fetchWithTimeout(`${API_BASE}/api/stats`, { credentials: 'include' })
+      ])
+      
+      if (resProfile.ok && resStats.ok) {
+        setProfile(await resProfile.json())
+        setStats(await resStats.json())
       } else {
         setProfileError(true)
       }
     } catch (err) {
-      console.error('Failed to fetch profile:', err)
+      console.error('Failed to fetch profile/stats:', err)
       setProfileError(true)
     }
     setLoading(false)
@@ -133,6 +137,23 @@ function ProfilePage() {
                 <p className="text-3xl font-black text-text-primary relative z-10">{profile.flashcards_reviewed}</p>
               </div>
             </>
+          )}
+
+          {/* Achievements */}
+          {stats && stats.badges && stats.badges.length > 0 && (
+            <div className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm animate-fade-in [animation-delay:275ms]">
+              <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                <span className="text-amber-500">🏆</span> Achievements
+              </h2>
+              <div className="flex flex-wrap gap-4">
+                {stats.badges.map(badge => (
+                  <div key={badge.id} className="flex items-center gap-3 px-4 py-3 bg-surface/50 border border-border/50 rounded-2xl hover:-translate-y-1 hover:shadow-md transition-all cursor-default">
+                    <span className="text-2xl">{badge.icon}</span>
+                    <span className={`font-bold text-${badge.color}`}>{badge.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Quick Links */}

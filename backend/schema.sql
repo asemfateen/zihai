@@ -60,33 +60,21 @@ CREATE TABLE IF NOT EXISTS search_history (
 CREATE INDEX IF NOT EXISTS idx_search_history_user ON search_history(user_id, searched_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_search_history_unique ON search_history(user_id, query);
 
-CREATE TABLE IF NOT EXISTS vocabulary_lists (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now'))
-);
 
-CREATE INDEX IF NOT EXISTS idx_vocabulary_lists_user ON vocabulary_lists(user_id);
-
-CREATE TABLE IF NOT EXISTS list_items (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  list_id INTEGER NOT NULL,
-  word_id INTEGER NOT NULL,
-  UNIQUE(list_id, word_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_list_items_list ON list_items(list_id);
-CREATE INDEX IF NOT EXISTS idx_list_items_word ON list_items(word_id);
 
 CREATE TABLE IF NOT EXISTS flashcard_progress (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   word_id INTEGER NOT NULL,
   added_at TEXT DEFAULT (datetime('now')),
-  ease_factor REAL DEFAULT 2.5,
-  interval_days INTEGER DEFAULT 0,
-  repetition INTEGER DEFAULT 0,
+  stability REAL DEFAULT 0,
+  difficulty REAL DEFAULT 0,
+  elapsed_days INTEGER DEFAULT 0,
+  scheduled_days INTEGER DEFAULT 0,
+  reps INTEGER DEFAULT 0,
+  lapses INTEGER DEFAULT 0,
+  state INTEGER DEFAULT 0,
+  last_review_date TEXT,
   next_review_date TEXT DEFAULT (date('now')),
   correct_count INTEGER DEFAULT 0,
   incorrect_count INTEGER DEFAULT 0,
@@ -121,3 +109,20 @@ CREATE TABLE IF NOT EXISTS word_examples (
 );
 
 CREATE INDEX IF NOT EXISTS idx_word_examples_word ON word_examples(word_id);
+
+CREATE TABLE IF NOT EXISTS review_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  word_id INTEGER NOT NULL,
+  correct INTEGER NOT NULL,
+  review_date TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_log_user_date ON review_log(user_id, review_date);
+
+CREATE TABLE IF NOT EXISTS reading_stories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  hsk_level INTEGER NOT NULL,
+  content TEXT NOT NULL
+);

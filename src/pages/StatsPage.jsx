@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { FlashcardIcon, ClockIcon, HeartIcon } from '../components/Icons'
+import ActivityHeatmap from '../components/ActivityHeatmap'
 
 function StatsPage() {
   const { user } = useAuth()
@@ -41,7 +42,7 @@ function StatsPage() {
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:auto-rows-[160px]">
-            {[1, 2, 3, 4].map(i => <div key={i} className={`bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 animate-pulse ${i === 4 ? 'col-span-2 md:col-span-4' : 'col-span-2 md:col-span-1 md:row-span-1'}`} />)}
+            {[1, 2, 3, 4, 5].map(i => <div key={i} className={`bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 animate-pulse ${i >= 4 ? 'col-span-2 md:col-span-4' : 'col-span-2 md:col-span-1 md:row-span-1'}`} />)}
           </div>
         ) : error ? (
           <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 text-center animate-fade-in [animation-delay:100ms]">
@@ -56,7 +57,12 @@ function StatsPage() {
                 <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                   <ClockIcon className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Streak</span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Current Streak</span>
+                  {stats.longestStreak > stats.streak && (
+                    <span className="text-[10px] text-text-tertiary">Best: {stats.longestStreak}</span>
+                  )}
+                </div>
               </div>
               <div className="flex items-baseline gap-2 mt-4">
                 <span className="text-5xl font-black text-text-primary">{stats.streak}</span>
@@ -94,6 +100,12 @@ function StatsPage() {
               </div>
             </div>
 
+            {/* Heatmap Activity */}
+            <div className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 animate-fade-in [animation-delay:220ms] flex flex-col justify-center min-h-[220px]">
+              <h3 className="text-lg font-bold mb-4 text-text-primary">Review Activity</h3>
+              <ActivityHeatmap data={stats.heatmap || []} />
+            </div>
+
             {/* Mastery Breakdown */}
             <div className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in [animation-delay:250ms] flex flex-col justify-center min-h-[200px]">
               <h3 className="text-lg font-bold mb-6 text-text-primary">Mastery Breakdown</h3>
@@ -111,8 +123,8 @@ function StatsPage() {
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Mastered</div>
                 </div>
                 <div className="text-center group hover:-translate-y-1 transition-transform">
-                  <div className="text-4xl font-black text-text-primary mb-1 group-hover:scale-110 transition-transform">{stats.streak}</div>
-                  <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Streak</div>
+                  <div className="text-4xl font-black text-text-primary mb-1 group-hover:scale-110 transition-transform">{stats.longestStreak}</div>
+                  <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Best Streak</div>
                 </div>
               </div>
             </div>
@@ -124,3 +136,4 @@ function StatsPage() {
 }
 
 export default StatsPage
+

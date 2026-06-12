@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom'
 import { PlayIcon } from './Icons'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 
-export default function TextAnalyzer({ cardStyle = true }) {
-  const [text, setText] = useState('')
+export default function TextAnalyzer({ cardStyle = true, initialText = '', readOnly = false }) {
+  const [text, setText] = useState(initialText)
   const [tokens, setTokens] = useState([])
   const [loading, setLoading] = useState(false)
   const [showEnglish, setShowEnglish] = useState(false)
@@ -33,6 +33,14 @@ export default function TextAnalyzer({ cardStyle = true }) {
     }
   }
 
+  useEffect(() => {
+    if (initialText) {
+      setText(initialText)
+      // Small timeout to ensure state is set before analyzing
+      setTimeout(handleAnalyze, 100)
+    }
+  }, [initialText])
+
   const getHskColor = (level) => {
     if (!level) return 'text-text-secondary border-border/50'
     const colors = {
@@ -52,29 +60,31 @@ export default function TextAnalyzer({ cardStyle = true }) {
 
   return (
     <div className="w-full">
-      <div className={containerClass}>
-        <h3 className="text-xl font-bold text-text-primary mb-3">Reading Mode (Text Analyzer)</h3>
-        <p className="text-sm text-text-secondary mb-4 font-medium">Paste Chinese text below to break it down into words, show pinyin, and get English definitions.</p>
-        
-        <textarea
-          className="w-full h-32 bg-surface/50 border border-border rounded-2xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans text-sm sm:text-base"
-          placeholder="Paste Chinese text here..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        ></textarea>
-        
-        <div className="flex justify-between items-center">
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !text.trim()}
-            className="bg-primary text-text-primary px-5 py-2.5 rounded-2xl font-bold transition-all hover:scale-102 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer text-sm sm:text-base"
-          >
-            {loading && <Spinner className="w-4 h-4 text-text-primary animate-spin" />}
-            Analyze Text
-          </button>
-          {error && <span className="text-rose-500 font-medium text-xs sm:text-sm">{error}</span>}
+      {!readOnly && (
+        <div className={containerClass}>
+          <h3 className="text-xl font-bold text-text-primary mb-3">Reading Mode (Text Analyzer)</h3>
+          <p className="text-sm text-text-secondary mb-4 font-medium">Paste Chinese text below to break it down into words, show pinyin, and get English definitions.</p>
+          
+          <textarea
+            className="w-full h-32 bg-surface/50 border border-border rounded-2xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans text-sm sm:text-base"
+            placeholder="Paste Chinese text here..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          ></textarea>
+          
+          <div className="flex justify-between items-center">
+            <button
+              onClick={handleAnalyze}
+              disabled={loading || !text.trim()}
+              className="bg-primary text-text-primary px-5 py-2.5 rounded-2xl font-bold transition-all hover:scale-102 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer text-sm sm:text-base"
+            >
+              {loading && <Spinner className="w-4 h-4 text-text-primary animate-spin" />}
+              Analyze Text
+            </button>
+            {error && <span className="text-rose-500 font-medium text-xs sm:text-sm">{error}</span>}
+          </div>
         </div>
-      </div>
+      )}
 
       {tokens.length > 0 && (
         <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm animate-fade-in [animation-delay:100ms] mb-8">

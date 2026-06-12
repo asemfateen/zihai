@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import { CheckIcon, SpeakerIcon, XIcon } from '../components/Icons'
+import StrokeOrderSection from '../components/StrokeOrderSection'
+import confetti from 'canvas-confetti'
 
 function FlashcardsPage() {
   const navigate = useNavigate()
@@ -145,8 +147,6 @@ function FlashcardsPage() {
         return
       }
     } catch (err) {
-      console.error('Failed to save flashcard result:', err)
-      showToast('Failed to save result. Please try again.')
       setAnimating(false)
       return
     }
@@ -155,6 +155,7 @@ function FlashcardsPage() {
       setCorrectCount((prev) => prev + 1)
       if (idx + 1 >= currentCards.length) {
         setComplete(true)
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } })
         setAnimating(false)
       } else {
         advanceToNext(null)
@@ -163,6 +164,7 @@ function FlashcardsPage() {
       setIncorrectCount((prev) => prev + 1)
       if (currentCards.length <= 1) {
         setComplete(true)
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } })
         setAnimating(false)
       } else {
         const reshuffled = [...currentCards.slice(0, idx), ...currentCards.slice(idx + 1), word]

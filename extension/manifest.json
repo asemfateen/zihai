@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Zihai Web Dictionary",
+  "version": "1.0.0",
+  "description": "Hover over Chinese text to see definitions and instantly add words to your flashcards.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3002/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content.css"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  }
+}

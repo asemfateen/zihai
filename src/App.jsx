@@ -9,6 +9,7 @@ import Spinner from './components/Spinner'
 import OfflineBanner from './components/OfflineBanner'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
+import CommandPalette from './components/CommandPalette'
 import { createBrowserRouter } from 'react-router-dom'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -31,6 +32,10 @@ const StatsPage = lazy(() => import('./pages/StatsPage'))
 const PinyinChartPage = lazy(() => import('./pages/PinyinChartPage'))
 const AnalyzerPage = lazy(() => import('./pages/AnalyzerPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const ReadingPage = lazy(() => import('./pages/ReadingPage'))
+const StoryPage = lazy(() => import('./pages/StoryPage'))
+const QuizPage = lazy(() => import('./pages/QuizPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 function PageSuspense({ children }) {
   return (
@@ -46,6 +51,7 @@ function Layout() {
       {/* Global Dynamic background blobs */}
       <div className="fixed top-0 left-1/4 w-[40rem] h-[40rem] bg-primary/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
       <div className="fixed bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-orange-500/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
+      <CommandPalette />
       <ScrollRestoration />
       <Outlet />
       <OfflineBanner />
@@ -76,6 +82,10 @@ const router = createBrowserRouter([
       { path: '/stats', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StatsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/pinyin', element: <PageSuspense><ErrorBoundary><PinyinChartPage /></ErrorBoundary></PageSuspense> },
       { path: '/analyzer', element: <PageSuspense><ErrorBoundary><AnalyzerPage /></ErrorBoundary></PageSuspense> },
+      { path: '/reading', element: <PageSuspense><ProtectedRoute><ErrorBoundary><ReadingPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/reading/:id', element: <PageSuspense><ProtectedRoute><ErrorBoundary><StoryPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/quiz', element: <PageSuspense><ProtectedRoute><ErrorBoundary><QuizPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/settings', element: <PageSuspense><ProtectedRoute><ErrorBoundary><SettingsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },
