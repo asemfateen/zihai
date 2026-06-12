@@ -13,6 +13,19 @@ function ChevronDownIcon(props) {
   )
 }
 
+function TrophyIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7c0 3.31 2.69 6 6 6s6-2.69 6-6V2Z" />
+    </svg>
+  )
+}
+
 function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -307,6 +320,13 @@ function Navbar() {
                 <UserIcon className="w-4 h-4 text-text-secondary" />
                 Stats
               </button>
+              <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/achievements'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/achievements' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <TrophyIcon className="w-4 h-4 text-text-secondary" />
+                Achievements
+              </button>
             </div>
           )}
         </div>
@@ -459,6 +479,13 @@ function Navbar() {
                 >
                   <UserIcon className="w-4 h-4 text-text-secondary" />
                   Stats
+                </button>
+                <button
+                  onClick={() => handleNav('/achievements')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/achievements' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <TrophyIcon className="w-4 h-4 text-text-secondary" />
+                  Achievements
                 </button>
               </div>
             )}

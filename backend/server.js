@@ -396,6 +396,41 @@ const insertMany = db.transaction((rads) => {
 })
 insertMany(RADICALS)
 
+// Achievements System
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS achievements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      requirement_type TEXT NOT NULL,
+      requirement_value INTEGER NOT NULL
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_achievements (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      achievement_id INTEGER NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+      unlocked_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, achievement_id)
+    )
+  `)
+
+  const count = db.prepare('SELECT COUNT(*) as c FROM achievements').get().c
+  if (count === 0) {
+    const insertAch = db.prepare('INSERT INTO achievements (name, description, icon, requirement_type, requirement_value) VALUES (?, ?, ?, ?, ?)')
+    insertAch.run('First Steps', 'Sign up and log in for the first time', 'Footprints', 'first_login', 1)
+    insertAch.run('Vocab Collector', 'Favorite 10 words', 'Star', 'favorites_count', 10)
+    insertAch.run('Flashcard Novice', 'Review 50 flashcards', 'Brain', 'review_count', 50)
+    insertAch.run('Dedicated Scholar', 'Review 500 flashcards', 'GraduationCap', 'review_count', 500)
+    insertAch.run('Curious Explorer', 'Search for 20 different words', 'Search', 'search_count', 20)
+  }
+} catch (err) {
+  console.error('Failed to init achievements system', err)
+}
+
 const isSecure = process.env.NODE_ENV === 'production'
 const cookieOptions = {
   httpOnly: true,
@@ -1673,6 +1708,61 @@ app.post('/api/flashcards/:id/grade', (req, res) => {
   } catch (err) {
     console.error('Failed to grade flashcard:', err.message)
     res.status(500).json({ error: 'Failed to grade flashcard' })
+  }
+})
+
+// Achievements Endpoint
+app.get('/api/achievements', requireAuth, (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get current stats
+    const firstLogin = 1; // If they are hitting this, they are logged in
+    const favoritesCount = db.prepare('SELECT COUNT(*) as c FROM favorites WHERE user_id = ?').get(userId).c;
+    const reviewCount = db.prepare('SELECT COUNT(*) as c FROM review_log WHERE user_id = ?').get(userId).c;
+    const searchCount = db.prepare('SELECT COUNT(*) as c FROM search_history WHERE user_id = ?').get(userId).c;
+
+    const statsMap = {
+      'first_login': firstLogin,
+      'favorites_count': favoritesCount,
+      'review_count': reviewCount,
+      'search_count': searchCount
+    };
+
+    const achievements = db.prepare('SELECT * FROM achievements').all();
+    const userUnlocked = db.prepare('SELECT achievement_id, unlocked_at FROM user_achievements WHERE user_id = ?').all(userId);
+    const unlockedSet = new Set(userUnlocked.map(a => a.achievement_id));
+
+    // Calculate progress and auto-unlock
+    const insertUnlock = db.prepare('INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, ?)');
+    
+    const results = achievements.map(ach => {
+      let isUnlocked = unlockedSet.has(ach.id);
+      let currentProgress = statsMap[ach.requirement_type] || 0;
+      
+      // Auto-unlock logic
+      if (!isUnlocked && currentProgress >= ach.requirement_value) {
+        insertUnlock.run(userId, ach.id);
+        isUnlocked = true;
+      }
+
+      return {
+        id: ach.id,
+        name: ach.name,
+        description: ach.description,
+        icon: ach.icon,
+        requirement_type: ach.requirement_type,
+        requirement_value: ach.requirement_value,
+        current_progress: Math.min(currentProgress, ach.requirement_value),
+        is_unlocked: isUnlocked,
+        unlocked_at: isUnlocked ? (userUnlocked.find(u => u.achievement_id === ach.id)?.unlocked_at || new Date().toISOString()) : null
+      };
+    });
+
+    res.json(results);
+  } catch (err) {
+    console.error('Failed to fetch achievements:', err.message);
+    res.status(500).json({ error: 'Failed to fetch achievements' });
   }
 })
 

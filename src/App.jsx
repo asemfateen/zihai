@@ -37,6 +37,7 @@ const StoryPage = lazy(() => import('./pages/StoryPage'))
 const QuizPage = lazy(() => import('./pages/QuizPage'))
 const MatchGamePage = lazy(() => import('./pages/MatchGamePage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const AchievementsPage = lazy(() => import('./pages/AchievementsPage'))
 
 function PageSuspense({ children }) {
   return (
@@ -88,6 +89,7 @@ const router = createBrowserRouter([
       { path: '/quiz', element: <PageSuspense><ProtectedRoute><ErrorBoundary><QuizPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/match-game', element: <PageSuspense><ProtectedRoute><ErrorBoundary><MatchGamePage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '/settings', element: <PageSuspense><ProtectedRoute><ErrorBoundary><SettingsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
+      { path: '/achievements', element: <PageSuspense><ProtectedRoute><ErrorBoundary><AchievementsPage /></ErrorBoundary></ProtectedRoute></PageSuspense> },
       { path: '*', element: <PageSuspense><ErrorBoundary><NotFoundPage /></ErrorBoundary></PageSuspense> },
     ],
   },
