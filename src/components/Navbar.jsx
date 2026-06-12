@@ -280,6 +280,13 @@ function Navbar() {
                 Quiz Mode
               </button>
               <button
+                onClick={() => { setExploreDropdownOpen(false); navigate('/match-game'); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/match-game' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+              >
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎴</span>
+                Memory Match
+              </button>
+              <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/history'); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/history' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
               >
@@ -424,6 +431,13 @@ function Navbar() {
                 >
                   <FileIcon className="w-4 h-4 text-text-secondary" />
                   Text Analyzer
+                </button>
+                <button
+                  onClick={() => handleNav('/match-game')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/match-game' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎴</span>
+                  Memory Match
                 </button>
                 <button
                   onClick={() => handleNav('/history')}
