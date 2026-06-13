@@ -32,7 +32,6 @@ try {
       CREATE INDEX IF NOT EXISTS idx_favorites_user_word ON favorites(user_id, word_id);
     `);
 
-    console.log('2. Migrating "search_history" table...');
     db.exec(`
       ALTER TABLE search_history RENAME TO search_history_old;
       
