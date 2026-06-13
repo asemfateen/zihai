@@ -807,31 +807,92 @@ app.get('/api/dev-reset-link/:token', (req, res) => {
   res.json({ resetUrl: `${frontendUrl}/reset-password/${req.params.token}` })
 })
 
-function resolveDefinition(def) {
-  if (!def) return def
-  const match = def.trim().match(/^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/)
-  if (match) {
-    const target = match[1]
-    let targetRow = db.prepare('SELECT definition FROM cedict_words WHERE simplified = ? OR traditional = ?').get(target, target)
-    if (!targetRow) {
-      targetRow = db.prepare('SELECT definition FROM characters WHERE simplified = ? OR traditional = ?').get(target, target)
-    }
-    if (targetRow && targetRow.definition && !targetRow.definition.startsWith('see ')) {
-      return targetRow.definition
-    }
-  }
-  return def
-}
+function resolveRows(rows) {
+  if (!rows) return rows;
+  const isArray = Array.isArray(rows);
+  const rowsArray = isArray ? rows : [rows];
+  if (rowsArray.length === 0) return rows;
 
-function resolveRow(row) {
-  if (!row) return row
-  if (row.definition) {
-    row.definition = resolveDefinition(row.definition)
+  const seeTargets = new Set();
+  const seePattern = /^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/;
+
+  for (let i = 0; i < rowsArray.length; i++) {
+    const row = rowsArray[i];
+    if (!row) continue;
+
+    if (row.definition) {
+      const match = row.definition.trim().match(seePattern);
+      if (match) seeTargets.add(match[1]);
+    }
+
+    if (row.english_definition) {
+      const match = row.english_definition.trim().match(seePattern);
+      if (match) seeTargets.add(match[1]);
+    }
   }
-  if (row.english_definition) {
-    row.english_definition = resolveDefinition(row.english_definition)
+
+  if (seeTargets.size === 0) return rows;
+
+  const targetArray = Array.from(seeTargets);
+  const targetMap = new Map();
+
+  // Process in chunks to avoid SQLite parameter limits
+  const chunkSize = 100;
+  for (let i = 0; i < targetArray.length; i += chunkSize) {
+    const chunk = targetArray.slice(i, i + chunkSize);
+    const placeholders = chunk.map(() => '?').join(',');
+
+    // Query cedict_words first
+    const wordQuery = `SELECT simplified, traditional, definition FROM cedict_words WHERE simplified IN (${placeholders}) OR traditional IN (${placeholders})`;
+    const params = [...chunk, ...chunk];
+    const wordResults = db.prepare(wordQuery).all(...params);
+
+    for (const row of wordResults) {
+        if (row.definition && !row.definition.startsWith('see ')) {
+            if (!targetMap.has(row.simplified)) targetMap.set(row.simplified, row.definition);
+            if (row.traditional && !targetMap.has(row.traditional)) targetMap.set(row.traditional, row.definition);
+        }
+    }
+
+    // Identify targets not yet found
+    const missingTargets = chunk.filter(t => !targetMap.has(t));
+
+    if (missingTargets.length > 0) {
+        const missingPlaceholders = missingTargets.map(() => '?').join(',');
+        const charQuery = `SELECT simplified, traditional, definition FROM characters WHERE simplified IN (${missingPlaceholders}) OR traditional IN (${missingPlaceholders})`;
+        const charParams = [...missingTargets, ...missingTargets];
+        const charResults = db.prepare(charQuery).all(...charParams);
+
+        for (const row of charResults) {
+            if (row.definition && !row.definition.startsWith('see ')) {
+                if (!targetMap.has(row.simplified)) targetMap.set(row.simplified, row.definition);
+                if (row.traditional && !targetMap.has(row.traditional)) targetMap.set(row.traditional, row.definition);
+            }
+        }
+    }
   }
-  return row
+
+  // Update the rows
+  for (let i = 0; i < rowsArray.length; i++) {
+    const row = rowsArray[i];
+    if (!row) continue;
+
+    if (row.definition) {
+      const match = row.definition.trim().match(seePattern);
+      if (match && targetMap.has(match[1])) {
+        row.definition = targetMap.get(match[1]);
+      }
+    }
+
+    if (row.english_definition) {
+      const match = row.english_definition.trim().match(seePattern);
+      if (match && targetMap.has(match[1])) {
+        row.english_definition = targetMap.get(match[1]);
+      }
+    }
+  }
+
+  return rows;
 }
 
 app.get('/api/ping', (req, res) => {
@@ -1132,8 +1193,8 @@ app.get('/api/search', (req, res) => {
 
   rows.forEach(r => {
     r.pinyin = convertNumberedPinyin(r.pinyin)
-    resolveRow(r)
   })
+  resolveRows(rows)
   res.json(rows)
 })
 
@@ -1172,8 +1233,8 @@ app.get('/api/radicals/:radical', (req, res) => {
     `).all(radical, limit, offset)
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
-      resolveRow(w)
     })
+    resolveRows(words)
     res.json({ radical: radicalInfo, words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     console.error('Radical detail query failed:', err.message)
@@ -1211,8 +1272,8 @@ app.get('/api/hsk/:level', (req, res) => {
 
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
-      resolveRow(w)
     })
+    resolveRows(words)
 
     res.json({ words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
@@ -1256,7 +1317,7 @@ app.get('/api/word/:query', (req, res) => {
   }
 
   if (!item) return res.status(404).json({ error: 'Word not found' })
-  item = resolveRow(item)
+  item = resolveRows([item])[0]
   item.pinyin = convertNumberedPinyin(item.pinyin)
   res.json({ ...item, examples: [] })
 })
@@ -1315,7 +1376,8 @@ app.get('/api/favorites', requireAuth, (req, res) => {
     WHERE f.user_id = ?
     ORDER BY f.created_at DESC
   `).all(req.user.id)
-  res.json(rows.map(resolveRow))
+  resolveRows(rows)
+  res.json(rows)
 })
 
 // Custom lists endpoints
@@ -1354,7 +1416,8 @@ app.get('/api/lists/:id/words', requireAuth, (req, res) => {
     WHERE clw.list_id = ?
     ORDER BY clw.added_at DESC
   `).all(req.params.id)
-  res.json(rows.map(resolveRow))
+  resolveRows(rows)
+  res.json(rows)
 })
 
 app.post('/api/lists/:id/words', requireAuth, (req, res) => {
@@ -1530,7 +1593,8 @@ app.get('/api/flashcards/due', requireAuth, (req, res) => {
     WHERE fp.user_id = ? AND fp.next_review_date <= datetime('now')
     ORDER BY fp.next_review_date ASC
   `).all(req.user.id)
-  res.json(rows.map(resolveRow))
+  resolveRows(rows)
+  res.json(rows)
 })
 
 app.get('/api/flashcards/indeck/:wordId', requireAuth, (req, res) => {
