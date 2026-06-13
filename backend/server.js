@@ -299,7 +299,6 @@ try {
   const hasEaseFactor = tableInfo.some(col => col.name === 'ease_factor')
   
   if (hasEaseFactor) {
-    console.log('Migrating flashcard_progress to FSRS schema...')
     db.transaction(() => {
       // Create a temporary table with the old data
       db.exec(`
@@ -342,7 +341,6 @@ try {
         
         DROP TABLE flashcard_progress_backup;
       `)
-      console.log('FSRS Migration complete.')
     })()
   }
 } catch (e) {
