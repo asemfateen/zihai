@@ -758,9 +758,6 @@ app.post('/api/forgot-password', authLimiter, async (req, res) => {
         console.error('Failed to send password reset email:', err)
       }
     }
-    if (!mailTransporter || process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] Password reset link for ${email}: ${resetUrl}`)
-    }
   }
   res.json({ message: 'If an account exists a reset link has been sent' })
 })
