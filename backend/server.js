@@ -342,7 +342,6 @@ try {
         
         DROP TABLE flashcard_progress_backup;
       `)
-      console.log('FSRS Migration complete.')
     })()
   }
 } catch (e) {
