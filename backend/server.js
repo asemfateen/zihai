@@ -807,31 +807,60 @@ app.get('/api/dev-reset-link/:token', (req, res) => {
   res.json({ resetUrl: `${frontendUrl}/reset-password/${req.params.token}` })
 })
 
-function resolveDefinition(def) {
-  if (!def) return def
-  const match = def.trim().match(/^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/)
-  if (match) {
-    const target = match[1]
-    let targetRow = db.prepare('SELECT definition FROM cedict_words WHERE simplified = ? OR traditional = ?').get(target, target)
-    if (!targetRow) {
-      targetRow = db.prepare('SELECT definition FROM characters WHERE simplified = ? OR traditional = ?').get(target, target)
-    }
-    if (targetRow && targetRow.definition && !targetRow.definition.startsWith('see ')) {
-      return targetRow.definition
-    }
-  }
-  return def
-}
+function resolveRowsBatch(rows) {
+  if (!rows || rows.length === 0) return rows
 
-function resolveRow(row) {
-  if (!row) return row
-  if (row.definition) {
-    row.definition = resolveDefinition(row.definition)
+  const targets = new Set()
+  const regex = /^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/
+
+  const arr = Array.isArray(rows) ? rows : [rows]
+
+  arr.forEach(row => {
+    if (!row) return
+    if (row.definition) {
+      const match = row.definition.trim().match(regex)
+      if (match) targets.add(match[1])
+    }
+    if (row.english_definition) {
+      const match = row.english_definition.trim().match(regex)
+      if (match) targets.add(match[1])
+    }
+  })
+
+  if (targets.size === 0) return rows
+
+  const targetsArr = Array.from(targets)
+  const chunkSize = 200
+  const defMap = new Map()
+
+  for (let i = 0; i < targetsArr.length; i += chunkSize) {
+    const chunk = targetsArr.slice(i, i + chunkSize)
+    const placeholders = chunk.map(() => '?').join(',')
+
+    const wordDefs = db.prepare(`SELECT simplified, traditional, definition FROM cedict_words WHERE simplified IN (${placeholders}) OR traditional IN (${placeholders})`).all(...chunk, ...chunk)
+    const charDefs = db.prepare(`SELECT simplified, traditional, definition FROM characters WHERE simplified IN (${placeholders}) OR traditional IN (${placeholders})`).all(...chunk, ...chunk)
+
+    for (const row of [...wordDefs, ...charDefs]) {
+      if (row.definition && !row.definition.startsWith('see ')) {
+        if (row.simplified) defMap.set(row.simplified, row.definition)
+        if (row.traditional) defMap.set(row.traditional, row.definition)
+      }
+    }
   }
-  if (row.english_definition) {
-    row.english_definition = resolveDefinition(row.english_definition)
-  }
-  return row
+
+  arr.forEach(row => {
+    if (!row) return
+    if (row.definition) {
+      const match = row.definition.trim().match(regex)
+      if (match && defMap.has(match[1])) row.definition = defMap.get(match[1])
+    }
+    if (row.english_definition) {
+      const match = row.english_definition.trim().match(regex)
+      if (match && defMap.has(match[1])) row.english_definition = defMap.get(match[1])
+    }
+  })
+
+  return rows
 }
 
 app.get('/api/ping', (req, res) => {
@@ -1132,8 +1161,8 @@ app.get('/api/search', (req, res) => {
 
   rows.forEach(r => {
     r.pinyin = convertNumberedPinyin(r.pinyin)
-    resolveRow(r)
   })
+  resolveRowsBatch(rows)
   res.json(rows)
 })
 
@@ -1172,8 +1201,8 @@ app.get('/api/radicals/:radical', (req, res) => {
     `).all(radical, limit, offset)
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
-      resolveRow(w)
     })
+    resolveRowsBatch(words)
     res.json({ radical: radicalInfo, words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     console.error('Radical detail query failed:', err.message)
@@ -1211,8 +1240,8 @@ app.get('/api/hsk/:level', (req, res) => {
 
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
-      resolveRow(w)
     })
+    resolveRowsBatch(words)
 
     res.json({ words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
@@ -1256,7 +1285,7 @@ app.get('/api/word/:query', (req, res) => {
   }
 
   if (!item) return res.status(404).json({ error: 'Word not found' })
-  item = resolveRow(item)
+  item = resolveRowsBatch(item)
   item.pinyin = convertNumberedPinyin(item.pinyin)
   res.json({ ...item, examples: [] })
 })
@@ -1315,7 +1344,8 @@ app.get('/api/favorites', requireAuth, (req, res) => {
     WHERE f.user_id = ?
     ORDER BY f.created_at DESC
   `).all(req.user.id)
-  res.json(rows.map(resolveRow))
+  resolveRowsBatch(rows)
+  res.json(rows)
 })
 
 // Custom lists endpoints
@@ -1354,7 +1384,8 @@ app.get('/api/lists/:id/words', requireAuth, (req, res) => {
     WHERE clw.list_id = ?
     ORDER BY clw.added_at DESC
   `).all(req.params.id)
-  res.json(rows.map(resolveRow))
+  resolveRowsBatch(rows)
+  res.json(rows)
 })
 
 app.post('/api/lists/:id/words', requireAuth, (req, res) => {
@@ -1530,7 +1561,8 @@ app.get('/api/flashcards/due', requireAuth, (req, res) => {
     WHERE fp.user_id = ? AND fp.next_review_date <= datetime('now')
     ORDER BY fp.next_review_date ASC
   `).all(req.user.id)
-  res.json(rows.map(resolveRow))
+  resolveRowsBatch(rows)
+  res.json(rows)
 })
 
 app.get('/api/flashcards/indeck/:wordId', requireAuth, (req, res) => {
