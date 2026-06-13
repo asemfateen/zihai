@@ -73,8 +73,6 @@ const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db')
 const embeddedDbPath = path.join(__dirname, 'zihai.db')
 if (DB_PATH !== embeddedDbPath) {
   if (!fs.existsSync(DB_PATH) || fs.statSync(DB_PATH).size < 1000) {
-    console.log(`Initializing persistent database at ${DB_PATH} from ${embeddedDbPath}`)
-    
     // Ensure the target directory exists
     const targetDir = path.dirname(DB_PATH)
     if (!fs.existsSync(targetDir)) {
@@ -83,7 +81,6 @@ if (DB_PATH !== embeddedDbPath) {
     
     // Copy the populated database over
     fs.copyFileSync(embeddedDbPath, DB_PATH)
-    console.log('Database copy successful.')
   }
 }
 
