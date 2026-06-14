@@ -89,6 +89,11 @@ if (DB_PATH !== embeddedDbPath) {
 
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
+
+const TTS_CACHE_DIR = path.join(path.dirname(DB_PATH), 'tts_cache')
+if (!fs.existsSync(TTS_CACHE_DIR)) {
+  fs.mkdirSync(TTS_CACHE_DIR, { recursive: true })
+}
 db.pragma('synchronous = NORMAL')
 db.pragma('cache_size = -16000')
 db.pragma('temp_store = MEMORY')
@@ -999,6 +1004,16 @@ app.get('/api/tts', async (req, res) => {
     }
   }
 
+  const textHash = crypto.createHash('md5').update(text).digest('hex')
+  const cacheFile = path.join(TTS_CACHE_DIR, `${textHash}.mp3`)
+
+  if (fs.existsSync(cacheFile)) {
+    res.set('Content-Type', 'audio/mpeg')
+    res.set('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+    const stream = fs.createReadStream(cacheFile)
+    return stream.pipe(res)
+  }
+
   // Use Edge TTS (Neural Xiaoxiao) for much more natural sound
   const tts = new EdgeTTS({
     voice: 'zh-CN-XiaoxiaoNeural',
@@ -1007,19 +1022,25 @@ app.get('/api/tts', async (req, res) => {
     rate: '-10%' // Slightly slower for better clarity of tones
   })
 
-  const tmpFile = path.join(os.tmpdir(), `zihai-tts-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`)
+  const tmpFile = path.join(TTS_CACHE_DIR, `zihai-tts-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`)
 
   try {
     await tts.ttsPromise(text, tmpFile)
+
+    // Atomically rename to cache file
+    fs.renameSync(tmpFile, cacheFile)
+
     res.set('Content-Type', 'audio/mpeg')
-    res.set('Cache-Control', 'no-cache')
-    const stream = fs.createReadStream(tmpFile)
+    res.set('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+    const stream = fs.createReadStream(cacheFile)
     stream.pipe(res)
-    stream.on('end', () => {
-      fs.unlink(tmpFile, () => {})
-    })
   } catch (edgeErr) {
     console.error('Edge TTS Error, falling back to Google:', edgeErr.message)
+    // Clean up temporary file if Edge TTS failed midway
+    if (fs.existsSync(tmpFile)) {
+      fs.unlinkSync(tmpFile)
+    }
+
     // Fallback to Google Translate TTS
     try {
       const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=zh-CN&total=1&idx=0&textlen=${text.length}&client=tw-ob&prev=input`
@@ -1031,10 +1052,20 @@ app.get('/api/tts', async (req, res) => {
       })
       if (!response.ok) throw new Error(`Google TTS status: ${response.status}`)
       const buffer = await response.arrayBuffer()
+
+      // Save Google TTS to cache
+      fs.writeFileSync(tmpFile, Buffer.from(buffer))
+      fs.renameSync(tmpFile, cacheFile)
+
       res.set('Content-Type', 'audio/mpeg')
-      res.send(Buffer.from(buffer))
+      res.set('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+      const stream = fs.createReadStream(cacheFile)
+      stream.pipe(res)
     } catch (googleErr) {
       console.error('All TTS services failed:', googleErr.message)
+      if (fs.existsSync(tmpFile)) {
+        fs.unlinkSync(tmpFile)
+      }
       res.status(502).json({ error: 'All TTS services failed' })
     }
   }
