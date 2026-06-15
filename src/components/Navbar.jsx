@@ -230,6 +230,8 @@ function Navbar() {
         <div ref={exploreDropdownRef} className="relative">
           <button
             onClick={() => setExploreDropdownOpen(prev => !prev)}
+            aria-haspopup="true"
+            aria-expanded={exploreDropdownOpen}
             className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
               exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
                 ? 'text-primary border-primary bg-primary/5'
@@ -334,6 +336,7 @@ function Navbar() {
           onClick={toggleTheme}
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
         </button>
@@ -388,6 +391,9 @@ function Navbar() {
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
         <button
           onClick={() => setMobileMenuOpen(prev => !prev)}
+          aria-haspopup="true"
+          aria-expanded={mobileMenuOpen}
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
         >
           {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
@@ -406,6 +412,8 @@ function Navbar() {
             
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
+              aria-haspopup="true"
+              aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               <span className="flex items-center gap-3">
@@ -526,6 +534,8 @@ function Navbar() {
             
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
+              aria-haspopup="true"
+              aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               <span className="flex items-center gap-3">
