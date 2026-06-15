@@ -3,7 +3,6 @@ import path from 'path';
 import os from 'os';
 
 const DB_PATH = process.env.DB_PATH || path.join(os.homedir(), 'zihai.db');
-console.log(`Starting database migration on: ${DB_PATH}`);
 
 const db = new Database(DB_PATH);
 
