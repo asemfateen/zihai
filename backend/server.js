@@ -1780,18 +1780,22 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason)
 })
 
-const server = app.listen(PORT, () => {
-  console.log(`Zihai backend running on http://localhost:${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  const server = app.listen(PORT, () => {
+    console.log(`Zihai backend running on http://localhost:${PORT}`)
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+  })
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`\nPort ${PORT} is already in use.`)
-    console.error(`Stop the other backend process or run: kill $(lsof -t -i:${PORT})`)
-    process.exit(1)
-  } else {
-    console.error('Server error:', err)
-    process.exit(1)
-  }
-})
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\nPort ${PORT} is already in use.`)
+      console.error(`Stop the other backend process or run: kill $(lsof -t -i:${PORT})`)
+      process.exit(1)
+    } else {
+      console.error('Server error:', err)
+      process.exit(1)
+    }
+  })
+}
+
+export { app, db }
