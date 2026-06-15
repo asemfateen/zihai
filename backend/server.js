@@ -1257,39 +1257,44 @@ app.get('/api/word/:query', (req, res) => {
   const isNumeric = /^\d+$/.test(query)
   let item
 
-  if (isNumeric) {
-    const id = parseInt(query, 10)
-    item = db.prepare(`
-      SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-             definition AS english_definition, hsk_level
-      FROM cedict_words WHERE id = ?
-    `).get(id)
-    if (!item) {
+  try {
+    if (isNumeric) {
+      const id = parseInt(query, 10)
       item = db.prepare(`
         SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-               definition AS english_definition, hsk_level, radical, stroke_count
-        FROM characters WHERE id = ?
+               definition AS english_definition, hsk_level
+        FROM cedict_words WHERE id = ?
       `).get(id)
-    }
-  } else {
-    item = db.prepare(`
-      SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-             definition AS english_definition, hsk_level
-      FROM cedict_words WHERE simplified = ?
-    `).get(query)
-    if (!item) {
+      if (!item) {
+        item = db.prepare(`
+          SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+                 definition AS english_definition, hsk_level, radical, stroke_count
+          FROM characters WHERE id = ?
+        `).get(id)
+      }
+    } else {
       item = db.prepare(`
         SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
-               definition AS english_definition, hsk_level, radical, stroke_count
-        FROM characters WHERE simplified = ?
+               definition AS english_definition, hsk_level
+        FROM cedict_words WHERE simplified = ?
       `).get(query)
+      if (!item) {
+        item = db.prepare(`
+          SELECT id, simplified AS character, traditional, pinyin, pinyin AS pinyin_display, pinyin_flat,
+                 definition AS english_definition, hsk_level, radical, stroke_count
+          FROM characters WHERE simplified = ?
+        `).get(query)
+      }
     }
-  }
 
-  if (!item) return res.status(404).json({ error: 'Word not found' })
-  item = resolveRow(item)
-  item.pinyin = convertNumberedPinyin(item.pinyin)
-  res.json({ ...item, examples: [] })
+    if (!item) return res.status(404).json({ error: 'Word not found' })
+    item = resolveRow(item)
+    item.pinyin = convertNumberedPinyin(item.pinyin)
+    res.json({ ...item, examples: [] })
+  } catch (error) {
+    console.error('Word fetch error:', error.message)
+    res.status(500).json({ error: 'Database error' })
+  }
 })
 
 app.post('/api/history', requireAuth, (req, res) => {
