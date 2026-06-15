@@ -347,12 +347,14 @@ function Navbar() {
                   ? 'text-primary border-primary bg-primary/5'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
+              aria-label="Profile"
             >
               <UserIcon className="w-4 h-4" />
             </button>
             <button
               onClick={handleLogout}
               className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors cursor-pointer"
+              aria-label="Logout"
             >
               <LogoutIcon className="w-4 h-4" />
             </button>
@@ -380,6 +382,8 @@ function Navbar() {
         <button
           onClick={() => setMobileMenuOpen(prev => !prev)}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
+          aria-expanded={mobileMenuOpen}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
         >
           {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
         </button>
