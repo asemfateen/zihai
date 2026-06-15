@@ -237,6 +237,8 @@ function Navbar() {
         <div ref={exploreDropdownRef} className="relative">
           <button
             onClick={() => setExploreDropdownOpen(prev => !prev)}
+            aria-haspopup="true"
+            aria-expanded={exploreDropdownOpen}
             className={`px-4 py-2.5 btn-brutal flex items-center gap-1.5 text-sm font-bold cursor-pointer ${
               exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
                 ? 'text-text-primary bg-primary'
@@ -381,6 +383,9 @@ function Navbar() {
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
         <button
           onClick={() => setMobileMenuOpen(prev => !prev)}
+          aria-haspopup="true"
+          aria-expanded={mobileMenuOpen}
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -392,6 +397,8 @@ function Navbar() {
           <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
+              aria-haspopup="true"
+              aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               <span className="flex items-center gap-3">
@@ -503,6 +510,8 @@ function Navbar() {
           <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
+              aria-haspopup="true"
+              aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
               <span className="flex items-center gap-3">
