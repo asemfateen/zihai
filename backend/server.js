@@ -83,7 +83,6 @@ if (DB_PATH !== embeddedDbPath) {
     
     // Copy the populated database over
     fs.copyFileSync(embeddedDbPath, DB_PATH)
-    console.log('Database copy successful.')
   }
 }
 
