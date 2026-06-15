@@ -12,7 +12,6 @@ db.pragma('foreign_keys = OFF');
 
 try {
   db.transaction(() => {
-    console.log('1. Migrating "favorites" table...');
     db.exec(`
       ALTER TABLE favorites RENAME TO favorites_old;
       
@@ -32,7 +31,6 @@ try {
       CREATE INDEX IF NOT EXISTS idx_favorites_user_word ON favorites(user_id, word_id);
     `);
 
-    console.log('2. Migrating "search_history" table...');
     db.exec(`
       ALTER TABLE search_history RENAME TO search_history_old;
       
@@ -53,7 +51,6 @@ try {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_search_history_unique ON search_history(user_id, query);
     `);
 
-    console.log('3. Migrating "flashcard_progress" table...');
     db.exec(`
       ALTER TABLE flashcard_progress RENAME TO flashcard_progress_old;
       
@@ -80,7 +77,6 @@ try {
       CREATE INDEX IF NOT EXISTS idx_flashcard_user ON flashcard_progress(user_id, word_id);
     `);
 
-    console.log('4. Migrating "password_resets" table...');
     db.exec(`
       ALTER TABLE password_resets RENAME TO password_resets_old;
       
@@ -102,7 +98,6 @@ try {
       CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);
     `);
 
-    console.log('5. Fixing invalid reference in "word_examples" table...');
     db.exec(`
       ALTER TABLE word_examples RENAME TO word_examples_old;
       
