@@ -333,6 +333,7 @@ function Navbar() {
         <button
           onClick={toggleTheme}
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
@@ -388,6 +389,8 @@ function Navbar() {
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
         <button
           onClick={() => setMobileMenuOpen(prev => !prev)}
+          aria-expanded={mobileMenuOpen}
+          aria-label="Toggle mobile menu"
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
         >
           {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
