@@ -1,0 +1,3 @@
+## 2025-02-28 - Missing Accessible Names on Core Navigation
+**Learning:** Found that core icon-only navigation buttons (Profile, Settings, Logout, Theme toggle) in the Navbar lacked `aria-label` attributes. This is a critical accessibility issue because screen reader users wouldn't know the purpose of these primary navigation elements. Additionally, the mobile menu button was missing `aria-expanded` to communicate its state.
+**Action:** Always verify that icon-only buttons have descriptive `aria-label`s, and that toggle buttons (like mobile menus) use `aria-expanded` to communicate their current open/closed state to assistive technologies.
