@@ -106,6 +106,7 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
                 disabled={isSpeaking}
                 className="p-2 rounded-xl bg-surface hover:bg-primary/20 text-primary transition-colors cursor-pointer border border-border/50 hover:border-primary/30"
                 title="Play full text audio"
+                aria-label="Play full text audio"
               >
               {isSpeaking ? <Spinner className="w-4 h-4 animate-spin" /> : <PlayIcon className="w-4 h-4" />}
             </button>
