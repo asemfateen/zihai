@@ -207,6 +207,7 @@ function WordPage() {
                       : 'bg-surface/80 backdrop-blur-xl text-text-secondary hover:text-primary hover:border-primary border border-border/50 hover:shadow-lg'
                   }`}
                   title='Listen to pronunciation'
+                  aria-label='Listen to pronunciation'
                 >
                   {isSpeaking ? <SpeakerWaveIcon className="w-6 h-6" /> : <SpeakerIcon className="w-6 h-6" />}
                 </button>
@@ -227,6 +228,7 @@ function WordPage() {
                 disabled={favoriteLoading}
                 className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {favoriteLoading ? (
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -244,6 +246,7 @@ function WordPage() {
                     : 'bg-surface/50 border border-border/50 text-text-secondary hover:text-primary hover:border-primary/50 hover:shadow-primary/20'
                 }`}
                 title={inDeck ? 'Remove from deck' : 'Study this word'}
+                aria-label={inDeck ? 'Remove from deck' : 'Study this word'}
               >
                 {addingToDeck ? (
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -258,6 +261,7 @@ function WordPage() {
                 onClick={() => setShowListsModal(true)}
                 className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:text-primary hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0 text-text-secondary"
                 title="Add to Custom List"
+                aria-label="Add to Custom List"
               >
                 <PlusIcon className="w-7 h-7" />
               </button>
