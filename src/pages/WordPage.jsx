@@ -285,7 +285,20 @@ function WordPage() {
              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
              <div className="relative z-10">
                <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4 bg-surface inline-block px-4 py-1.5 rounded-full border border-border shadow-sm">Definition</h2>
-               <p className="text-xl sm:text-2xl text-text-primary font-medium">{word.english_definition || 'No definition available'}</p>
+               {word.english_definition ? (
+                 <div className="space-y-3 mt-2">
+                   {word.english_definition.split(';').map((part, i) => (
+                     <div key={i} className="flex items-start gap-3">
+                       <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold mt-1">
+                         {i + 1}
+                       </span>
+                       <p className="text-lg sm:text-xl text-text-primary font-medium">{part.trim()}</p>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-xl sm:text-2xl text-text-primary font-medium">No definition available</p>
+               )}
              </div>
           </div>
 
