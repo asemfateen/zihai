@@ -24,7 +24,7 @@ function ExampleSentenceCard({ sentence, translation }) {
   }, [sentence])
 
   return (
-    <div className="bg-surface btn-brutal p-4 sm:p-5 hover:border-primary/40 transition-colors">
+    <div className="bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg p-4 sm:p-5 hover:border-primary/40 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-xl sm:text-2xl text-text-primary font-medium leading-relaxed break-words">

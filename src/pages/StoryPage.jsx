@@ -28,7 +28,7 @@ function StoryPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-background relative z-10 text-text-primary pb-20">
+    <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
@@ -37,8 +37,8 @@ function StoryPage() {
 
         {loading ? (
           <div className="animate-pulse flex flex-col gap-4">
-             <div className="h-12 w-1/2 bg-card btn-brutal mb-4" />
-             <div className="h-64 bg-card btn-brutal" />
+             <div className="h-12 w-1/2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl mb-4" />
+             <div className="h-64 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl" />
           </div>
         ) : story ? (
           <div className="animate-fade-in">

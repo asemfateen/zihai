@@ -1,106 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-background: #f4f4f0; /* Off-white paper */
-  --color-surface: #ffffff; /* White */
-  --color-card: #ffffff;
-  --color-border: #000000; /* Solid Black */
-  --color-primary: #ffdb58; /* Yellow */
-  --color-primary-hover: #e5c54f;
-  --color-cta: #ff6b6b; /* Red */
-  --color-cta-hover: #e56060;
-  --color-secondary: #4ecdc4; /* Teal */
-  --color-text-primary: #000000;
-  --color-text-secondary: #333333;
-  
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --color-background: #1a1c1a;
+  --color-surface: #222622;
+  --color-card: #2a2f2a;
+  --color-border: #3a413a;
+  --color-primary: #4ade80;
+  --color-primary-hover: #22c55e;
+  --color-text-primary: #f0fdf4;
+  --color-text-secondary: #bbf7d0;
 }
 
 :root {
-  color-scheme: light; /* Neubrutalism is usually light mode, force it */
+  color-scheme: dark;
 }
 
-/* Custom Brutalist Scrollbar */
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-surface);
-  border-left: 2px solid var(--color-border);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border: 2px solid var(--color-border);
-  border-right: none;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-hover);
-}
-
-::-webkit-scrollbar-corner {
-  background: var(--color-surface);
+:root.light {
+  color-scheme: light;
+  --color-background: #fdfcf8;
+  --color-surface: #f5f3eb;
+  --color-card: #ffffff;
+  --color-border: #e6e2d3;
+  --color-text-primary: #2f332f;
+  --color-text-secondary: #6b726b;
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
 }
 
 html {
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
+  font-family: 'Inter', sans-serif;
   scroll-behavior: smooth;
-  /* Minimal transition for that sharp, instant feel */
-  transition: background-color 0.1s ease, color 0.1s ease;
-}
-
-h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-/* Neubrutalism Shadows */
-.shadow-brutal {
-  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-  border: 3px solid var(--color-border);
-  border-radius: 8px; /* Slightly rounded or sharp, 8px is good */
-}
-
-.shadow-brutal-hover:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
-}
-
-.shadow-brutal-active:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
-}
-
-/* Combining them for quick use */
-.btn-brutal {
-  border: 3px solid var(--color-border);
-  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-  border-radius: 8px;
-  transition: all 0.1s ease;
-}
-
-.btn-brutal:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
-}
-
-.btn-brutal:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 *, *::before, *::after {
-  transition-property: transform, box-shadow, background-color;
-  transition-duration: 0.1s;
-  transition-timing-function: linear;
+  transition-property: background-color, border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 input, button, svg, path, polyline, circle, rect, line {

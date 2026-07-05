@@ -110,23 +110,23 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-background/90 transition-opacity duration-300"
+        className="absolute inset-0 bg-background/60 backdrop-blur-md transition-opacity duration-300"
       />
 
       {/* Modal Content */}
-      <div className="relative bg-card btn-brutal p-6 w-full max-w-md  overflow-hidden animate-fade-in">
+      <div className="relative bg-card/90 backdrop-blur-2xl border border-border/50 rounded-3xl p-6 w-full max-w-md shadow-2xl overflow-hidden animate-fade-in">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-text-primary">Add to Vocabulary List</h3>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-text-primary  text-xl font-bold"
+            className="text-text-secondary hover:text-text-primary transition-colors text-xl font-bold"
           >
             &times;
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 btn-brutal px-3 py-2">
+          <div className="mb-4 text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">
             {error}
           </div>
         )}
@@ -145,7 +145,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
             lists.map(list => (
               <label
                 key={list.id}
-                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface border border-border/30 btn-brutal cursor-pointer  duration-200"
+                className="flex items-center gap-3 p-3 bg-surface/40 hover:bg-surface/80 border border-border/30 rounded-2xl cursor-pointer transition-all duration-200"
               >
                 <input
                   type="checkbox"
@@ -176,19 +176,19 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
               value={newListName}
               onChange={e => setNewListName(e.target.value)}
               required
-              className="w-full px-4 py-2 bg-surface btn-brutal text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full px-4 py-2 bg-surface/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <input
               type="text"
               placeholder="Description (optional)"
               value={newListDesc}
               onChange={e => setNewListDesc(e.target.value)}
-              className="w-full px-4 py-2 bg-surface btn-brutal text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full px-4 py-2 bg-surface/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <button
               type="submit"
               disabled={!newListName.trim()}
-              className="w-full py-2 bg-primary text-text-primary btn-brutal text-sm font-semibold   active:scale-[98%] disabled:opacity-50"
+              className="w-full py-2 bg-primary text-text-primary rounded-xl text-sm font-semibold hover:bg-primary-hover transition-all active:scale-[98%] disabled:opacity-50"
             >
               Create &amp; Add Word
             </button>

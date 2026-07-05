@@ -47,17 +47,17 @@ function AnalyzerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative z-10 text-text-primary">
+    <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="mb-8 animate-fade-in">
-          <h1 className="text-4xl sm:text-5xl font-black mb-4 text-text-primary drop-shadow-sm">Reading Mode</h1>
+          <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-sm">Reading Mode</h1>
           <p className="text-lg text-text-secondary font-medium">Paste Chinese text below. We will break it down into words, add pinyin, and highlight difficulty levels.</p>
         </header>
 
-        <div className="bg-card btn-brutal p-6 sm:p-8  animate-fade-in [animation-delay:100ms] mb-8">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm animate-fade-in [animation-delay:100ms] mb-8">
           <textarea
-            className="w-full h-32 bg-surface border border-border rounded-xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans"
+            className="w-full h-32 bg-surface/50 border border-border rounded-2xl p-4 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none mb-4 font-sans"
             placeholder="Paste Chinese text here..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -67,7 +67,7 @@ function AnalyzerPage() {
             <button
               onClick={handleAnalyze}
               disabled={loading || !text.trim()}
-              className="bg-primary text-text-primary px-6 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-primary text-text-primary px-6 py-3 rounded-2xl font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading && <Spinner className="w-5 h-5 text-text-primary animate-spin" />}
               Analyze Text
@@ -77,7 +77,7 @@ function AnalyzerPage() {
         </div>
 
         {tokens.length > 0 && (
-          <div className="bg-card btn-brutal p-6 sm:p-8  animate-fade-in [animation-delay:200ms]">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm animate-fade-in [animation-delay:200ms]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Analysis Result</h2>
               <button
@@ -99,7 +99,7 @@ function AnalyzerPage() {
                 return (
                   <div key={idx} className="group relative inline-flex flex-col items-center mx-1 align-bottom cursor-pointer hover:scale-110 transition-transform">
                     {/* Tooltip */}
-                    <div className="absolute bottom-full mb-10 w-48 p-3 bg-surface border border-border rounded-xl  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none scale-95 group-hover:scale-100">
+                    <div className="absolute bottom-full mb-10 w-48 p-3 bg-surface border border-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none scale-95 group-hover:scale-100">
                       <div className="font-bold text-lg mb-1">{token.text}</div>
                       <div className="text-primary font-medium text-sm mb-1">{token.pinyin}</div>
                       <div className="text-xs text-text-secondary line-clamp-3">{token.definition || 'No definition found'}</div>

@@ -29,11 +29,6 @@ function HSKPage() {
     { level: 6, name: 'Mastery', desc: 'HSK 6 · 5000+ Words', position: 'right' },
   ]
 
-  const showToastMessage = (msg) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 2500)
-  }
-
   const fetchWords = useCallback(async (level, pageNum) => {
     setLoading(true)
     try {
@@ -65,7 +60,10 @@ function HSKPage() {
     }
   }, [user, navigate, selectedLevel, page, fetchWords])
 
-
+  const showToastMessage = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
 
   const handleSelectLevel = (level) => {
     setSelectedLevel(level)
@@ -101,11 +99,11 @@ function HSKPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative z-10 text-text-primary">
+    <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {toast && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-card btn-brutal border border-border/50 px-4 py-2 btn-brutal text-sm font-medium text-text-primary z-50 animate-fade-in">
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-card/80 backdrop-blur-xl border border-border/50 px-4 py-2 rounded-lg shadow-xl text-sm font-medium text-text-primary z-50 animate-fade-in">
             {toast}
           </div>
         )}
@@ -129,33 +127,33 @@ function HSKPage() {
                     {/* Left Node */}
                     <div className={`w-[calc(50%-2rem)] flex ${lvl.position === 'left' ? 'justify-end' : 'justify-end opacity-0 pointer-events-none hidden sm:flex'}`}>
                       {lvl.position === 'left' && (
-                        <div className="bg-card btn-brutal border-2 border-border/50 hover:border-primary btn-brutal p-6 text-right w-full max-w-xs  duration-300 hover: group">
-                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary ">{lvl.name}</h2>
+                        <div className="bg-card/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary rounded-3xl p-6 text-right w-full max-w-xs transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group">
+                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary transition-colors">{lvl.name}</h2>
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-end">
-                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary btn-brutal font-bold hover:bg-surface  text-sm border border-border/50">Browse</button>
-                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary btn-brutal font-bold   text-sm  ">Quiz</button>
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
                           </div>
                         </div>
                       )}
                     </div>
 
                     {/* Central Icon */}
-                    <div className="hidden sm:flex relative z-10 w-16 h-16 rounded-full bg-surface border-4 border-card items-center justify-center  text-primary font-bold text-xl ">
+                    <div className="hidden sm:flex relative z-10 w-16 h-16 rounded-full bg-surface border-4 border-card items-center justify-center shadow-xl text-primary font-bold text-xl shadow-primary/10">
                       {lvl.level}
                     </div>
                     
                     {/* Mobile Center Layout */}
                     <div className="flex sm:hidden w-full justify-center">
-                       <div className="bg-card btn-brutal p-6 text-center w-full max-w-sm  duration-300   ">
+                       <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-3xl p-6 text-center w-full max-w-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
                           <div className="w-12 h-12 rounded-full bg-surface border-2 border-primary/30 items-center justify-center text-primary font-bold text-lg mx-auto mb-3 flex">
                             {lvl.level}
                           </div>
                           <h2 className="text-2xl font-bold mb-1 text-text-primary">{lvl.name}</h2>
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-center">
-                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary btn-brutal font-bold hover:bg-surface  text-sm border border-border/50">Browse</button>
-                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary btn-brutal font-bold   text-sm  ">Quiz</button>
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
                           </div>
                         </div>
                     </div>
@@ -163,12 +161,12 @@ function HSKPage() {
                     {/* Right Node */}
                     <div className={`w-[calc(50%-2rem)] flex ${lvl.position === 'right' ? 'justify-start' : 'justify-start opacity-0 pointer-events-none hidden sm:flex'}`}>
                       {lvl.position === 'right' && (
-                        <div className="bg-card btn-brutal border-2 border-border/50 hover:border-primary btn-brutal p-6 text-left w-full max-w-xs  duration-300 hover: group">
-                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary ">{lvl.name}</h2>
+                        <div className="bg-card/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary rounded-3xl p-6 text-left w-full max-w-xs transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group">
+                          <h2 className="text-2xl font-bold mb-1 text-text-primary group-hover:text-primary transition-colors">{lvl.name}</h2>
                           <p className="text-xs text-text-secondary mb-5 font-semibold tracking-wider uppercase">{lvl.desc}</p>
                           <div className="flex gap-2 justify-start">
-                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary btn-brutal font-bold   text-sm  ">Quiz</button>
-                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary btn-brutal font-bold hover:bg-surface  text-sm border border-border/50">Browse</button>
+                            <button onClick={() => navigate(`/quiz?hsk=${lvl.level}`)} className="px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-colors text-sm shadow-lg shadow-primary/20">Quiz</button>
+                            <button onClick={() => handleSelectLevel(lvl.level)} className="px-4 py-2 bg-surface text-text-primary rounded-xl font-bold hover:bg-surface/80 transition-colors text-sm border border-border/50">Browse</button>
                           </div>
                         </div>
                       )}
@@ -183,7 +181,7 @@ function HSKPage() {
             <div className="flex items-center justify-between gap-4 mb-6">
               <button
                 onClick={() => setSelectedLevel(null)}
-                className="px-3 py-1.5 bg-card btn-brutal border border-border/50 text-text-primary btn-brutal text-sm flex items-center gap-1.5 hover:bg-surface cursor-pointer "
+                className="px-3 py-1.5 bg-card/80 backdrop-blur-xl border border-border/50 text-text-primary rounded-lg text-sm flex items-center gap-1.5 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors"
               >
                 <ChevronLeftIcon className="w-4 h-4" />
                 Back to Path
@@ -191,7 +189,7 @@ function HSKPage() {
               <h2 className="text-2xl font-bold text-text-primary tracking-tight">HSK {selectedLevel} Lexicon</h2>
               <button
                 onClick={() => navigate(`/quiz?hsk=${selectedLevel}`)}
-                className="px-4 py-2 bg-primary text-text-primary btn-brutal font-semibold   flex items-center gap-2 text-sm cursor-pointer  "
+                className="px-4 py-2 bg-primary text-text-primary rounded-lg font-semibold hover:bg-primary-hover transition-colors flex items-center gap-2 text-sm cursor-pointer shadow-lg shadow-primary/20"
               >
                 <PlayIcon className="w-4.5 h-4.5" />
                 Quiz Me
@@ -204,17 +202,17 @@ function HSKPage() {
                   <span className="animate-spin text-primary font-bold text-3xl">🍵</span>
                 </div>
               ) : words.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-text-secondary text-sm bg-card btn-brutal ">No words found in this branch.</div>
+                <div className="col-span-full py-12 text-center text-text-secondary text-sm bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl shadow-sm">No words found in this branch.</div>
               ) : (
                 words.map((word, index) => (
                   <div 
                     key={word.id} 
-                    className="bg-card btn-brutal p-5 flex flex-col justify-between   hover:  duration-300 animate-fade-in group min-h-[140px]"
+                    className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-5 flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in group min-h-[140px]"
                     style={{ animationDelay: `${(index % 10 + 1) * 50}ms` }}
                   >
                     <div className="space-y-2">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold cursor-pointer hover:text-primary  text-text-primary" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
+                        <span className="text-3xl font-bold cursor-pointer hover:text-primary transition-colors text-text-primary" onClick={() => navigate(`/word/${encodeURIComponent(word.character)}`)}>
                           {word.character}
                         </span>
                         <span className="text-sm font-semibold text-primary">{word.pinyin}</span>
@@ -231,7 +229,7 @@ function HSKPage() {
                       {supported && (
                         <button
                           onClick={() => speak(word.character)}
-                          className={`p-2 border btn-brutal flex items-center justify-center  cursor-pointer   ${
+                          className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 ${
                             isSpeaking ? 'bg-primary/20 border-primary text-primary animate-pulse' : 'bg-surface border-border/50 text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
                           }`}
                           title="Listen to pronunciation"
@@ -242,7 +240,7 @@ function HSKPage() {
                       <button
                         onClick={() => handleToggleDeck(word)}
                         disabled={actionLoading[word.id]}
-                        className={`p-2 border btn-brutal flex items-center justify-center  cursor-pointer   ${
+                        className={`p-2 border rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95 ${
                           word.inDeck
                             ? 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/25'
                             : 'bg-surface border-border/50 text-text-secondary hover:border-primary hover:text-primary hover:bg-primary/5'
@@ -267,7 +265,7 @@ function HSKPage() {
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="p-2 bg-card btn-brutal text-text-primary disabled:opacity-50 hover:bg-surface cursor-pointer  "
+                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors shadow-sm"
                 >
                   <ChevronLeftIcon className="w-5 h-5" />
                 </button>
@@ -277,7 +275,7 @@ function HSKPage() {
                 <button
                   disabled={page >= totalPages}
                   onClick={() => setPage(p => p + 1)}
-                  className="p-2 bg-card btn-brutal text-text-primary disabled:opacity-50 hover:bg-surface cursor-pointer  "
+                  className="p-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary disabled:opacity-50 hover:bg-surface/80 backdrop-blur-xl cursor-pointer transition-colors shadow-sm"
                 >
                   <ChevronRightIcon className="w-5 h-5" />
                 </button>

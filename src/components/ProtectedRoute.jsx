@@ -8,7 +8,7 @@ function ProtectedRoute({ children }) {
 
   if (!initialized) {
     return (
-      <div className="min-h-screen bg-background relative z-10 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center">
         <Spinner size={40} />
       </div>
     )

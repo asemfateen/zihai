@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
-import { cleanDefinition } from '../utils/text'
+import { useTheme } from '../hooks/useTheme'
+import API_BASE, { fetchWithTimeout } from '../api'
+import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
 
 function ChevronDownIcon(props) {
   return (
@@ -29,6 +30,7 @@ function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { dark, toggle: toggleTheme } = useTheme()
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
@@ -172,7 +174,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between px-3 sm:px-6 py-4 bg-card btn-brutal border-b-[3px] border-border sticky top-0 z-50 transition-colors">
+    <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
       <div className="flex-shrink-0">
         <Link viewTransition to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
           字海 Zihai
@@ -189,13 +191,13 @@ function Navbar() {
             onChange={handleSearch}
             onKeyDown={handleKeyDown}
             aria-label="Search characters, pinyin, or definitions"
-            className="w-full px-4 sm:px-5 py-2.5 bg-surface text-text-primary border-[3px] border-border rounded-lg outline-none focus:shadow-brutal transition-all placeholder:text-text-secondary text-sm sm:text-base font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-2px] focus:translate-y-[-2px]"
+            className="w-full px-3 sm:px-4 py-2 bg-card/80 backdrop-blur-md text-text-primary border border-border/50 rounded-lg outline-none focus:border-primary transition-all placeholder:text-text-secondary text-sm sm:text-base focus:ring-2 focus:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
           />
         </form>
 
         {showDropdown && suggestions.length > 0 && (
           <div
-            className="absolute top-full left-0 right-0 mt-1 bg-card btn-brutal border border-border rounded-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
+            className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-y-auto overflow-x-hidden z-50 max-h-72"
             role="listbox"
           >
             {suggestions.map((s, i) => (
@@ -209,24 +211,15 @@ function Navbar() {
                   i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
                 }`}
               >
-                <div className="flex-shrink-0 w-12 sm:w-16">
-                  <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
-                </div>
-                <div className="flex-shrink-0 w-24 sm:w-32">
-                  <span className="text-sm text-primary">{s.pinyin}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs text-text-secondary truncate block">
-                    {cleanDefinition(s.definition || s.english_definition) || 'No definition available'}
-                  </span>
-                </div>
+                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
+                <span className="text-sm text-primary">{s.pinyin}</span>
               </div>
             ))}
           </div>
         )}
 
         {showDropdown && searchError && suggestions.length === 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-card btn-brutal border border-red-400 rounded-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-red-400 rounded-lg shadow-lg overflow-hidden z-50 px-4 py-3 text-sm text-red-400">
             {searchError}
           </div>
         )}
@@ -239,10 +232,10 @@ function Navbar() {
             onClick={() => setExploreDropdownOpen(prev => !prev)}
             aria-haspopup="true"
             aria-expanded={exploreDropdownOpen}
-            className={`px-4 py-2.5 btn-brutal flex items-center gap-1.5 text-sm font-bold cursor-pointer ${
+            className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
               exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
-                ? 'text-text-primary bg-primary'
-                : 'text-text-primary bg-surface'
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-text-secondary border-border hover:text-primary hover:border-primary'
             }`}
           >
             <GridIcon className="w-4 h-4" />
@@ -251,7 +244,7 @@ function Navbar() {
           </button>
 
           {exploreDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-card btn-brutal border-[3px] border-border rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-2 z-50">
+            <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50 animate-fade-in">
               <button
                 onClick={() => { setExploreDropdownOpen(false); navigate('/radicals'); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
@@ -339,7 +332,14 @@ function Navbar() {
             </div>
           )}
         </div>
-
+        <button
+          onClick={toggleTheme}
+          className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+        </button>
         {user ? (
           <>
             <button
@@ -354,6 +354,17 @@ function Navbar() {
               <UserIcon className="w-4 h-4" />
             </button>
             <button
+              onClick={() => navigate('/settings')}
+              className={`p-2 border rounded-lg transition-colors cursor-pointer ${
+                location.pathname === '/settings'
+                  ? 'text-primary border-primary bg-primary/5'
+                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+              }`}
+              aria-label="Settings"
+            >
+              <span className="w-4 h-4 flex items-center justify-center text-xs">⚙️</span>
+            </button>
+            <button
               onClick={handleLogout}
               className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors cursor-pointer"
               aria-label="Logout"
@@ -365,13 +376,13 @@ function Navbar() {
           <>
             <button
               onClick={() => navigate('/login')}
-              className="px-5 py-2.5 btn-brutal bg-surface text-text-primary font-bold text-sm cursor-pointer"
+              className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-colors text-sm cursor-pointer"
             >
               Login
             </button>
             <button
               onClick={() => navigate('/register')}
-              className="px-5 py-2.5 btn-brutal bg-primary text-text-primary font-bold text-sm cursor-pointer"
+              className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors text-sm cursor-pointer"
             >
               Register
             </button>
@@ -387,14 +398,21 @@ function Navbar() {
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
         >
           {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
         </button>
 
         {mobileMenuOpen && user && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
+            >
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
+              {dark ? 'Light Mode' : 'Dark Mode'}
+            </button>
+            <div className="border-t border-border" />
+            
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
               aria-haspopup="true"
@@ -409,7 +427,7 @@ function Navbar() {
             </button>
 
             {mobileExploreOpen && (
-              <div className="bg-surface border-t border-border/50 py-1 pl-4">
+              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
                 <button
                   onClick={() => handleNav('/radicals')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
@@ -507,7 +525,16 @@ function Navbar() {
         )}
 
         {mobileMenuOpen && !user && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-card btn-brutal border border-border rounded-xl overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
+            >
+              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
+              {dark ? 'Light Mode' : 'Dark Mode'}
+            </button>
+            <div className="border-t border-border" />
+            
             <button
               onClick={() => setMobileExploreOpen(prev => !prev)}
               aria-haspopup="true"
@@ -522,7 +549,7 @@ function Navbar() {
             </button>
 
             {mobileExploreOpen && (
-              <div className="bg-surface border-t border-border/50 py-1 pl-4">
+              <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
                 <button
                   onClick={() => handleNav('/radicals')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}

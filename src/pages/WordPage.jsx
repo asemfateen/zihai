@@ -12,7 +12,6 @@ import { ChevronLeftIcon, HeartIcon, TrashIcon, FlashcardIcon, SpeakerIcon, Spea
 import ExampleSentenceCard from '../components/ExampleSentenceCard'
 import CustomListsModal from '../components/CustomListsModal'
 import RADICAL_MAP from '../data/radicals'
-import { cleanDefinition } from '../utils/text'
 
 function WordPage() {
   const { query } = useParams()
@@ -113,27 +112,27 @@ function WordPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background relative z-10">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
           <div className="flex flex-col items-center space-y-4 mb-8">
-            <div className="skeleton w-24 h-24 btn-brutal" />
+            <div className="skeleton w-24 h-24 rounded-xl" />
             <div className="skeleton w-40 h-8" />
             <div className="skeleton w-16 h-6 rounded-full" />
           </div>
-          <div className="bg-card btn-brutal p-5">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
             <div className="skeleton w-20 h-4 mb-3" />
             <div className="skeleton w-48 h-8" />
           </div>
-          <div className="bg-card btn-brutal p-5">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
             <div className="skeleton w-24 h-4 mb-3" />
             <div className="skeleton w-full h-6" />
           </div>
-          <div className="bg-card btn-brutal p-5">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-5">
             <div className="skeleton w-28 h-4 mb-4" />
             <div className="flex gap-4 justify-center">
-              <div className="skeleton w-28 h-28 btn-brutal" />
-              <div className="skeleton w-28 h-28 btn-brutal" />
+              <div className="skeleton w-28 h-28 rounded-lg" />
+              <div className="skeleton w-28 h-28 rounded-lg" />
             </div>
           </div>
         </div>
@@ -143,7 +142,7 @@ function WordPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-background relative z-10">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <h1 className="text-8xl font-bold text-primary mb-4">404</h1>
@@ -151,7 +150,7 @@ function WordPage() {
           <p className="text-text-secondary mb-8 text-center">The word you are looking for doesn't exist or has been moved.</p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-primary text-text-primary btn-brutal    font-medium"
+            className="px-6 py-3 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-all hover:scale-105 font-medium"
           >
             Go Home
           </button>
@@ -161,19 +160,19 @@ function WordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative z-10">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface btn-brutal hover:text-primary hover:border-primary  flex items-center gap-1.5"
+          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface/50 backdrop-blur-md border border-border/50 rounded-xl hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back
         </button>
 
         {toast && (
-          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card btn-brutal  text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
+          <div className="fixed top-28 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg text-text-primary text-sm animate-fade-in" role="status" aria-live="polite">
             {toast}
           </div>
         )}
@@ -181,8 +180,8 @@ function WordPage() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           
           {/* Main Hero Card - Bento Style */}
-          <div className="md:col-span-12 bg-card btn-brutal p-8 sm:p-12      animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 sm:p-12 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             
             <div className="flex gap-2 justify-center flex-wrap mb-6 relative z-10">
               {word.character.split('').map((char, i) => (
@@ -190,7 +189,7 @@ function WordPage() {
                   key={i}
                   onClick={() => navigate(`/search?q=${encodeURIComponent(char)}`)}
                   aria-label={`Search for character ${char}`}
-                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-text-primary hover:text-primary transition-transform  cursor-pointer drop-shadow-sm"
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-text-primary hover:text-primary transition-transform hover:scale-110 cursor-pointer drop-shadow-sm"
                 >
                   {char}
                 </button>
@@ -202,10 +201,10 @@ function WordPage() {
               {speechSupported ? (
                 <button
                   onClick={speak}
-                  className={`flex items-center justify-center w-12 h-12 rounded-full   ${
+                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md ${
                     isSpeaking
-                      ? 'bg-primary text-text-primary scale-110 animate-pulse '
-                      : 'bg-surface text-text-secondary hover:text-primary hover:border-primary border border-border/50 '
+                      ? 'bg-primary text-text-primary scale-110 animate-pulse shadow-primary/30'
+                      : 'bg-surface/80 backdrop-blur-xl text-text-secondary hover:text-primary hover:border-primary border border-border/50 hover:shadow-lg'
                   }`}
                   title='Listen to pronunciation'
                 >
@@ -213,7 +212,7 @@ function WordPage() {
                 </button>
               ) : (
                 <div
-                  className="flex items-center justify-center w-12 h-12 rounded-full bg-surface border border-border/50 text-text-secondary opacity-50 cursor-not-allowed"
+                  className="flex items-center justify-center w-12 h-12 rounded-full bg-surface/80 backdrop-blur-xl border border-border/50 text-text-secondary opacity-50 cursor-not-allowed"
                   title="Speech not supported in this browser"
                   tabIndex={-1}
                 >
@@ -226,7 +225,7 @@ function WordPage() {
               <button
                 onClick={() => toggleFavorite(navigate)}
                 disabled={favoriteLoading}
-                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal    hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {favoriteLoading ? (
@@ -239,10 +238,10 @@ function WordPage() {
               <button
                 onClick={inDeck ? removeFromDeck : addToDeck}
                 disabled={addingToDeck}
-                className={`flex items-center justify-center w-14 h-14 btn-brutal    active:translate-y-0 disabled:opacity-50 ${
+                className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg active:translate-y-0 disabled:opacity-50 ${
                   inDeck
-                    ? 'bg-primary/20 border border-primary/50 text-primary '
-                    : 'bg-surface border border-border/50 text-text-secondary hover:text-primary hover:border-primary/50 '
+                    ? 'bg-primary/20 border border-primary/50 text-primary shadow-primary/20'
+                    : 'bg-surface/50 border border-border/50 text-text-secondary hover:text-primary hover:border-primary/50 hover:shadow-primary/20'
                 }`}
                 title={inDeck ? 'Remove from deck' : 'Study this word'}
               >
@@ -257,14 +256,14 @@ function WordPage() {
 
               <button
                 onClick={() => setShowListsModal(true)}
-                className="flex items-center justify-center w-14 h-14 bg-surface btn-brutal    hover:text-primary hover:border-primary/50  active:translate-y-0 text-text-secondary"
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:text-primary hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0 text-text-secondary"
                 title="Add to Custom List"
               >
                 <PlusIcon className="w-7 h-7" />
               </button>
 
               {word.hsk_level && (
-                <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 btn-brutal text-sm font-bold ">
+                <span className="px-5 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl text-sm font-bold shadow-sm">
                   HSK {word.hsk_level}
                 </span>
               )}
@@ -272,7 +271,7 @@ function WordPage() {
               {word.radical && RADICAL_MAP[word.radical] && (
                 <button
                   onClick={() => navigate(`/radicals/${word.radical}`)}
-                  className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 btn-brutal text-sm font-bold   hover: hover:shadow-emerald-500/20  flex items-center gap-2"
+                  className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-2xl text-sm font-bold shadow-sm hover:-translate-y-1 hover:shadow-md hover:shadow-emerald-500/20 transition-all flex items-center gap-2"
                 >
                   <span className="text-lg">{RADICAL_MAP[word.radical]}</span>
                   <span>Radical {word.radical}</span>
@@ -282,20 +281,20 @@ function WordPage() {
           </div>
 
           {/* Definition Tile */}
-          <div className="md:col-span-12 bg-card btn-brutal p-8      animate-fade-in [animation-delay:200ms] group relative overflow-hidden flex flex-col justify-center min-h-[140px]">
+          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:200ms] group relative overflow-hidden flex flex-col justify-center min-h-[140px]">
              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
              <div className="relative z-10">
-               <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4 bg-surface inline-block px-4 py-1.5 rounded-full border border-border ">Definition</h2>
-               <p className="text-xl sm:text-2xl text-text-primary font-medium">{cleanDefinition(word.english_definition) || 'No definition available'}</p>
+               <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4 bg-surface inline-block px-4 py-1.5 rounded-full border border-border shadow-sm">Definition</h2>
+               <p className="text-xl sm:text-2xl text-text-primary font-medium">{word.english_definition || 'No definition available'}</p>
              </div>
           </div>
 
           {/* Examples Tile */}
           {word.examples && word.examples.length > 0 && (
-            <div className="md:col-span-12 bg-card btn-brutal p-8   hover:shadow-purple-500/10   animate-fade-in [animation-delay:300ms] group relative overflow-hidden">
+            <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-sm hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:300ms] group relative overflow-hidden">
                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                <div className="relative z-10">
-                 <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border ">Example Sentences</h2>
+                 <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border shadow-sm">Example Sentences</h2>
                  <div className="space-y-4">
                    {word.examples.map((ex, i) => (
                      <ExampleSentenceCard

@@ -50,14 +50,14 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative z-10 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-transparent relative z-10 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold mb-3 text-text-primary">Create Account</h1>
+          <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">Create Account</h1>
           <p className="text-text-secondary">Join Zihai to start learning Chinese</p>
         </div>
 
-        <div className="bg-card btn-brutal p-8  ">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-2xl shadow-primary/20">
           <form onSubmit={handleRegister}>
             <div className="mb-4">
               <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1.5">
@@ -70,7 +70,7 @@ function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-2.5 bg-surface btn-brutal text-text-primary outline-none focus:border-primary  placeholder:text-text-secondary"
+                className="w-full px-4 py-2.5 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                 placeholder="you@example.com"
               />
             </div>
@@ -88,13 +88,13 @@ function RegisterPage() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  className="w-full px-4 py-2.5 pr-12 bg-surface btn-brutal text-text-primary outline-none focus:border-primary  placeholder:text-text-secondary"
+                  className="w-full px-4 py-2.5 pr-12 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                   placeholder="At least 6 characters"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary "
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -115,13 +115,13 @@ function RegisterPage() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  className="w-full px-4 py-2.5 pr-12 bg-surface btn-brutal text-text-primary outline-none focus:border-primary  placeholder:text-text-secondary"
+                  className="w-full px-4 py-2.5 pr-12 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
                   placeholder="Re-enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary "
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -130,7 +130,7 @@ function RegisterPage() {
             </div>
 
             {error && (
-              <div role="alert" className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 btn-brutal text-red-400 text-sm">
+              <div role="alert" className="mb-4 px-4 py-2.5 bg-red-500/10 border border-red-500 border-opacity-30 rounded-lg text-red-400 text-sm">
                 {error}
               </div>
             )}
@@ -138,7 +138,7 @@ function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-primary text-text-primary font-medium btn-brutal   disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-primary text-text-primary font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Register'}
             </button>

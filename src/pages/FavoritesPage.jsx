@@ -159,7 +159,7 @@ function FavoritesPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-background relative z-10">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         
@@ -169,7 +169,7 @@ function FavoritesPage() {
             {selectedList ? `${selectedList.name}` : 'My Library'}
           </h1>
 
-          <div className="flex bg-surface p-1 rounded-xl border border-border/50 self-start sm:self-auto">
+          <div className="flex bg-surface/80 p-1 rounded-xl border border-border/50 self-start sm:self-auto">
             <button
               onClick={() => {
                 setActiveTab('favorites')
@@ -200,7 +200,7 @@ function FavoritesPage() {
         {selectedList && (
           <button
             onClick={() => setSelectedList(null)}
-            className="mb-4 text-xs font-semibold text-text-secondary bg-surface border border-border/50 px-3 py-1.5 rounded-xl hover:text-primary transition-colors"
+            className="mb-4 text-xs font-semibold text-text-secondary bg-surface/50 border border-border/50 px-3 py-1.5 rounded-xl hover:text-primary transition-colors"
           >
             &larr; Back to Lists
           </button>
@@ -214,7 +214,7 @@ function FavoritesPage() {
             {loadingFavorites && (
               <div className="flex flex-col gap-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-card btn-brutal p-5 skeleton h-24" />
+                  <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 skeleton h-24" />
                 ))}
               </div>
             )}
@@ -226,7 +226,7 @@ function FavoritesPage() {
             )}
 
             {!loadingFavorites && !favError && favorites.length === 0 && (
-              <div className="text-center py-12 bg-card btn-brutal border border-border/30 rounded-xl text-text-secondary p-6">
+              <div className="text-center py-12 bg-card/40 border border-border/30 rounded-3xl text-text-secondary p-6">
                 <HeartIcon className="w-12 h-12 mx-auto mb-3 text-border" />
                 <p className="text-base font-bold mb-1">No favorites yet</p>
                 <p className="text-xs">Tap the heart icon on any word page to save it here.</p>
@@ -243,7 +243,7 @@ function FavoritesPage() {
                     role="button"
                     tabIndex={0}
                     style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
-                    className="flex items-center gap-4 p-4 bg-card btn-brutal hover:border-primary    transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
+                    className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
                   >
                     <div className="flex-shrink-0 text-center">
                       <div className="flex gap-0.5 justify-center">
@@ -280,7 +280,7 @@ function FavoritesPage() {
             {loadingLists && (
               <div className="flex flex-col gap-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="bg-card btn-brutal p-5 skeleton h-20" />
+                  <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 skeleton h-20" />
                 ))}
               </div>
             )}
@@ -292,7 +292,7 @@ function FavoritesPage() {
             )}
 
             {!loadingLists && !listsError && lists.length === 0 && (
-              <div className="text-center py-12 bg-card btn-brutal border border-border/30 rounded-xl text-text-secondary p-6">
+              <div className="text-center py-12 bg-card/40 border border-border/30 rounded-3xl text-text-secondary p-6">
                 <svg className="w-12 h-12 mx-auto mb-3 text-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -311,7 +311,7 @@ function FavoritesPage() {
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewList(list) } }}
                     style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
-                    className="flex items-center justify-between p-5 bg-card btn-brutal hover:border-primary    transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
+                    className="flex items-center justify-between p-5 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%] animate-fade-in"
                   >
                     <div className="flex-1 min-w-0 pr-4">
                       <div className="flex items-center gap-3">
@@ -342,7 +342,7 @@ function FavoritesPage() {
         {/* 3. LIST DETAIL WORDS PREVIEW */}
         {selectedList && (
           <>
-            <div className="mb-4 bg-card btn-brutal border border-border/30 rounded-xl p-4">
+            <div className="mb-4 bg-card/40 backdrop-blur-md border border-border/30 rounded-2xl p-4">
               <h2 className="text-base font-bold text-text-primary">{selectedList.name}</h2>
               {selectedList.description && (
                 <p className="text-xs text-text-secondary mt-1">{selectedList.description}</p>
@@ -352,7 +352,7 @@ function FavoritesPage() {
             {loadingListWords && (
               <div className="flex flex-col gap-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="bg-card btn-brutal p-5 skeleton h-20" />
+                  <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 skeleton h-20" />
                 ))}
               </div>
             )}
@@ -374,7 +374,7 @@ function FavoritesPage() {
                     role="button"
                     tabIndex={0}
                     style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
-                    className="flex items-center gap-4 p-4 bg-card btn-brutal hover:border-primary    transition-all duration-300 cursor-pointer active:scale-[98%]"
+                    className="flex items-center gap-4 p-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-[98%]"
                   >
                     <div className="flex-shrink-0 text-center">
                       <div className="flex gap-0.5 justify-center">

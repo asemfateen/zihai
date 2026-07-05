@@ -33,7 +33,7 @@ function RadicalsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background relative z-10">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="flex items-center justify-center py-20">
           <Spinner size={40} />
@@ -44,7 +44,7 @@ function RadicalsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background relative z-10">
+      <div className="min-h-screen bg-transparent relative z-10">
         <Navbar />
         <div className="text-center py-20 text-red-400">
           <p className="text-lg font-medium">Failed to load radicals.</p>
@@ -57,7 +57,7 @@ function RadicalsPage() {
   const maxCount = radicals.length > 0 ? radicals[0].count : 1
 
   return (
-    <div className="min-h-screen bg-background relative z-10">
+    <div className="min-h-screen bg-transparent relative z-10">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-6">
@@ -71,12 +71,12 @@ function RadicalsPage() {
               <button
                 key={r.id}
                 onClick={() => navigate(`/radicals/${r.id}`)}
-                className="flex flex-col items-center justify-center gap-1 p-3 bg-card btn-brutal hover:border-primary/50    transition-all duration-300 cursor-pointer active:scale-95 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary animate-fade-in group"
+                className="flex flex-col items-center justify-center gap-1 p-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer active:scale-95 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary animate-fade-in group"
                 style={{ animationDelay: `${(index % 20 + 1) * 30}ms` }}
               >
                 <span className="text-3xl sm:text-4xl font-bold text-text-primary group-hover:text-primary transition-colors">{r.character}</span>
                 <span className="text-[10px] sm:text-xs text-text-secondary font-medium tracking-wider">{r.count.toLocaleString()}</span>
-                <div className="w-full h-1 bg-surface rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                <div className="w-full h-1 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
                   <div
                     className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${intensity}%` }}
