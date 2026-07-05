@@ -169,16 +169,37 @@ function AuthedHome() {
 
           <button
             onClick={() => navigate('/analyzer')}
-            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-500/30 transition-all group animate-fade-in [animation-delay:350ms] min-h-[120px]"
+            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-500/30 transition-all group animate-fade-in [animation-delay:300ms] min-h-[120px]"
           >
             <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
             </div>
             <span className="text-sm font-bold text-text-primary">Analyzer</span>
           </button>
+
+          <button
+            onClick={() => navigate('/reading')}
+            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/5 hover:border-violet-500/30 transition-all group animate-fade-in [animation-delay:325ms] min-h-[120px]"
+          >
+            <div className="w-12 h-12 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-500 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+              <span className="text-xl">📚</span>
+            </div>
+            <span className="text-sm font-bold text-text-primary">Reading</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/quiz')}
+            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-rose-500/5 hover:border-rose-500/30 transition-all group animate-fade-in [animation-delay:350ms] min-h-[120px]"
+          >
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
+              <span className="text-xl">🎮</span>
+            </div>
+            <span className="text-sm font-bold text-text-primary">Quiz Mode</span>
+          </button>
+
           <button
             onClick={() => navigate('/stats')}
-            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-500/30 transition-all group animate-fade-in [animation-delay:300ms] min-h-[120px]"
+            className="col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-500/30 transition-all group animate-fade-in [animation-delay:375ms] min-h-[120px]"
           >
             <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
               <UserIcon className="w-6 h-6" />

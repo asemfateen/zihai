@@ -464,6 +464,20 @@ function Navbar() {
                   Text Analyzer
                 </button>
                 <button
+                  onClick={() => handleNav('/reading')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/reading' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">📚</span>
+                  Graded Reading
+                </button>
+                <button
+                  onClick={() => handleNav('/quiz')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/quiz' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎮</span>
+                  Quiz Mode
+                </button>
+                <button
                   onClick={() => handleNav('/match-game')}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/match-game' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
                 >
