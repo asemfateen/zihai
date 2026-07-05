@@ -381,19 +381,19 @@ function FlashcardsPage() {
                   </button>
                 </div>
                 <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-3 bg-surface inline-block px-3 py-1 rounded-full border border-border shadow-sm">Definition</h3>
-                {card.english_definition || card.definition ? (
+                {card.definitions && card.definitions.length > 0 ? (
                   <div className="space-y-2 mt-1 max-w-sm text-left">
-                    {(card.english_definition || card.definition).split(';').map((part, i) => (
+                    {card.definitions.map((part, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold mt-0.5">
                           {i + 1}
                         </span>
-                        <p className="text-base sm:text-lg text-text-primary font-medium">{part.trim()}</p>
+                        <p className="text-base sm:text-lg text-text-primary font-medium">{part}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">No definition available</p>
+                  <p className="text-xl sm:text-2xl text-text-primary text-center font-medium max-w-sm">{card.english_definition || card.definition || 'No definition available'}</p>
                 )}
               </div>
             </div>

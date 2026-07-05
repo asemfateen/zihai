@@ -147,9 +147,9 @@ export default function TextAnalyzer({ cardStyle = true, initialText = '', readO
                   </Link>
                   
                   {/* Inline English Definition */}
-                  {showEnglish && token.definition && (
+                  {showEnglish && token.definitions && token.definitions.length > 0 && (
                     <span className="text-[10px] md:text-xs text-text-secondary mt-1 leading-tight text-center max-w-[80px] break-words line-clamp-2">
-                      {token.definition.split(';').filter(Boolean).slice(0, 2).join(', ')}
+                      {token.definitions.slice(0, 2).join(', ')}
                     </span>
                   )}
                 </div>

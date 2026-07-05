@@ -25,6 +25,11 @@ export function resolveDefinition(def) {
   return def
 }
 
+export function splitDefinition(defStr) {
+  if (!defStr) return []
+  return defStr.split(';').map(s => s.trim()).filter(Boolean)
+}
+
 export function resolveRowsBatch(rows) {
   if (!rows || rows.length === 0) return rows
 
@@ -45,7 +50,14 @@ export function resolveRowsBatch(rows) {
     }
   })
 
-  if (targets.size === 0) return rows
+  if (targets.size === 0) {
+    arr.forEach(row => {
+      if (!row) return
+      if (row.definition) row.definitions = splitDefinition(row.definition)
+      if (row.english_definition) row.definitions = splitDefinition(row.english_definition)
+    })
+    return rows
+  }
 
   const targetsArr = Array.from(targets)
   const chunkSize = 200
@@ -71,10 +83,12 @@ export function resolveRowsBatch(rows) {
     if (row.definition) {
       const match = row.definition.trim().match(regex)
       if (match && defMap.has(match[1])) row.definition = defMap.get(match[1])
+      row.definitions = splitDefinition(row.definition)
     }
     if (row.english_definition) {
       const match = row.english_definition.trim().match(regex)
       if (match && defMap.has(match[1])) row.english_definition = defMap.get(match[1])
+      row.definitions = splitDefinition(row.english_definition)
     }
   })
 

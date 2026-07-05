@@ -1,7 +1,7 @@
 import express from 'express'
 import { db } from '../db.js'
 import { apiLimiter } from '../middleware/rateLimiter.js'
-import { resolveRowsBatch, resolveDefinition } from '../utils/textUtils.js'
+import { resolveRowsBatch, resolveDefinition, splitDefinition } from '../utils/textUtils.js'
 import { convertNumberedPinyin } from '../utils/pinyin.js'
 
 const router = express.Router()
@@ -47,13 +47,15 @@ router.post('/analyze', apiLimiter, (req, res) => {
         }
 
         if (row) {
+          const resolvedDef = resolveDefinition(row.definition)
           tokens.push({
             text: substr,
             isChinese: true,
             id: row.id,
             type: row.type,
             pinyin: convertNumberedPinyin(row.type === 'char' ? row.pinyin.split(/[ ,/]+/)[0] : row.pinyin) || row.pinyin,
-            definition: resolveDefinition(row.definition),
+            definition: resolvedDef,
+            definitions: splitDefinition(resolvedDef),
             hsk_level: row.hsk_level
           });
           i += len;
@@ -75,6 +77,7 @@ router.post('/analyze', apiLimiter, (req, res) => {
             id: null,
             pinyin: null,
             definition: null,
+            definitions: [],
             hsk_level: null
           });
         }
