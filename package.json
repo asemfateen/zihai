@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"vite\" \"node backend/server.js\"",
+    "dev": "node backend/server.js",
     "start": "node backend/server.js",
     "start:prod": "NODE_ENV=production node backend/server.js",
     "seed": "node backend/seed_stories.js",

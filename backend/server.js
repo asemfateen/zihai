@@ -142,7 +142,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' })
 })
 
-// Production Frontend Serving
+// Serve frontend assets (Production or Development)
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../dist')
   app.use(express.static(distPath))
@@ -150,6 +150,19 @@ if (process.env.NODE_ENV === 'production') {
   app.use((req, res) => {
     res.sendFile(path.join(distPath, 'index.html'))
   })
+} else if (process.env.NODE_ENV !== 'test') {
+  try {
+    const { createServer: createViteServer } = await import('vite')
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+      root: path.join(__dirname, '../')
+    })
+    app.use(vite.middlewares)
+    console.log('Vite dev server integrated in middleware mode.')
+  } catch (err) {
+    console.error('Failed to start Vite dev server in middleware mode:', err.message)
+  }
 }
 
 // Graceful Shutdown
