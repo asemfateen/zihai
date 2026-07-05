@@ -334,6 +334,7 @@ function Navbar() {
           onClick={toggleTheme}
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
         </button>
@@ -346,6 +347,7 @@ function Navbar() {
                   ? 'text-primary border-primary bg-primary/5'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
+              aria-label="User profile"
             >
               <UserIcon className="w-4 h-4" />
             </button>
@@ -356,12 +358,14 @@ function Navbar() {
                   ? 'text-primary border-primary bg-primary/5'
                   : 'text-text-secondary border-border hover:text-primary hover:border-primary'
               }`}
+              aria-label="Settings"
             >
               <span className="w-4 h-4 flex items-center justify-center text-xs">⚙️</span>
             </button>
             <button
               onClick={handleLogout}
               className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors cursor-pointer"
+              aria-label="Logout"
             >
               <LogoutIcon className="w-4 h-4" />
             </button>

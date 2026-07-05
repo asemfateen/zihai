@@ -148,6 +148,7 @@ function StrokeOrderSection({ word }) {
                       startQuiz(i)
                     }}
                     className="mt-1 text-[10px] font-medium text-primary hover:underline block mx-auto"
+                    aria-label={`Reset practice for character ${char}`}
                   >
                     Reset
                   </button>
