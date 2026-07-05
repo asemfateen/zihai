@@ -26,10 +26,6 @@ describe('Login API Tests', () => {
   afterAll(() => {
     // Clean up test user
     db.prepare('DELETE FROM users WHERE email = ?').run(testUser.email)
-
-    // Test database clean up
-    db.close()
-    if (fs.existsSync('test-zihai.db')) fs.unlinkSync('test-zihai.db')
   })
 
   it('should return 400 when missing email or password', async () => {
@@ -88,4 +84,29 @@ describe('Login API Tests', () => {
     expect(cookies).toBeDefined()
     expect(cookies.some(cookie => cookie.startsWith('token='))).toBe(true)
   })
+})
+
+describe('Text Analyzer API', () => {
+  it('should return 400 for non-string input', async () => {
+    const res = await request(app)
+      .post('/api/analyze')
+      .send({ text: 123 })
+    expect(res.status).toBe(400)
+  })
+
+  it('should successfully tokenize and analyze Chinese text', async () => {
+    const res = await request(app)
+      .post('/api/analyze')
+      .send({ text: '我们' })
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('tokens')
+    expect(res.body.tokens.length).toBeGreaterThan(0)
+    expect(res.body.tokens[0].isChinese).toBe(true)
+  })
+})
+
+afterAll(() => {
+  // Test database clean up
+  try { db.close() } catch {}
+  if (fs.existsSync('test-zihai.db')) fs.unlinkSync('test-zihai.db')
 })
