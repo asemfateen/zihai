@@ -165,7 +165,7 @@ function WordPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface/50 backdrop-blur-md border border-border/50 rounded-xl hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5"
+          className="mb-6 px-4 py-2 text-sm text-text-secondary bg-surface/50 backdrop-blur-md border border-border/50 rounded-xl hover:text-primary hover:border-primary transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Back
@@ -201,12 +201,13 @@ function WordPage() {
               {speechSupported ? (
                 <button
                   onClick={speak}
-                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md ${
+                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                     isSpeaking
                       ? 'bg-primary text-text-primary scale-110 animate-pulse shadow-primary/30'
                       : 'bg-surface/80 backdrop-blur-xl text-text-secondary hover:text-primary hover:border-primary border border-border/50 hover:shadow-lg'
                   }`}
-                  title='Listen to pronunciation'
+                  title="Listen to pronunciation"
+                  aria-label="Listen to pronunciation"
                 >
                   {isSpeaking ? <SpeakerWaveIcon className="w-6 h-6" /> : <SpeakerIcon className="w-6 h-6" />}
                 </button>
@@ -225,8 +226,9 @@ function WordPage() {
               <button
                 onClick={() => toggleFavorite(navigate)}
                 disabled={favoriteLoading}
-                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50"
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-red-500/50 hover:shadow-red-500/20 active:translate-y-0 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {favoriteLoading ? (
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -238,12 +240,13 @@ function WordPage() {
               <button
                 onClick={inDeck ? removeFromDeck : addToDeck}
                 disabled={addingToDeck}
-                className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg active:translate-y-0 disabled:opacity-50 ${
+                className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg active:translate-y-0 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                   inDeck
                     ? 'bg-primary/20 border border-primary/50 text-primary shadow-primary/20'
                     : 'bg-surface/50 border border-border/50 text-text-secondary hover:text-primary hover:border-primary/50 hover:shadow-primary/20'
                 }`}
                 title={inDeck ? 'Remove from deck' : 'Study this word'}
+                aria-label={inDeck ? 'Remove from deck' : 'Study this word'}
               >
                 {addingToDeck ? (
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -256,8 +259,9 @@ function WordPage() {
 
               <button
                 onClick={() => setShowListsModal(true)}
-                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:text-primary hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0 text-text-secondary"
+                className="flex items-center justify-center w-14 h-14 bg-surface/50 border border-border/50 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg hover:text-primary hover:border-primary/50 hover:shadow-primary/20 active:translate-y-0 text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 title="Add to Custom List"
+                aria-label="Add to Custom List"
               >
                 <PlusIcon className="w-7 h-7" />
               </button>
