@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { HeartIcon, FlashcardIcon, ClockIcon, ChevronRightIcon, PencilIcon } from '../components/Icons'
 
 function ProfilePage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [profile, setProfile] = useState(null)
   const [profileError, setProfileError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -46,7 +45,6 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-text-primary mb-1">{displayName}</h1>
@@ -149,7 +147,18 @@ function ProfilePage() {
                 {stats.badges.map(badge => (
                   <div key={badge.id} className="flex items-center gap-3 px-4 py-3 bg-surface/50 border border-border/50 rounded-2xl hover:-translate-y-1 hover:shadow-md transition-all cursor-default">
                     <span className="text-2xl">{badge.icon}</span>
-                    <span className={`font-bold text-${badge.color}`}>{badge.name}</span>
+                    <span 
+                      className="font-bold" 
+                      style={{
+                        color: badge.color === 'emerald-500' ? '#10b981' :
+                               badge.color === 'amber-500' ? '#f59e0b' :
+                               badge.color === 'blue-500' ? '#3b82f6' :
+                               badge.color === 'rose-500' ? '#f43f5e' :
+                               'var(--text-primary)'
+                      }}
+                    >
+                      {badge.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -197,6 +206,21 @@ function ProfilePage() {
             </div>
             <ChevronRightIcon className="w-5 h-5 text-text-secondary group-hover:text-text-primary transition-colors group-hover:translate-x-1" />
           </Link>
+
+          {/* Logout Button */}
+          <button
+            onClick={logout}
+            className="col-span-2 md:col-span-4 bg-red-500/10 border border-red-500/20 rounded-3xl p-6 flex items-center justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 no-underline group animate-fade-in [animation-delay:450ms] mt-4"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <span className="text-red-500 font-bold text-lg">Log Out</span>
+            </div>
+          </button>
         </div>
       </div>
     </div>

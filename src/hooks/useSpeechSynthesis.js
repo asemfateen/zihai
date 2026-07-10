@@ -5,6 +5,7 @@ const audioSupported = typeof window !== 'undefined' && typeof Audio !== 'undefi
 
 export function useSpeechSynthesis() {
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [ready, setReady] = useState(false)
   const audioRef = useRef(null)
   const lastCallRef = useRef({ text: '', tone: null, time: 0 })
@@ -35,11 +36,16 @@ export function useSpeechSynthesis() {
         audioRef.current.pause()
         audioRef.current = null
       }
+      setIsLoading(false)
+      setIsSpeaking(false)
     }
   }, [])
 
   const speakBrowser = useCallback((text, tone) => {
-    if (!browserSupported || !text) return false
+    if (!browserSupported || !text) {
+      setIsLoading(false)
+      return false
+    }
     const v = window.speechSynthesis.getVoices()
 
     // Priority: Premium/Neural/Online/Google voices first
@@ -58,11 +64,6 @@ export function useSpeechSynthesis() {
 
     window.speechSynthesis.cancel()
 
-    // If text is purely pinyin (letters), it will be spelled out by the browser. 
-    // We should try to provide a character or let the browser do its best if we can't.
-    // In this app, the backend usually resolves characters. But if it fails, we fall back to this.
-    // The browser doesn't do tones for raw pinyin well, but we can't load the whole dict here.
-    // However, if the text is just letters, it's a known limitation of the fallback.
     let speechText = text
     if (/^[a-z]+$/i.test(text)) {
       console.warn('Browser TTS fallback received raw pinyin. It may spell the letters in English.')
@@ -73,9 +74,18 @@ export function useSpeechSynthesis() {
     utterance.rate = 0.8
     if (chineseVoice) utterance.voice = chineseVoice
 
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
+    utterance.onstart = () => {
+      setIsLoading(false)
+      setIsSpeaking(true)
+    }
+    utterance.onend = () => {
+      setIsSpeaking(false)
+      setIsLoading(false)
+    }
+    utterance.onerror = () => {
+      setIsSpeaking(false)
+      setIsLoading(false)
+    }
 
     window.speechSynthesis.speak(utterance)
     return true
@@ -101,21 +111,27 @@ export function useSpeechSynthesis() {
       audioRef.current = null
     }
 
+    setIsLoading(true)
+    setIsSpeaking(false)
+
     // Try Premium Backend TTS first
     try {
       const toneQuery = tone ? `&tone=${tone}` : ''
       const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}${toneQuery}&t=${now}`)
       audioRef.current = audio
 
-      audio.onplay = () => setIsSpeaking(true)
+      audio.onplay = () => {
+        setIsLoading(false)
+        setIsSpeaking(true)
+      }
       audio.onended = () => {
         setIsSpeaking(false)
+        setIsLoading(false)
         audioRef.current = null
       }
       audio.onerror = () => {
-        setIsSpeaking(false)
         audioRef.current = null
-        // Fallback to browser
+        // Fallback to browser (speakBrowser handles setting isLoading/isSpeaking)
         speakBrowser(text, tone)
       }
 
@@ -127,5 +143,5 @@ export function useSpeechSynthesis() {
     }
   }, [speakBrowser])
 
-  return { speak, isSpeaking, ready, supported: browserSupported || audioSupported }
+  return { speak, isSpeaking, isLoading, ready, supported: browserSupported || audioSupported }
 }

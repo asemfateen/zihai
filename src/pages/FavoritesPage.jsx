@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { HeartIcon, TrashIcon } from '../components/Icons'
@@ -156,18 +155,60 @@ function FavoritesPage() {
     }
   }
 
+  const handleExportCSV = (words, listName = 'zihai-export') => {
+    if (!words || words.length === 0) return
+    const csvContent = [
+      ['Word', 'Pinyin', 'Definition'],
+      ...words.map(w => [
+        w.character || w.simplified,
+        w.pinyin,
+        cleanDefinition(w.english_definition || w.definition || '')
+      ])
+    ]
+      .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `${listName.toLowerCase().replace(/\s+/g, '-')}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (!user) return null
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         
         {/* Header and Tab Controls */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-text-primary">
-            {selectedList ? `${selectedList.name}` : 'My Library'}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-text-primary">
+              {selectedList ? `${selectedList.name}` : 'My Library'}
+            </h1>
+            {selectedList && listWords.length > 0 && (
+              <button
+                onClick={() => handleExportCSV(listWords, selectedList.name)}
+                className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-xl hover:bg-primary/25 transition-colors cursor-pointer flex items-center gap-1 select-none"
+                title="Export to Anki CSV"
+              >
+                📥 Export CSV
+              </button>
+            )}
+            {!selectedList && activeTab === 'favorites' && favorites.length > 0 && (
+              <button
+                onClick={() => handleExportCSV(favorites, 'favorites')}
+                className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-xl hover:bg-primary/25 transition-colors cursor-pointer flex items-center gap-1 select-none"
+                title="Export to Anki CSV"
+              >
+                📥 Export CSV
+              </button>
+            )}
+          </div>
 
           <div className="flex bg-surface/80 p-1 rounded-xl border border-border/50 self-start sm:self-auto">
             <button
@@ -226,10 +267,20 @@ function FavoritesPage() {
             )}
 
             {!loadingFavorites && !favError && favorites.length === 0 && (
-              <div className="text-center py-12 bg-card/40 border border-border/30 rounded-3xl text-text-secondary p-6">
-                <HeartIcon className="w-12 h-12 mx-auto mb-3 text-border" />
-                <p className="text-base font-bold mb-1">No favorites yet</p>
-                <p className="text-xs">Tap the heart icon on any word page to save it here.</p>
+              <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-surface/50 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-xl shadow-black/20 mt-8 animate-fade-in">
+                <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <HeartIcon className="w-12 h-12 text-rose-500/50" />
+                </div>
+                <h3 className="text-2xl font-black text-text-primary mb-2">No favorites yet</h3>
+                <p className="text-text-secondary mb-8 max-w-sm text-sm">
+                  You haven't saved any words. Tap the heart icon on any character page to build your personal library!
+                </p>
+                <button
+                  onClick={() => navigate('/search')}
+                  className="px-8 py-4 bg-primary text-text-primary rounded-2xl font-bold hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/30 transition-all active:translate-y-0"
+                >
+                  Find Characters
+                </button>
               </div>
             )}
 
@@ -292,12 +343,22 @@ function FavoritesPage() {
             )}
 
             {!loadingLists && !listsError && lists.length === 0 && (
-              <div className="text-center py-12 bg-card/40 border border-border/30 rounded-3xl text-text-secondary p-6">
-                <svg className="w-12 h-12 mx-auto mb-3 text-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <p className="text-base font-bold mb-1">No custom lists yet</p>
-                <p className="text-xs">Create custom lists from any word page to organize your vocabulary.</p>
+              <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-surface/50 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-xl shadow-black/20 mt-8 animate-fade-in">
+                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <svg className="w-12 h-12 text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-text-primary mb-2">No custom lists</h3>
+                <p className="text-text-secondary mb-8 max-w-sm text-sm">
+                  Create custom lists from any word page to organize your vocabulary for specific goals.
+                </p>
+                <button
+                  onClick={() => navigate('/search')}
+                  className="px-8 py-4 bg-surface border border-border/50 text-text-primary rounded-2xl font-bold hover:bg-surface-hover transition-all"
+                >
+                  Search Words
+                </button>
               </div>
             )}
 

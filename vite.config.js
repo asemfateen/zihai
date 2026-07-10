@@ -37,6 +37,10 @@ export default defineConfig({
             options: { cacheName: 'api-words', expiration: { maxEntries: 100, maxAgeSeconds: 60*60*24*7 }, cacheableResponse: { statuses: [0,200] } } },
           { urlPattern: /\/api\/search.*/i, handler: 'NetworkFirst',
             options: { cacheName: 'api-search', expiration: { maxEntries: 50, maxAgeSeconds: 60*60*24*7 }, cacheableResponse: { statuses: [0,200] } } },
+          { urlPattern: /\/api\/tts.*/i, handler: 'CacheFirst',
+            options: { cacheName: 'api-tts', expiration: { maxEntries: 300, maxAgeSeconds: 60*60*24*30 }, cacheableResponse: { statuses: [0,200] } } },
+          { urlPattern: /\/api\/hsk.*/i, handler: 'NetworkFirst',
+            options: { cacheName: 'api-hsk', expiration: { maxEntries: 20, maxAgeSeconds: 60*60*24*7 }, cacheableResponse: { statuses: [0,200] } } },
         ],
       },
       manifest: {
@@ -64,4 +68,25 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            if (id.includes('framer-motion') || id.includes('motion-dom')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            return 'vendor-libs';
+          }
+        }
+      }
+    }
+  }
 })

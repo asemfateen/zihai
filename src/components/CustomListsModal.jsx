@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import PropTypes from 'prop-types'
+import API_BASE, { fetchWithTimeout } from '../api'
 
 function CustomListsModal({ wordId, isOpen, onClose }) {
   const [lists, setLists] = useState([])
@@ -15,8 +16,8 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
     setError(null)
     try {
       const [listsRes, membershipsRes] = await Promise.all([
-        fetch('/api/lists'),
-        fetch(`/api/words/${wordId}/lists`),
+        fetchWithTimeout(`${API_BASE}/api/lists`, { credentials: 'include' }),
+        fetchWithTimeout(`${API_BASE}/api/words/${wordId}/lists`, { credentials: 'include' }),
       ])
 
       if (!listsRes.ok || !membershipsRes.ok) {
@@ -46,12 +47,13 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
     const method = isMember ? 'DELETE' : 'POST'
 
     try {
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(`${API_BASE}${url}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: isMember ? undefined : JSON.stringify({ wordId }),
+        credentials: 'include',
       })
 
       if (!res.ok) throw new Error('Failed to update list association')
@@ -72,12 +74,13 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
     setError(null)
 
     try {
-      const res = await fetch('/api/lists', {
+      const res = await fetchWithTimeout(`${API_BASE}/api/lists`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: newListName, description: newListDesc }),
+        credentials: 'include',
       })
 
       if (!res.ok) throw new Error('Failed to create new list')
@@ -85,12 +88,13 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
       const createdList = await res.json()
 
       // Automatically add word to this new list
-      await fetch(`/api/lists/${createdList.id}/words`, {
+      await fetchWithTimeout(`${API_BASE}/api/lists/${createdList.id}/words`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ wordId }),
+        credentials: 'include',
       })
 
       // Refresh list options

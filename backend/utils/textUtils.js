@@ -1,4 +1,5 @@
 import { db } from '../db.js'
+import { convertNumberedPinyin } from './pinyin.js'
 
 export function sanitizeEmail(email) {
   return email.trim().toLowerCase()
@@ -30,6 +31,35 @@ export function splitDefinition(defStr) {
   return defStr.split(';').map(s => s.trim()).filter(Boolean)
 }
 
+function processDefinition(row, defFieldName) {
+  const rawDef = row[defFieldName]
+  if (!rawDef) return
+  
+  const parts = splitDefinition(rawDef)
+  const definitions = []
+  const classifiers = []
+
+  parts.forEach(part => {
+    if (part.startsWith('CL:')) {
+      const cls = part.substring(3).split(',').map(item => {
+        const match = item.match(/^(?:.*\|)?([^\[]+)\[([^\]]+)\]$/)
+        if (match) {
+          const char = match[1]
+          const pinyin = convertNumberedPinyin(match[2])
+          return `${char} (${pinyin})`
+        }
+        return item
+      })
+      classifiers.push(...cls)
+    } else {
+      definitions.push(part)
+    }
+  })
+
+  row.definitions = definitions
+  row.classifiers = classifiers
+}
+
 export function resolveRowsBatch(rows) {
   if (!rows || rows.length === 0) return rows
 
@@ -53,8 +83,8 @@ export function resolveRowsBatch(rows) {
   if (targets.size === 0) {
     arr.forEach(row => {
       if (!row) return
-      if (row.definition) row.definitions = splitDefinition(row.definition)
-      if (row.english_definition) row.definitions = splitDefinition(row.english_definition)
+      if (row.definition) processDefinition(row, 'definition')
+      else if (row.english_definition) processDefinition(row, 'english_definition')
     })
     return rows
   }
@@ -83,12 +113,12 @@ export function resolveRowsBatch(rows) {
     if (row.definition) {
       const match = row.definition.trim().match(regex)
       if (match && defMap.has(match[1])) row.definition = defMap.get(match[1])
-      row.definitions = splitDefinition(row.definition)
+      processDefinition(row, 'definition')
     }
     if (row.english_definition) {
       const match = row.english_definition.trim().match(regex)
       if (match && defMap.has(match[1])) row.english_definition = defMap.get(match[1])
-      row.definitions = splitDefinition(row.english_definition)
+      processDefinition(row, 'english_definition')
     }
   })
 

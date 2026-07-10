@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { ClockIcon } from '../components/Icons'
@@ -69,7 +68,6 @@ function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-text-primary">Search History</h1>
@@ -136,9 +134,20 @@ function HistoryPage() {
         )}
 
         {!loading && !error && history.length === 0 && (
-          <div className="text-center py-12 text-text-secondary">
-            <p className="text-lg mb-2">No search history yet</p>
-            <p className="text-sm">Your recent searches will appear here</p>
+          <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-surface/50 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-xl shadow-black/20 mt-8 animate-fade-in">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6 shadow-inner">
+              <ClockIcon className="w-12 h-12 text-primary/50" />
+            </div>
+            <h3 className="text-2xl font-black text-text-primary mb-2">No history yet</h3>
+            <p className="text-text-secondary mb-8 max-w-sm text-sm">
+              Your recent searches will automatically be logged here so you can easily jump back into them.
+            </p>
+            <button
+              onClick={() => navigate('/search')}
+              className="px-8 py-4 bg-primary text-text-primary rounded-2xl font-bold hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/30 transition-all active:translate-y-0"
+            >
+              Start Searching
+            </button>
           </div>
         )}
 

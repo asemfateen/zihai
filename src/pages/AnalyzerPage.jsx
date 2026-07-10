@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
 import { fetchWithTimeout } from '../api'
 import Spinner from '../components/Spinner'
 import { Link } from 'react-router-dom'
@@ -9,6 +8,7 @@ import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 function AnalyzerPage() {
   const [text, setText] = useState('')
   const [tokens, setTokens] = useState([])
+  const [translation, setTranslation] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const { speak, isSpeaking } = useSpeechSynthesis()
@@ -17,6 +17,7 @@ function AnalyzerPage() {
     if (!text.trim()) return
     setLoading(true)
     setError(null)
+    setTranslation('')
     try {
       const res = await fetchWithTimeout('/api/analyze', {
         method: 'POST',
@@ -26,6 +27,7 @@ function AnalyzerPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to analyze text')
       setTokens(data.tokens || [])
+      setTranslation(data.translation || '')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -48,7 +50,6 @@ function AnalyzerPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="mb-8 animate-fade-in">
           <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-sm">Reading Mode</h1>
@@ -89,6 +90,17 @@ function AnalyzerPage() {
                 {isSpeaking ? <Spinner className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
               </button>
             </div>
+            
+            {translation && (
+              <div className="mb-6 p-5 bg-primary/5 border border-primary/20 rounded-2xl animate-fade-in">
+                <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-2 flex items-center gap-2 select-none">
+                  <span>📝</span> English Translation
+                </h3>
+                <p className="text-base sm:text-lg font-bold text-text-primary leading-relaxed">
+                  {translation}
+                </p>
+              </div>
+            )}
             
             <div className="leading-[3.5rem] md:leading-[4rem] text-justify">
               {tokens.map((token, idx) => {

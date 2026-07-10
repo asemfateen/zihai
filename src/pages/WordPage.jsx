@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import StrokeOrderSection from '../components/StrokeOrderSection'
 import { useAuth } from '../context/AuthContext'
 import { useWordData } from '../hooks/useWordData'
@@ -13,6 +12,15 @@ import ExampleSentenceCard from '../components/ExampleSentenceCard'
 import CustomListsModal from '../components/CustomListsModal'
 import RADICAL_MAP from '../data/radicals'
 
+function getToneColorClass(pinyin) {
+  if (!pinyin) return 'from-primary/20 to-transparent'
+  if (/[āēīōūǖ]/i.test(pinyin)) return 'from-red-500/40 to-transparent'
+  if (/[áéíóúǘ]/i.test(pinyin)) return 'from-emerald-500/40 to-transparent'
+  if (/[ǎěǐǒǔǚ]/i.test(pinyin)) return 'from-blue-500/40 to-transparent'
+  if (/[àèìòùǜ]/i.test(pinyin)) return 'from-purple-500/40 to-transparent'
+  return 'from-primary/20 to-transparent'
+}
+
 function WordPage() {
   const { query } = useParams()
   const navigate = useNavigate()
@@ -20,7 +28,7 @@ function WordPage() {
   const { toast, showToast } = useToast()
   const { word, loading, notFound } = useWordData(query)
   const { isFavorite, favoriteLoading, toggleFavorite } = useWordFavorite(word, user, showToast)
-  const { speak: speakTTS, isSpeaking, supported: speechSupported } = useSpeechSynthesis()
+  const { speak: speakTTS, isSpeaking, isLoading, supported: speechSupported } = useSpeechSynthesis()
   const [inDeck, setInDeck] = useState(false)
   const [addingToDeck, setAddingToDeck] = useState(false)
   const [showListsModal, setShowListsModal] = useState(false)
@@ -113,7 +121,6 @@ function WordPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
           <div className="flex flex-col items-center space-y-4 mb-8">
             <div className="skeleton w-24 h-24 rounded-xl" />
@@ -143,7 +150,6 @@ function WordPage() {
   if (notFound) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <h1 className="text-8xl font-bold text-primary mb-4">404</h1>
           <p className="text-2xl text-text-primary mb-2">Word not found</p>
@@ -161,7 +167,6 @@ function WordPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}
@@ -179,12 +184,13 @@ function WordPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           
-          {/* Main Hero Card - Bento Style */}
-          <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 sm:p-12 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          {/* Main Hero Card - Bento Style with Dynamic Tone Glow */}
+          <div className={`md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 sm:p-12 shadow-sm hover:-translate-y-1 transition-all animate-fade-in [animation-delay:100ms] flex flex-col items-center justify-center relative overflow-hidden group hover:shadow-lg hover:shadow-${getToneColorClass(word.pinyin).split('-')[1]}-500/20`}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${getToneColorClass(word.pinyin)} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}></div>
+            <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${getToneColorClass(word.pinyin).replace('from-', 'from-').replace('to-transparent', 'to-transparent/0')} opacity-20 blur-3xl rounded-full scale-150 -translate-y-1/2 translate-x-1/4`}></div>
             
             <div className="flex gap-2 justify-center flex-wrap mb-6 relative z-10">
-              {word.character.split('').map((char, i) => (
+              {(word.character || '').split('').map((char, i) => (
                 <button
                   key={i}
                   onClick={() => navigate(`/search?q=${encodeURIComponent(char)}`)}
@@ -201,14 +207,22 @@ function WordPage() {
               {speechSupported ? (
                 <button
                   onClick={speak}
-                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md ${
+                  className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md cursor-pointer ${
                     isSpeaking
                       ? 'bg-primary text-text-primary scale-110 animate-pulse shadow-primary/30'
+                      : isLoading
+                      ? 'bg-primary/20 text-primary scale-105 border border-primary/40 shadow-lg shadow-primary/10'
                       : 'bg-surface/80 backdrop-blur-xl text-text-secondary hover:text-primary hover:border-primary border border-border/50 hover:shadow-lg'
                   }`}
                   title='Listen to pronunciation'
                 >
-                  {isSpeaking ? <SpeakerWaveIcon className="w-6 h-6" /> : <SpeakerIcon className="w-6 h-6" />}
+                  {isSpeaking ? (
+                    <SpeakerWaveIcon className="w-6 h-6" />
+                  ) : isLoading ? (
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <SpeakerIcon className="w-6 h-6" />
+                  )}
                 </button>
               ) : (
                 <div
@@ -299,6 +313,17 @@ function WordPage() {
                ) : (
                  <p className="text-xl sm:text-2xl text-text-primary font-medium">{word.english_definition || 'No definition available'}</p>
                )}
+
+               {word.classifiers && word.classifiers.length > 0 && (
+                 <div className="flex flex-wrap gap-2 items-center mt-5 pt-4 border-t border-border/50">
+                   <span className="text-xs font-bold text-text-secondary uppercase tracking-wider bg-surface px-3.5 py-1 rounded-full border border-border shadow-sm">Measure Words</span>
+                   <div className="flex gap-2 flex-wrap">
+                     {word.classifiers.map((c, idx) => (
+                       <span key={idx} className="text-sm font-bold text-primary bg-primary/5 border border-primary/20 px-3 py-1.5 rounded-xl">{c}</span>
+                     ))}
+                   </div>
+                 </div>
+               )}
              </div>
           </div>
 
@@ -315,6 +340,38 @@ function WordPage() {
                        sentence={ex.sentence}
                        translation={ex.translation}
                      />
+                   ))}
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {/* Character Breakdown Tile */}
+          {word.components && word.components.length > 0 && (
+            <div className="md:col-span-12 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-sm hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all animate-fade-in [animation-delay:350ms] group relative overflow-hidden">
+               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <div className="relative z-10">
+                 <h2 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-5 bg-surface inline-block px-4 py-1.5 rounded-full border border-border shadow-sm">Character Breakdown</h2>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   {word.components.map((comp, i) => (
+                     <div key={i} className="flex bg-surface/50 border border-border rounded-2xl p-4 gap-4 items-center">
+                       <div className="text-4xl font-black text-primary w-16 h-16 flex-shrink-0 bg-white rounded-xl flex items-center justify-center shadow-inner">
+                         {comp.character}
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         {comp.unknown ? (
+                           <p className="text-text-secondary italic text-sm">Component details not found.</p>
+                         ) : (
+                           <>
+                             <div className="flex items-center gap-2 mb-1">
+                               <p className="font-bold text-text-primary text-lg">{comp.pinyin}</p>
+                               {comp.hsk_level && <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/30">HSK {comp.hsk_level}</span>}
+                             </div>
+                             <p className="text-sm text-text-secondary truncate">{comp.english_definition}</p>
+                           </>
+                         )}
+                       </div>
+                     </div>
                    ))}
                  </div>
                </div>

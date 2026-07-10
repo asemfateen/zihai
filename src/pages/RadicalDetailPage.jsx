@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import SearchResultCard from '../components/SearchResultCard'
 import Spinner from '../components/Spinner'
 import { ChevronLeftIcon } from '../components/Icons'
@@ -47,7 +46,6 @@ function RadicalDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="flex items-center justify-center py-20">
           <Spinner size={40} />
         </div>
@@ -58,7 +56,6 @@ function RadicalDetailPage() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="text-center py-20 text-red-400">
           <p className="text-lg font-medium">Failed to load radical details.</p>
           <p className="text-sm mt-1">Please try again later.</p>
@@ -77,7 +74,6 @@ function RadicalDetailPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={handleBack}

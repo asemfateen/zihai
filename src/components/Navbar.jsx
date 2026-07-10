@@ -1,21 +1,56 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../hooks/useTheme'
-import API_BASE, { fetchWithTimeout } from '../api'
-import { SunIcon, MoonIcon, HeartIcon, ClockIcon, UserIcon, LogoutIcon, MenuIcon, XIcon, PlusIcon, SpeakerIcon, FlashcardIcon, GridIcon, DashboardIcon, FileIcon } from './Icons'
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../hooks/useTheme";
+import API_BASE, { fetchWithTimeout } from "../api";
+import {
+  SunIcon,
+  MoonIcon,
+  HeartIcon,
+  ClockIcon,
+  UserIcon,
+  LogoutIcon,
+  MenuIcon,
+  XIcon,
+  PlusIcon,
+  SpeakerIcon,
+  FlashcardIcon,
+  GridIcon,
+  DashboardIcon,
+  FileIcon,
+} from "./Icons";
+import { Star as StarIcon, Flame } from "lucide-react";
+import { motion } from "framer-motion";
 
 function ChevronDownIcon(props) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <polyline points="6 9 12 15 18 9" />
     </svg>
-  )
+  );
 }
 
 function TrophyIcon(props) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
       <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
       <path d="M4 22h16" />
@@ -23,162 +58,185 @@ function TrophyIcon(props) {
       <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
       <path d="M18 2H6v7c0 3.31 2.69 6 6 6s6-2.69 6-6V2Z" />
     </svg>
-  )
+  );
 }
 
 function Navbar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { user, logout } = useAuth()
-  const { dark, toggle: toggleTheme } = useTheme()
-  const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [focusedIndex, setFocusedIndex] = useState(-1)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false)
-  const [mobileExploreOpen, setMobileExploreOpen] = useState(false)
-  const [searchError, setSearchError] = useState(null)
-  const debounceRef = useRef(null)
-  const abortControllerRef = useRef(null)
-  const inputRef = useRef(null)
-  const containerRef = useRef(null)
-  const mobileMenuRef = useRef(null)
-  const exploreDropdownRef = useRef(null)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  const { dark, toggle: toggleTheme } = useTheme();
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
+  const [mobileExploreOpen, setMobileExploreOpen] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const debounceRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const inputRef = useRef(null);
+  const containerRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const exploreDropdownRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setShowDropdown(false)
+        setShowDropdown(false);
       }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
-        setMobileMenuOpen(false)
+        setMobileMenuOpen(false);
       }
-      if (exploreDropdownRef.current && !exploreDropdownRef.current.contains(e.target)) {
-        setExploreDropdownOpen(false)
+      if (
+        exploreDropdownRef.current &&
+        !exploreDropdownRef.current.contains(e.target)
+      ) {
+        setExploreDropdownOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      clearTimeout(debounceRef.current)
+      document.removeEventListener("mousedown", handleClickOutside);
+      clearTimeout(debounceRef.current);
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+        abortControllerRef.current.abort();
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleSearch = (e) => {
-    const value = e.target.value
-    setQuery(value)
-    setFocusedIndex(-1)
+    const value = e.target.value;
+    setQuery(value);
+    setFocusedIndex(-1);
 
-    clearTimeout(debounceRef.current)
+    clearTimeout(debounceRef.current);
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
+      abortControllerRef.current.abort();
     }
 
     if (value.length >= 1) {
       debounceRef.current = setTimeout(() => {
-        abortControllerRef.current = new AbortController()
-        fetchWithTimeout(`${API_BASE}/api/search?q=${encodeURIComponent(value)}&limit=6`, {
-          signal: abortControllerRef.current.signal,
-        })
+        abortControllerRef.current = new AbortController();
+        fetchWithTimeout(
+          `${API_BASE}/api/search?q=${encodeURIComponent(value)}&limit=6`,
+          {
+            signal: abortControllerRef.current.signal,
+          },
+        )
           .then((res) => {
             if (!res.ok) {
-              setSearchError('Search unavailable. Server returned an error.')
-              setSuggestions([])
-              setShowDropdown(false)
-              return
+              setSearchError("Search unavailable. Server returned an error.");
+              setSuggestions([]);
+              setShowDropdown(false);
+              return;
             }
-            return res.json()
+            return res.json();
           })
           .then((data) => {
-            if (!data) return
-            setSuggestions(data.slice(0, 6))
-            setShowDropdown(true)
-            setSearchError(null)
+            if (!data) return;
+            setSuggestions(data.slice(0, 6));
+            setShowDropdown(true);
+            setSearchError(null);
           })
           .catch((err) => {
-            if (err.name === 'AbortError') return
-            console.error('Search suggestion failed:', err)
-            if (err.name === 'TimeoutError' || err.message.includes('timed out')) {
-              setSearchError('Search timed out. Please try again.')
-            } else if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-              setSearchError('Network error. Check your connection.')
+            if (err.name === "AbortError") return;
+            console.error("Search suggestion failed:", err);
+            if (
+              err.name === "TimeoutError" ||
+              err.message.includes("timed out")
+            ) {
+              setSearchError("Search timed out. Please try again.");
+            } else if (
+              err.message === "Failed to fetch" ||
+              err.name === "TypeError"
+            ) {
+              setSearchError("Network error. Check your connection.");
             } else {
-              setSearchError('Search unavailable. Please try again.')
+              setSearchError("Search unavailable. Please try again.");
             }
-            setSuggestions([])
-            setShowDropdown(false)
-          })
-      }, 200)
+            setSuggestions([]);
+            setShowDropdown(false);
+          });
+      }, 200);
     } else {
-      setSuggestions([])
-      setShowDropdown(false)
-      setSearchError(null)
+      setSuggestions([]);
+      setShowDropdown(false);
+      setSearchError(null);
     }
-  }
+  };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setShowDropdown(false)
-      setFocusedIndex(-1)
-      setMobileMenuOpen(false)
+    if (e.key === "Escape") {
+      setShowDropdown(false);
+      setFocusedIndex(-1);
+      setMobileMenuOpen(false);
     }
     if (showDropdown && suggestions.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setFocusedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1))
-      } else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < suggestions.length) {
-        e.preventDefault()
-        handleSelect(suggestions[focusedIndex])
-        return
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : 0,
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev > 0 ? prev - 1 : suggestions.length - 1,
+        );
+      } else if (
+        e.key === "Enter" &&
+        focusedIndex >= 0 &&
+        focusedIndex < suggestions.length
+      ) {
+        e.preventDefault();
+        handleSelect(suggestions[focusedIndex]);
+        return;
       }
     }
-    if (e.key === 'Enter' && query.trim()) {
-      e.preventDefault()
-      setShowDropdown(false)
-      setFocusedIndex(-1)
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    if (e.key === "Enter" && query.trim()) {
+      e.preventDefault();
+      setShowDropdown(false);
+      setFocusedIndex(-1);
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     }
-  }
+  };
 
   const handleSelect = (suggestion) => {
-    setShowDropdown(false)
-    setFocusedIndex(-1)
-    setQuery('')
-    navigate(`/word/${suggestion.id}`)
-  }
+    setShowDropdown(false);
+    setFocusedIndex(-1);
+    setQuery("");
+    navigate(`/word/${suggestion.id}`);
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (query.trim()) {
-      setShowDropdown(false)
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+      setShowDropdown(false);
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     }
-  }
+  };
 
   const handleLogout = () => {
-    logout()
-    setMobileMenuOpen(false)
-    navigate('/')
-  }
+    logout();
+    setMobileMenuOpen(false);
+    navigate("/");
+  };
 
   const handleNav = (path) => {
-    setMobileMenuOpen(false)
-    navigate(path)
-  }
+    setMobileMenuOpen(false);
+    navigate(path);
+  };
 
   return (
     <nav className="flex items-center justify-between px-3 sm:px-4 py-3 bg-surface/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
       <div className="flex-shrink-0">
-        <Link viewTransition to="/" className="text-lg sm:text-xl font-bold text-primary no-underline">
+        <button
+          onClick={() => navigate("/")}
+          className="text-lg sm:text-xl font-bold text-primary no-underline cursor-pointer bg-transparent border-none p-0 hover:opacity-80 transition-opacity"
+        >
           字海 Zihai
-        </Link>
+        </button>
       </div>
 
       <div ref={containerRef} className="flex-1 max-w-md mx-2 sm:mx-4 relative">
@@ -206,12 +264,14 @@ function Navbar() {
                 onClick={() => handleSelect(s)}
                 onMouseEnter={() => setFocusedIndex(i)}
                 role="option"
-                aria-selected={i === focusedIndex ? 'true' : 'false'}
+                aria-selected={i === focusedIndex ? "true" : "false"}
                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${
-                  i === focusedIndex ? 'bg-surface' : 'hover:bg-surface'
+                  i === focusedIndex ? "bg-surface" : "hover:bg-surface"
                 }`}
               >
-                <span className="text-xl font-bold text-text-primary">{s.simplified}</span>
+                <span className="text-xl font-bold text-text-primary">
+                  {s.simplified}
+                </span>
                 <span className="text-sm text-primary">{s.pinyin}</span>
               </div>
             ))}
@@ -227,104 +287,205 @@ function Navbar() {
 
       {/* Desktop nav */}
       <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+        {user && user.streak !== undefined && (
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            className="flex items-center gap-1.5 px-3 py-2 bg-orange-500/10 text-orange-500 border border-orange-500/30 rounded-lg font-bold text-sm mr-2 shadow-[0_0_10px_rgba(249,115,22,0.2)]"
+          >
+            <motion.div
+              animate={{
+                rotate: [-5, 5, -5],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Flame size={16} fill="currentColor" />
+            </motion.div>
+            {user.streak}
+          </motion.div>
+        )}
+        <button
+          onClick={() => navigate("/journey")}
+          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
+            location.pathname.startsWith("/journey")
+              ? "text-primary border-primary bg-primary/5"
+              : "text-text-secondary border-border hover:text-primary hover:border-primary"
+          }`}
+        >
+          <TrophyIcon className="w-4 h-4" />
+          Journey
+        </button>
+        <button
+          onClick={() => navigate("/leaderboard")}
+          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
+            location.pathname.startsWith("/leaderboard")
+              ? "text-primary border-primary bg-primary/5"
+              : "text-text-secondary border-border hover:text-primary hover:border-primary"
+          }`}
+        >
+          <StarIcon className="w-4 h-4" />
+          Leaderboard
+        </button>
         <div ref={exploreDropdownRef} className="relative">
           <button
-            onClick={() => setExploreDropdownOpen(prev => !prev)}
+            onClick={() => setExploreDropdownOpen((prev) => !prev)}
             aria-haspopup="true"
             aria-expanded={exploreDropdownOpen}
             className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-sm cursor-pointer ${
-              exploreDropdownOpen || ['/radicals', '/flashcards', '/hsk', '/pinyin', '/analyzer', '/history', '/favorites', '/stats'].some(path => location.pathname === path || location.pathname.startsWith(path + '/'))
-                ? 'text-primary border-primary bg-primary/5'
-                : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+              exploreDropdownOpen ||
+              [
+                "/radicals",
+                "/flashcards",
+                "/hsk",
+                "/pinyin",
+                "/analyzer",
+                "/history",
+                "/favorites",
+                "/stats",
+              ].some(
+                (path) =>
+                  location.pathname === path ||
+                  location.pathname.startsWith(path + "/"),
+              )
+                ? "text-primary border-primary bg-primary/5"
+                : "text-text-secondary border-border hover:text-primary hover:border-primary"
             }`}
           >
             <GridIcon className="w-4 h-4" />
             Explore Tools
-            <ChevronDownIcon className={`w-3 h-3 transition-transform duration-200 ${exploreDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon
+              className={`w-3 h-3 transition-transform duration-200 ${exploreDropdownOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
           {exploreDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50 animate-fade-in">
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/radicals'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/radicals");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname.startsWith("/radicals") ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <GridIcon className="w-4 h-4 text-text-secondary" />
                 Radicals
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/flashcards'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/flashcards");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/flashcards" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <FlashcardIcon className="w-4 h-4 text-text-secondary" />
                 Flashcards
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/hsk'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/hsk' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/hsk");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/hsk" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <DashboardIcon className="w-4 h-4 text-text-secondary" />
                 HSK Levels
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/pinyin'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/pinyin");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/pinyin" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <SpeakerIcon className="w-4 h-4 text-text-secondary" />
                 Pinyin Chart
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/analyzer'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/analyzer");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/analyzer" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <FileIcon className="w-4 h-4 text-text-secondary" />
                 Text Analyzer
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/reading'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/reading' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/reading");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/reading" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
-                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">📚</span>
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                  📚
+                </span>
                 Graded Reading
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/quiz'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/quiz' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/quiz");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/quiz" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
-                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎮</span>
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                  🎮
+                </span>
                 Quiz Mode
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/match-game'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/match-game' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/match-game");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/match-game" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
-                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎴</span>
+                <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                  🎴
+                </span>
                 Memory Match
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/history'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/history' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/history");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/history" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <ClockIcon className="w-4 h-4 text-text-secondary" />
                 History
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/favorites'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/favorites' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/favorites");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/favorites" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <HeartIcon className="w-4 h-4 text-text-secondary" />
                 Favorites
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/stats'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/stats' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/stats");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/stats" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <UserIcon className="w-4 h-4 text-text-secondary" />
                 Stats
               </button>
               <button
-                onClick={() => { setExploreDropdownOpen(false); navigate('/achievements'); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === '/achievements' ? 'text-primary bg-primary/5 font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                onClick={() => {
+                  setExploreDropdownOpen(false);
+                  navigate("/achievements");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${location.pathname === "/achievements" ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
               >
                 <TrophyIcon className="w-4 h-4 text-text-secondary" />
                 Achievements
@@ -335,34 +496,40 @@ function Navbar() {
         <button
           onClick={toggleTheme}
           className="p-2 border border-border rounded-lg transition-colors text-text-secondary hover:text-primary hover:border-primary cursor-pointer"
-          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
         >
-          {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+          {dark ? (
+            <SunIcon className="w-4 h-4" />
+          ) : (
+            <MoonIcon className="w-4 h-4" />
+          )}
         </button>
         {user ? (
           <>
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate("/profile")}
               className={`p-2 border rounded-lg transition-colors cursor-pointer ${
-                location.pathname === '/profile'
-                  ? 'text-primary border-primary bg-primary/5'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+                location.pathname === "/profile"
+                  ? "text-primary border-primary bg-primary/5"
+                  : "text-text-secondary border-border hover:text-primary hover:border-primary"
               }`}
               aria-label="Profile"
             >
               <UserIcon className="w-4 h-4" />
             </button>
             <button
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate("/settings")}
               className={`p-2 border rounded-lg transition-colors cursor-pointer ${
-                location.pathname === '/settings'
-                  ? 'text-primary border-primary bg-primary/5'
-                  : 'text-text-secondary border-border hover:text-primary hover:border-primary'
+                location.pathname === "/settings"
+                  ? "text-primary border-primary bg-primary/5"
+                  : "text-text-secondary border-border hover:text-primary hover:border-primary"
               }`}
               aria-label="Settings"
             >
-              <span className="w-4 h-4 flex items-center justify-center text-xs">⚙️</span>
+              <span className="w-4 h-4 flex items-center justify-center text-xs">
+                ⚙️
+              </span>
             </button>
             <button
               onClick={handleLogout}
@@ -375,13 +542,13 @@ function Navbar() {
         ) : (
           <>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="px-4 py-2 text-text-primary border border-border rounded-lg hover:border-primary transition-colors text-sm cursor-pointer"
             >
               Login
             </button>
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate("/register")}
               className="px-4 py-2 bg-primary text-text-primary rounded-lg hover:bg-primary-hover transition-colors text-sm cursor-pointer"
             >
               Register
@@ -393,13 +560,17 @@ function Navbar() {
       {/* Mobile hamburger */}
       <div ref={mobileMenuRef} className="sm:hidden flex-shrink-0 relative">
         <button
-          onClick={() => setMobileMenuOpen(prev => !prev)}
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
           aria-haspopup="true"
           aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           className="p-2 text-text-secondary border border-border rounded-lg hover:text-primary hover:border-primary transition-colors"
         >
-          {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+          {mobileMenuOpen ? (
+            <XIcon className="w-5 h-5" />
+          ) : (
+            <MenuIcon className="w-5 h-5" />
+          )}
         </button>
 
         {mobileMenuOpen && user && (
@@ -408,13 +579,29 @@ function Navbar() {
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
+              {dark ? (
+                <SunIcon className="w-4 h-4 text-text-secondary" />
+              ) : (
+                <MoonIcon className="w-4 h-4 text-text-secondary" />
+              )}
+              {dark ? "Light Mode" : "Dark Mode"}
             </button>
             <div className="border-t border-border" />
-            
+
             <button
-              onClick={() => setMobileExploreOpen(prev => !prev)}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate("/journey");
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm cursor-pointer ${location.pathname.startsWith("/journey") ? "text-primary bg-primary/5 font-semibold" : "text-text-primary hover:bg-surface"}`}
+            >
+              <TrophyIcon className="w-4 h-4 text-text-secondary" />
+              Journey
+            </button>
+            <div className="border-t border-border" />
+
+            <button
+              onClick={() => setMobileExploreOpen((prev) => !prev)}
               aria-haspopup="true"
               aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
@@ -423,91 +610,99 @@ function Navbar() {
                 <GridIcon className="w-4 h-4 text-text-secondary" />
                 Explore Tools
               </span>
-              <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {mobileExploreOpen && (
               <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
                 <button
-                  onClick={() => handleNav('/radicals')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/radicals")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith("/radicals") ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <GridIcon className="w-4 h-4 text-text-secondary" />
                   Radicals
                 </button>
                 <button
-                  onClick={() => handleNav('/flashcards')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/flashcards")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/flashcards" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <FlashcardIcon className="w-4 h-4 text-text-secondary" />
                   Flashcards
                 </button>
                 <button
-                  onClick={() => handleNav('/hsk')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/hsk' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/hsk")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/hsk" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <DashboardIcon className="w-4 h-4 text-text-secondary" />
                   HSK Levels
                 </button>
                 <button
-                  onClick={() => handleNav('/pinyin')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/pinyin")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/pinyin" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <SpeakerIcon className="w-4 h-4 text-text-secondary" />
                   Pinyin Chart
                 </button>
                 <button
-                  onClick={() => handleNav('/analyzer')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/analyzer")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/analyzer" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <FileIcon className="w-4 h-4 text-text-secondary" />
                   Text Analyzer
                 </button>
                 <button
-                  onClick={() => handleNav('/reading')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/reading' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/reading")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/reading" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
-                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">📚</span>
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                    📚
+                  </span>
                   Graded Reading
                 </button>
                 <button
-                  onClick={() => handleNav('/quiz')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/quiz' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/quiz")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/quiz" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
-                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎮</span>
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                    🎮
+                  </span>
                   Quiz Mode
                 </button>
                 <button
-                  onClick={() => handleNav('/match-game')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/match-game' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/match-game")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/match-game" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
-                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">🎴</span>
+                  <span className="w-4 h-4 flex items-center justify-center text-text-secondary text-xs">
+                    🎴
+                  </span>
                   Memory Match
                 </button>
                 <button
-                  onClick={() => handleNav('/history')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/history' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/history")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/history" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <ClockIcon className="w-4 h-4 text-text-secondary" />
                   History
                 </button>
                 <button
-                  onClick={() => handleNav('/favorites')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/favorites' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/favorites")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/favorites" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <HeartIcon className="w-4 h-4 text-text-secondary" />
                   Favorites
                 </button>
                 <button
-                  onClick={() => handleNav('/stats')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/stats' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/stats")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/stats" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <UserIcon className="w-4 h-4 text-text-secondary" />
                   Stats
                 </button>
                 <button
-                  onClick={() => handleNav('/achievements')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/achievements' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/achievements")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/achievements" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <TrophyIcon className="w-4 h-4 text-text-secondary" />
                   Achievements
@@ -517,11 +712,11 @@ function Navbar() {
 
             <div className="border-t border-border" />
             <button
-              onClick={() => handleNav('/profile')}
+              onClick={() => handleNav("/profile")}
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-sm cursor-pointer ${
-                location.pathname === '/profile'
-                  ? 'text-primary bg-surface font-semibold'
-                  : 'text-text-primary hover:bg-surface'
+                location.pathname === "/profile"
+                  ? "text-primary bg-surface font-semibold"
+                  : "text-text-primary hover:bg-surface"
               }`}
             >
               <UserIcon className="w-4 h-4 text-text-secondary" />
@@ -544,13 +739,17 @@ function Navbar() {
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
             >
-              {dark ? <SunIcon className="w-4 h-4 text-text-secondary" /> : <MoonIcon className="w-4 h-4 text-text-secondary" />}
-              {dark ? 'Light Mode' : 'Dark Mode'}
+              {dark ? (
+                <SunIcon className="w-4 h-4 text-text-secondary" />
+              ) : (
+                <MoonIcon className="w-4 h-4 text-text-secondary" />
+              )}
+              {dark ? "Light Mode" : "Dark Mode"}
             </button>
             <div className="border-t border-border" />
-            
+
             <button
-              onClick={() => setMobileExploreOpen(prev => !prev)}
+              onClick={() => setMobileExploreOpen((prev) => !prev)}
               aria-haspopup="true"
               aria-expanded={mobileExploreOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm cursor-pointer"
@@ -559,63 +758,65 @@ function Navbar() {
                 <GridIcon className="w-4 h-4 text-text-secondary" />
                 Explore Tools
               </span>
-              <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileExploreOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {mobileExploreOpen && (
               <div className="bg-surface/50 border-t border-border/50 py-1 pl-4">
                 <button
-                  onClick={() => handleNav('/radicals')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith('/radicals') ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/radicals")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname.startsWith("/radicals") ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <GridIcon className="w-4 h-4 text-text-secondary" />
                   Radicals
                 </button>
                 <button
-                  onClick={() => handleNav('/flashcards')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/flashcards' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/flashcards")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/flashcards" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <FlashcardIcon className="w-4 h-4 text-text-secondary" />
                   Flashcards
                 </button>
                 <button
-                  onClick={() => handleNav('/hsk')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/hsk' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/hsk")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/hsk" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <DashboardIcon className="w-4 h-4 text-text-secondary" />
                   HSK Levels
                 </button>
                 <button
-                  onClick={() => handleNav('/pinyin')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/pinyin' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/pinyin")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/pinyin" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <SpeakerIcon className="w-4 h-4 text-text-secondary" />
                   Pinyin Chart
                 </button>
                 <button
-                  onClick={() => handleNav('/analyzer')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/analyzer' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/analyzer")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/analyzer" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <FileIcon className="w-4 h-4 text-text-secondary" />
                   Text Analyzer
                 </button>
                 <button
-                  onClick={() => handleNav('/history')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/history' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/history")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/history" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <ClockIcon className="w-4 h-4 text-text-secondary" />
                   History
                 </button>
                 <button
-                  onClick={() => handleNav('/favorites')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/favorites' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/favorites")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/favorites" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <HeartIcon className="w-4 h-4 text-text-secondary" />
                   Favorites
                 </button>
                 <button
-                  onClick={() => handleNav('/stats')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === '/stats' ? 'text-primary font-semibold' : 'text-text-primary hover:bg-surface'}`}
+                  onClick={() => handleNav("/stats")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-sm cursor-pointer ${location.pathname === "/stats" ? "text-primary font-semibold" : "text-text-primary hover:bg-surface"}`}
                 >
                   <UserIcon className="w-4 h-4 text-text-secondary" />
                   Stats
@@ -625,14 +826,14 @@ function Navbar() {
 
             <div className="border-t border-border" />
             <button
-              onClick={() => handleNav('/login')}
+              onClick={() => handleNav("/login")}
               className="w-full flex items-center gap-3 px-4 py-3 text-text-primary hover:bg-surface transition-colors text-sm text-left cursor-pointer"
             >
               <UserIcon className="w-4 h-4 text-text-secondary" />
               Login
             </button>
             <button
-              onClick={() => handleNav('/register')}
+              onClick={() => handleNav("/register")}
               className="w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-surface transition-colors text-sm text-left font-medium cursor-pointer"
             >
               <PlusIcon className="w-4 h-4" />
@@ -642,7 +843,7 @@ function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;

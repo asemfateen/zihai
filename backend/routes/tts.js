@@ -4,14 +4,14 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { EdgeTTS } from 'node-edge-tts'
-import { db, DB_PATH } from '../db.js'
+import { db } from '../db.js'
 
 const router = express.Router()
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const TTS_CACHE_DIR = path.join(path.dirname(DB_PATH), 'tts_cache')
+const TTS_CACHE_DIR = path.join(__dirname, '..', 'tts_cache')
 if (!fs.existsSync(TTS_CACHE_DIR)) {
   fs.mkdirSync(TTS_CACHE_DIR, { recursive: true })
 }
@@ -69,21 +69,24 @@ router.get('/tts', async (req, res) => {
 
     if (tone !== null) {
       const numbered = clean + tone
-      const dbNumbered = numbered.replace('v', 'u:')
 
-      let charRow = db.prepare(`
-        SELECT simplified FROM characters
-        WHERE (' ' || lower(replace(pinyin, 'u:', 'v')) || ' ') LIKE ?
-        ORDER BY
-          (CASE WHEN lower(replace(pinyin, 'u:', 'v')) = ? OR lower(replace(pinyin, 'u:', 'v')) = (? || ' ' || ?) THEN 0 ELSE 1 END) ASC,
-          (CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END) ASC,
-          hsk_level ASC,
-          length(pinyin) ASC
-        LIMIT 1
-      `).get(`% ${numbered.toLowerCase()} %`, numbered.toLowerCase(), numbered.toLowerCase(), numbered.toLowerCase())
+      try {
+        const charRow = await db.get(`
+          SELECT simplified FROM characters
+          WHERE (' ' || lower(replace(pinyin, 'u:', 'v')) || ' ') LIKE $1
+          ORDER BY
+            (CASE WHEN lower(replace(pinyin, 'u:', 'v')) = $2 OR lower(replace(pinyin, 'u:', 'v')) = ($3 || ' ' || $4) THEN 0 ELSE 1 END) ASC,
+            (CASE WHEN hsk_level > 0 THEN 0 ELSE 1 END) ASC,
+            hsk_level ASC,
+            length(pinyin) ASC
+          LIMIT 1
+        `, [`% ${numbered.toLowerCase()} %`, numbered.toLowerCase(), numbered.toLowerCase(), numbered.toLowerCase()])
 
-      if (charRow) {
-        text = charRow.simplified
+        if (charRow) {
+          text = charRow.simplified
+        }
+      } catch (dbErr) {
+        console.error('TTS database mapping error:', dbErr.message)
       }
     }
   }

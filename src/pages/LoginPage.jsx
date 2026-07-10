@@ -37,8 +37,12 @@ function LoginPage() {
         return
       }
       const data = await res.json()
-      login(data.email, data.id, data.display_name)
-      navigate(redirectTo)
+      login(data.email, data.id, data.display_name, data.is_admin)
+      if (data.is_admin === 1) {
+        navigate('/admin')
+      } else {
+        navigate(redirectTo)
+      }
     } catch (err) {
       console.error('Login failed:', err)
       setError('Server error. Please try again.')
@@ -63,13 +67,13 @@ function LoginPage() {
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="username email"
                 className="w-full px-4 py-2.5 bg-surface/80 backdrop-blur-xl border border-border/50 rounded-lg text-text-primary outline-none focus:border-primary transition-colors placeholder:text-text-secondary"
-                placeholder="you@example.com"
+                placeholder="Email address"
               />
             </div>
 

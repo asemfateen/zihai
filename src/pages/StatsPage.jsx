@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { FlashcardIcon, ClockIcon, HeartIcon } from '../components/Icons'
@@ -36,7 +35,6 @@ function StatsPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Study Statistics</h1>
 
@@ -49,7 +47,11 @@ function StatsPage() {
             <p className="text-red-400 mb-4">Failed to load statistics</p>
             <button onClick={fetchStats} className="px-6 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">Retry</button>
           </div>
-        ) : stats && (
+        ) : !stats ? (
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 text-center animate-fade-in [animation-delay:100ms]">
+            <p className="text-text-secondary mb-4">No statistics available yet. Start studying lessons or flashcards to see your metrics!</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:auto-rows-[160px]">
             {/* Current Streak */}
             <div className="col-span-2 md:col-span-1 md:row-span-1 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 animate-fade-in [animation-delay:100ms] flex flex-col justify-between group">
@@ -126,6 +128,66 @@ function StatsPage() {
                   <div className="text-4xl font-black text-text-primary mb-1 group-hover:scale-110 transition-transform">{stats.longestStreak}</div>
                   <div className="text-xs text-text-secondary uppercase font-bold tracking-tighter">Best Streak</div>
                 </div>
+              </div>
+            </div>
+
+            {/* HSK Level circular gauges */}
+            <div className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in [animation-delay:280ms] flex flex-col min-h-[250px]">
+              <h3 className="text-lg font-bold mb-6 text-text-primary">HSK Level Mastery</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                {[1, 2, 3, 4, 5, 6].map(level => {
+                  const levelData = (stats.hskProgress || []).find(p => p.level === level) || { count: 0, total: 100 }
+                  const count = levelData.count
+                  const total = levelData.total
+                  const percentage = total > 0 ? Math.round((count / total) * 100) : 0
+                  const radius = 22
+                  const circumference = 2 * Math.PI * radius
+                  const strokeDashoffset = circumference - (percentage / 100) * circumference
+
+                  const levelColors = {
+                    1: "stroke-emerald-500 text-emerald-500",
+                    2: "stroke-blue-500 text-blue-500",
+                    3: "stroke-indigo-500 text-indigo-500",
+                    4: "stroke-purple-500 text-purple-500",
+                    5: "stroke-pink-500 text-pink-500",
+                    6: "stroke-rose-500 text-rose-500",
+                  }
+                  const colorClass = levelColors[level] || "stroke-primary text-primary"
+
+                  return (
+                    <div key={level} className="flex flex-col items-center p-4 bg-surface/40 border border-border/40 rounded-2xl shadow-sm hover:scale-[1.03] hover:border-primary/30 transition-all duration-300 group">
+                      <div className="relative w-16 h-16 mb-2 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r={radius}
+                            className="stroke-border/40 fill-none"
+                            strokeWidth="4"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r={radius}
+                            className={`${colorClass} fill-none transition-all duration-1000 ease-out`}
+                            strokeWidth="4"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-[9px] font-bold text-text-secondary select-none">HSK</span>
+                          <span className="text-sm font-black text-text-primary leading-none select-none">{level}</span>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-black text-text-primary">{count} / {total}</p>
+                        <span className="text-[10px] font-bold text-text-secondary">{percentage}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>

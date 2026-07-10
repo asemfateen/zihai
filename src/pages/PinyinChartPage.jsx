@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
 import { SpeakerIcon, SpeakerWaveIcon } from '../components/Icons'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 
@@ -97,7 +96,6 @@ function PinyinChartPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10 text-text-primary">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="mb-8 animate-fade-in">
           <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-primary via-blue-500 to-emerald-500 bg-clip-text text-transparent drop-shadow-sm">Pinyin Sound Chart</h1>

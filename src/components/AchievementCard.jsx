@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as LucideIcons from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function AchievementCard({ achievement }) {
   const { name, description, icon, current_progress, requirement_value, is_unlocked, unlocked_at } = achievement;
@@ -9,7 +10,11 @@ export default function AchievementCard({ achievement }) {
   const percentage = Math.min(100, Math.max(0, (current_progress / requirement_value) * 100));
 
   return (
-    <div className={`relative overflow-hidden transition-all duration-300 hover:-translate-y-2 group rounded-3xl p-6 border ${is_unlocked ? 'bg-card/90 border-orange-500/30 hover:shadow-[0_0_30px_rgba(249,115,22,0.2)]' : 'bg-card/40 border-white/5 grayscale-[50%] opacity-80'}`}>
+    <motion.div 
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className={`relative overflow-hidden transition-all duration-300 group rounded-3xl p-6 border ${is_unlocked ? 'bg-card/90 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]' : 'bg-card/40 border-white/5 grayscale-[50%] opacity-80'}`}
+    >
       
       {/* Background glow for unlocked */}
       {is_unlocked && (
@@ -53,7 +58,7 @@ export default function AchievementCard({ achievement }) {
            </p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

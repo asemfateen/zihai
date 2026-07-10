@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { useAuth } from '../context/AuthContext'
 import Spinner from '../components/Spinner'
@@ -53,7 +52,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10 text-text-primary pb-20">
-      <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
         <h1 className="text-3xl font-bold mb-8">Data Settings</h1>
 

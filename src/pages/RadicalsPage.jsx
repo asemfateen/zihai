@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import Spinner from '../components/Spinner'
 import API_BASE, { fetchWithTimeout } from '../api'
 
@@ -34,7 +33,6 @@ function RadicalsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="flex items-center justify-center py-20">
           <Spinner size={40} />
         </div>
@@ -45,7 +43,6 @@ function RadicalsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-transparent relative z-10">
-        <Navbar />
         <div className="text-center py-20 text-red-400">
           <p className="text-lg font-medium">Failed to load radicals.</p>
           <p className="text-sm mt-1">Please try again later.</p>
@@ -58,7 +55,6 @@ function RadicalsPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-text-primary">Radical Browser</h1>

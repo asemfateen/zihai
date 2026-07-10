@@ -30,3 +30,7 @@ backend/.env
 
 test-zihai.db
 test-zihai.db*
+*.db
+*.db-journal
+cookie.txt
+

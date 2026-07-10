@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { ChevronLeftIcon } from '../components/Icons'
@@ -60,7 +59,6 @@ function ProfileEditPage() {
 
   return (
     <div className="min-h-screen bg-transparent relative z-10">
-      <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate('/profile')}

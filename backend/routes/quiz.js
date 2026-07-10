@@ -5,44 +5,46 @@ import { convertNumberedPinyin } from '../utils/pinyin.js'
 
 const router = express.Router()
 
-router.get('/quiz/generate', requireAuth, (req, res) => {
+router.get('/quiz/generate', requireAuth, async (req, res) => {
   try {
     let words = []
     const hskLevel = parseInt(req.query.hsk, 10)
 
     if (!isNaN(hskLevel) && hskLevel > 0) {
-      words = db.prepare(`
+      words = await db.all(`
         SELECT id, simplified as character, pinyin, definition
         FROM cedict_words
-        WHERE hsk_level = ?
+        WHERE hsk_level = $1
         ORDER BY RANDOM() LIMIT 10
-      `).all(hskLevel)
+      `, [hskLevel])
     } else {
-      words = db.prepare(`
+      words = await db.all(`
         SELECT w.id, w.simplified as character, w.pinyin, w.definition
         FROM flashcard_progress fp
         JOIN cedict_words w ON w.id = fp.word_id
-        WHERE fp.user_id = ? AND fp.next_review_date <= datetime('now')
+        WHERE fp.user_id = $1 AND fp.next_review_date <= CURRENT_TIMESTAMP
         ORDER BY RANDOM() LIMIT 10
-      `).all(req.user.id)
+      `, [req.user.id])
 
       if (words.length < 10) {
-        const extra = db.prepare(`
+        const excludeIds = words.map(w => w.id);
+        const extra = await db.all(`
           SELECT id, simplified as character, pinyin, definition
           FROM cedict_words
-          WHERE hsk_level > 0 AND id NOT IN (${words.map(w => w.id).join(',') || '0'})
-          ORDER BY RANDOM() LIMIT ?
-        `).all(10 - words.length)
+          WHERE hsk_level > 0 AND id NOT IN (${excludeIds.join(',') || '0'})
+          ORDER BY RANDOM() LIMIT $1
+        `, [10 - words.length])
         words = words.concat(extra)
       }
     }
 
-    const quiz = words.map(word => {
-      const distractors = db.prepare(`
+    const quiz = await Promise.all(words.map(async (word) => {
+      const distRows = await db.all(`
         SELECT definition FROM cedict_words
-        WHERE id != ? AND hsk_level > 0
+        WHERE id != $1 AND hsk_level > 0
         ORDER BY RANDOM() LIMIT 3
-      `).all(word.id).map(d => d.definition)
+      `, [word.id])
+      const distractors = distRows.map(d => d.definition)
 
       const options = [word.definition, ...distractors]
       options.sort(() => Math.random() - 0.5)
@@ -54,7 +56,7 @@ router.get('/quiz/generate', requireAuth, (req, res) => {
         options,
         answer: word.definition
       }
-    })
+    }))
 
     res.json(quiz)
   } catch (err) {

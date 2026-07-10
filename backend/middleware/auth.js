@@ -44,6 +44,9 @@ export function generateCsrfToken() {
 }
 
 export function csrfProtection(req, res, next) {
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    return next()
+  }
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next()
   const headerToken = req.headers['x-csrf-token']
   const cookieToken = req.cookies?.['xsrf-token']
