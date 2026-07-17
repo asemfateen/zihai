@@ -6,7 +6,7 @@ import compression from "compression";
 import path from "path";
 import os from "os";
 import { fileURLToPath } from "url";
-import { db, pool } from "./db.js";
+import { db, sqlite } from "./db-sqlite.js";
 import { setCsrfCookie, csrfProtection } from "./middleware/auth.js";
 import { apiLimiter, authLimiter } from "./middleware/rateLimiter.js";
 import { convertNumberedPinyin } from "./utils/pinyin.js";
@@ -25,6 +25,7 @@ import leaderboardRouter from "./routes/leaderboard.js";
 import mockTestRouter from "./routes/mocktest.js";
 import adminRouter from "./routes/admin.js";
 import questsRouter from "./routes/quests.js";
+import teachRouter from "./routes/teach.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -188,6 +189,7 @@ app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/mock-test", mockTestRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api", questsRouter);
+app.use("/api/teach", apiLimiter, teachRouter);
 
 app.get("/api/settings", async (req, res) => {
   try {
@@ -247,7 +249,7 @@ if (process.env.NODE_ENV === "production") {
 function shutdown() {
   console.log("Shutting down gracefully...");
   try {
-    pool.end();
+    sqlite.close();
   } catch {}
   process.exit(0);
 }

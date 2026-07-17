@@ -1,61 +1,91 @@
-import pg from "pg";
-import path from "path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
+// SQLite adapter - re-exported from db-sqlite.js
+// This replaces the PostgreSQL version since pg isn't available.
+import { db as sqliteDb } from "./db-sqlite.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Wrapper that matches the pg-based API
+// The SQLite db has synchronous methods, so we wrap them in Promises
 
-dotenv.config({ path: path.join(__dirname, ".env") });
-
-const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl) {
-  throw new Error("DATABASE_URL must be specified in the environment variables!");
-}
-
-const pool = new pg.Pool({
-  connectionString: dbUrl,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
-});
-
-// Awaitable helper wraps compatible with our route queries
-const db = {
-  async query(text, params) {
-    return pool.query(text, params);
-  },
-
-  async all(text, params = []) {
-    const res = await pool.query(text, params);
-    return res.rows;
-  },
-
-  async get(text, params = []) {
-    const res = await pool.query(text, params);
-    return res.rows[0] || null;
-  },
-
-  async run(text, params = []) {
-    const res = await pool.query(text, params);
-    return {
-      changes: res.rowCount,
-      lastInsertRowid: res.rows[0]?.id || null
-    };
-  },
-
-  async transaction(fn) {
-    const client = await pool.connect();
+export const db = {
+  /**
+   * Query rows (async)
+   * @param {string} text - SQL with $1, $2 bind params (auto-converted to ? for SQLite)
+   * @param {Array} params - parameter values
+   * @returns {Promise<Array>} array of row objects
+   */
+  async query(text, params = []) {
     try {
-      await client.query("BEGIN");
-      const result = await fn(client);
-      await client.query("COMMIT");
-      return result;
+      // Convert $1, $2 etc to ? for SQLite compatibility
+      const sql = text.replace(/\$(\d+)/g, '?');
+      const rows = sqliteDb.all(sql, params);
+      return { rows };
     } catch (err) {
-      await client.query("ROLLBACK");
       throw err;
-    } finally {
-      client.release();
     }
+  },
+
+  /**
+   * Single row (async)
+   */
+  async queryOne(text, params = []) {
+    const sql = text.replace(/\$(\d+)/g, '?');
+    const row = sqliteDb.get(sql, params);
+    return { rows: row ? [row] : [] };
+  },
+
+  /**
+   * Execute (INSERT/UPDATE/DELETE)
+   */
+  async execute(text, params = []) {
+    const sql = text.replace(/\$(\d+)/g, '?');
+    const result = sqliteDb.run(sql, params);
+    return { rowCount: result.changes };
+  },
+
+  /**
+   * Get a single value
+   */
+  async get(text, params = []) {
+    const sql = text.replace(/\$(\d+)/g, '?');
+    return sqliteDb.get(sql, params);
+  },
+
+  /**
+   * Run a query and return all rows
+   */
+  all(text, params = []) {
+    const sql = text.replace(/\$(\d+)/g, '?');
+    return sqliteDb.all(sql, params);
+  },
+
+  /**
+   * Execute (alias for run/execute - used throughout routes)
+   */
+  run(text, params = []) {
+    const sql = text.replace(/\$(\d+)/g, '?');
+    return sqliteDb.run(sql, params);
+  },
+
+  /**
+   * Begin transaction wrapper
+   */
+  transaction(fn) {
+    return sqliteDb.transaction(fn)();
+  },
+
+  /**
+   * Direct access to the SQLite instance
+   */
+  _db: sqliteDb,
+};
+
+// Also export pool-like object for compatibility
+export const pool = {
+  async query(text, params = []) {
+    return db.query(text, params);
+  },
+  end() {
+    sqliteDb.close();
   }
 };
 
-export { db, pool };
+export default db;

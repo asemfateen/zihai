@@ -90,16 +90,12 @@ router.post('/quests/claim', requireAuth, async (req, res) => {
     if (quest.claimed === 1) return res.status(400).json({ error: 'Quest already claimed' });
     if (quest.progress < quest.target) return res.status(400).json({ error: 'Quest not completed yet' });
 
-    await db.transaction(async (client) => {
+    db.transaction(() => {
       // 1. Award gems
-      await client.query(`
-        UPDATE users SET gems = COALESCE(gems, 0) + $1 WHERE id = $2
-      `, [quest.gems_reward, req.user.id]);
+      db.run('UPDATE users SET gems = COALESCE(gems, 0) + ? WHERE id = ?', [quest.gems_reward, req.user.id]);
 
       // 2. Mark quest as claimed
-      await client.query(`
-        UPDATE user_quests SET claimed = 1 WHERE id = $1
-      `, [questId]);
+      db.run('UPDATE user_quests SET claimed = ? WHERE id = ?', [1, questId]);
     });
 
     const user = await db.get('SELECT gems FROM users WHERE id = $1', [req.user.id]);

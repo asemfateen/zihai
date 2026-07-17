@@ -220,15 +220,12 @@ router.post('/flashcards/seed', requireAuth, async (req, res) => {
       ORDER BY RANDOM() LIMIT 5
     `)
 
-    await db.transaction(async (client) => {
-      for (const word of starterWords) {
-        await client.query(`
-          INSERT INTO flashcard_progress (user_id, word_id, added_at, next_review_date)
-          VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          ON CONFLICT (user_id, word_id) DO NOTHING
-        `, [req.user.id, word.id])
-      }
-    })
+    for (const word of starterWords) {
+      db.run(
+        'INSERT INTO flashcard_progress (user_id, word_id, added_at, next_review_date) VALUES (?, ?, datetime(\'now\'), datetime(\'now\')) ON CONFLICT (user_id, word_id) DO NOTHING',
+        [req.user.id, word.id]
+      )
+    }
 
     res.json({ message: 'Seeded 5 HSK 1 starter cards successfully' })
   } catch (err) {
@@ -246,19 +243,18 @@ router.post('/flashcards/import', requireAuth, async (req, res) => {
   let imported = 0
   
   try {
-    await db.transaction(async (client) => {
+    await db.transaction(() => {
       for (const line of lines) {
         const match = line.match(/([\u4e00-\u9fff]+)/)
         if (match) {
           const char = match[1]
-          const wordRow = await db.get('SELECT id FROM cedict_words WHERE simplified = $1 OR traditional = $2 LIMIT 1', [char, char])
+          const wordRow = db.get('SELECT id FROM cedict_words WHERE simplified = $1 OR traditional = $2 LIMIT 1', [char, char])
           if (wordRow) {
             try {
-              await client.query(`
-                INSERT INTO flashcard_progress (user_id, word_id, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, next_review_date)
-                VALUES ($1, $2, 0, 0, 0, 0, 0, 0, 0, CURRENT_TIMESTAMP)
-                ON CONFLICT (user_id, word_id) DO NOTHING
-              `, [req.user.id, wordRow.id])
+              db.run(
+                'INSERT INTO flashcard_progress (user_id, word_id, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, next_review_date) VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, datetime(\'now\')) ON CONFLICT (user_id, word_id) DO NOTHING',
+                [req.user.id, wordRow.id]
+              )
               imported++
             } catch (e) {
               console.error('Import error for word_id:', wordRow.id, e.message)

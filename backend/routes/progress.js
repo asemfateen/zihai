@@ -1,6 +1,6 @@
 import express from 'express'
 import { db } from '../db.js'
-import { requireAuth } from '../middleware/auth.js'
+import { optionalAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -13,8 +13,21 @@ function daysBetween(d1, d2) {
   return Math.round((date2 - date1) / (1000 * 60 * 60 * 24))
 }
 
-router.get('/progress', requireAuth, async (req, res) => {
+router.get('/progress', optionalAuth, async (req, res) => {
   try {
+    if (!req.user) {
+      return res.json({
+        xp: 0,
+        streak_days: 0,
+        last_login: null,
+        gems: 0,
+        streak_freezes: 0,
+        previous_streak: 0,
+        freeze_used: false,
+        streak_broken: false
+      })
+    }
+
     const user = await db.get('SELECT xp, streak_days, last_login, gems, streak_freezes, previous_streak FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
@@ -75,13 +88,26 @@ router.get('/progress', requireAuth, async (req, res) => {
   }
 })
 
-router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
+router.post('/progress/lesson-complete', optionalAuth, async (req, res) => {
   const { xpGained, unit } = req.body
   let xp = parseInt(xpGained, 10) || 10
-  if (xp > 100) xp = 100 // Cap XP to prevent arbitrary high values
+  if (xp > 100) xp = 100
   const parsedUnit = parseInt(unit, 10)
 
   try {
+    // Anonymous users: return success without saving
+    if (!req.user) {
+      return res.json({
+        xp: 0,
+        streak_days: 0,
+        last_login: null,
+        xp_gained: xp,
+        gems: 0,
+        gems_gained: 0,
+        milestone_reached: false
+      })
+    }
+
     const user = await db.get('SELECT xp, streak_days, last_login, gems, streak_freezes FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
@@ -112,47 +138,31 @@ router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
     const gemsAwarded = baseGems + milestoneGems
     const newGems = (user.gems || 0) + gemsAwarded
 
-    await db.transaction(async (client) => {
-      // 1. Update user progress stats (including gems)
-      await client.query(
-        'UPDATE users SET xp = $1, streak_days = $2, last_login = $3, gems = $4, previous_streak = 0 WHERE id = $5',
-        [newXp, newStreak, now, newGems, req.user.id]
-      )
+    // Update user progress
+    db.run(
+      'UPDATE users SET xp = $1, streak_days = $2, last_login = $3, gems = $4, previous_streak = 0 WHERE id = $5',
+      [newXp, newStreak, now, newGems, req.user.id]
+    )
 
       // 2. Auto-seed lesson words into user's flashcards
+      // 2. Auto-seed lesson words into user's flashcards (simplified for SQLite)
       if (parsedUnit && parsedUnit >= 1) {
-        let level = 1
-        let offset = 0
-        const wordsPerUnit = 10
-
-        if (parsedUnit <= 6) {
-          level = 1
-          offset = (parsedUnit - 1) * wordsPerUnit
-        } else if (parsedUnit <= 12) {
-          level = 2
-          offset = (parsedUnit - 7) * wordsPerUnit
-        } else {
-          level = 3
-          offset = (parsedUnit - 13) * wordsPerUnit
-        }
-
-        const targetWordsRes = await client.query(`
-          SELECT id FROM cedict_words 
-          WHERE hsk_level = $1
-          ORDER BY length(simplified) ASC, simplified ASC
-          LIMIT $2 OFFSET $3
-        `, [level, wordsPerUnit, offset])
-        const targetWords = targetWordsRes.rows
-
-        for (const w of targetWords) {
-          await client.query(`
-            INSERT INTO flashcard_progress (user_id, word_id, next_review_date)
-            VALUES ($1, $2, CURRENT_TIMESTAMP)
-            ON CONFLICT (user_id, word_id) DO NOTHING
-          `, [req.user.id, w.id])
+        // Try to add some words to flashcards
+        try {
+          const targetWords = db.all(
+            'SELECT id FROM cedict_words WHERE simplified GLOB ? AND length(simplified) <= 2 ORDER BY length(simplified) ASC LIMIT ?',
+            ['[一-龥]*', 10]
+          )
+          for (const w of targetWords) {
+            db.run(
+              'INSERT OR IGNORE INTO flashcard_progress (user_id, word_id, next_review_date) VALUES (?, ?, datetime(\'now\'))',
+              [req.user.id, w.id]
+            )
+          }
+        } catch(e) {
+          console.error('Seed flashcards error (non-fatal):', e.message)
         }
       }
-    })
 
     res.json({
       xp: newXp,
@@ -169,8 +179,9 @@ router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
   }
 })
 
-router.post('/progress/buy-streak-freeze', requireAuth, async (req, res) => {
+router.post('/progress/buy-streak-freeze', optionalAuth, async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' })
     const user = await db.get('SELECT gems, streak_freezes FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
@@ -193,8 +204,9 @@ router.post('/progress/buy-streak-freeze', requireAuth, async (req, res) => {
   }
 })
 
-router.post('/progress/streak-repair-gems', requireAuth, async (req, res) => {
+router.post('/progress/streak-repair-gems', optionalAuth, async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' })
     const user = await db.get('SELECT gems, previous_streak FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
@@ -227,8 +239,9 @@ router.post('/progress/streak-repair-gems', requireAuth, async (req, res) => {
   }
 })
 
-router.post('/progress/streak-repair-challenge', requireAuth, async (req, res) => {
+router.post('/progress/streak-repair-challenge', optionalAuth, async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' })
     const user = await db.get('SELECT previous_streak FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
@@ -255,8 +268,9 @@ router.post('/progress/streak-repair-challenge', requireAuth, async (req, res) =
   }
 })
 
-router.post('/progress/streak-repair-fail', requireAuth, async (req, res) => {
+router.post('/progress/streak-repair-fail', optionalAuth, async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' })
     await db.run('UPDATE users SET previous_streak = 0 WHERE id = $1', [req.user.id])
     res.json({ success: true })
   } catch (err) {

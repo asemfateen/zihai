@@ -219,10 +219,8 @@ router.post('/reset-password', authLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid or expired reset token' })
   }
   const password_hash = await bcrypt.hash(password, 10)
-  await db.transaction(async (client) => {
-    await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [password_hash, entry.user_id])
-    await client.query('UPDATE password_resets SET used = 1 WHERE token = $3', [token])
-  })
+  db.run('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash, entry.user_id])
+  db.run('UPDATE password_resets SET used = 1 WHERE token = ?', [token])
   res.json({ message: 'Password has been reset successfully' })
 })
 
