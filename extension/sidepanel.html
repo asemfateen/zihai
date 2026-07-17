@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zihai Companion</title>
+  <style>
+    body {
+      padding: 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #171717;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      color: #10b981;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+    .card-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #262626;
+      border: 1px solid #404040;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .character {
+      font-size: 5rem;
+      font-weight: 900;
+      margin: 0 0 16px 0;
+      line-height: 1;
+    }
+    .pinyin {
+      font-size: 1.5rem;
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .definition {
+      font-size: 1rem;
+      color: #d4d4d4;
+      line-height: 1.4;
+      max-width: 250px;
+      margin: 0 auto;
+    }
+    .hsk {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #404040;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #a3a3a3;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reveal-btn {
+      background: #10b981;
+      color: #fff;
+      width: 100%;
+    }
+    .reveal-btn:hover {
+      background: #059669;
+    }
+    .grade-container {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .grade-btn {
+      flex: 1;
+      color: #fff;
+    }
+    .again-btn {
+      background: #ef4444;
+    }
+    .again-btn:hover {
+      background: #dc2626;
+    }
+    .hard-btn {
+      background: #f59e0b;
+    }
+    .hard-btn:hover {
+      background: #d97706;
+    }
+    .easy-btn {
+      background: #10b981;
+    }
+    .easy-btn:hover {
+      background: #059669;
+    }
+    #status {
+      font-size: 1rem;
+      color: #a3a3a3;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #404040;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #10b981;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h2>Zihai Companion</h2>
+  <div class="progress-bar">
+    <div id="progress-fill" class="progress-fill"></div>
+  </div>
+  
+  <div id="deck-view" style="display: none; flex: 1; flex-direction: column;">
+    <div class="card-container">
+      <span id="hsk-badge" class="hsk"></span>
+      <div id="character" class="character"></div>
+      <div id="back-view" style="display: none;">
+        <div id="pinyin" class="pinyin"></div>
+        <div id="definition" class="definition"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="reveal-btn" class="reveal-btn">Reveal Definition</button>
+      <div id="grade-buttons" class="grade-container" style="display: none;">
+        <button data-grade="1" class="grade-btn again-btn">Again</button>
+        <button data-grade="2" class="grade-btn hard-btn">Hard</button>
+        <button data-grade="3" class="grade-btn easy-btn">Good</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status">Loading companion panel...</div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

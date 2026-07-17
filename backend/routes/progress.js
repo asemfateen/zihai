@@ -15,26 +15,59 @@ function daysBetween(d1, d2) {
 
 router.get('/progress', requireAuth, async (req, res) => {
   try {
-    const user = await db.get('SELECT xp, streak_days, last_login FROM users WHERE id = $1', [req.user.id])
+    const user = await db.get('SELECT xp, streak_days, last_login, gems, streak_freezes, previous_streak FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
-    // If it's been more than 1 day since last login, streak is broken
     let currentStreak = user.streak_days || 0
+    let currentFreezes = user.streak_freezes || 0
+    let currentGems = user.gems || 0
+    let lastLogin = user.last_login
+    let freezeUsed = false
+    let streakBroken = false
+    let previousStreak = user.previous_streak || 0
+
     const now = new Date()
     
-    if (user.last_login) {
-      const diff = daysBetween(user.last_login, now)
+    if (lastLogin) {
+      const diff = daysBetween(lastLogin, now)
       if (diff > 1) {
-        currentStreak = 0
-        // Update the broken streak in DB silently
-        await db.run('UPDATE users SET streak_days = 0 WHERE id = $1', [req.user.id])
+        const missedDays = diff - 1
+        if (currentFreezes >= missedDays) {
+          // Consume missedDays streak freezes
+          currentFreezes -= missedDays
+          freezeUsed = true
+          // Set last login to yesterday so they still need to complete a lesson today
+          const yesterday = new Date(now)
+          yesterday.setDate(now.getDate() - 1)
+          lastLogin = yesterday
+
+          await db.run(
+            'UPDATE users SET streak_freezes = $1, last_login = $2 WHERE id = $3',
+            [currentFreezes, yesterday, req.user.id]
+          )
+        } else {
+          // No freeze, streak is broken
+          previousStreak = currentStreak
+          currentStreak = 0
+          streakBroken = true
+
+          await db.run(
+            'UPDATE users SET previous_streak = $1, streak_days = 0 WHERE id = $2',
+            [previousStreak, req.user.id]
+          )
+        }
       }
     }
 
     res.json({
       xp: user.xp || 0,
       streak_days: currentStreak,
-      last_login: user.last_login
+      last_login: lastLogin,
+      gems: currentGems,
+      streak_freezes: currentFreezes,
+      previous_streak: previousStreak,
+      freeze_used: freezeUsed,
+      streak_broken: streakBroken
     })
   } catch (err) {
     console.error('Progress fetch error:', err)
@@ -44,11 +77,12 @@ router.get('/progress', requireAuth, async (req, res) => {
 
 router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
   const { xpGained, unit } = req.body
-  const xp = parseInt(xpGained, 10) || 10
+  let xp = parseInt(xpGained, 10) || 10
+  if (xp > 100) xp = 100 // Cap XP to prevent arbitrary high values
   const parsedUnit = parseInt(unit, 10)
 
   try {
-    const user = await db.get('SELECT xp, streak_days, last_login FROM users WHERE id = $1', [req.user.id])
+    const user = await db.get('SELECT xp, streak_days, last_login, gems, streak_freezes FROM users WHERE id = $1', [req.user.id])
     if (!user) return res.status(404).json({ error: 'User not found' })
 
     let newStreak = user.streak_days || 0
@@ -67,12 +101,22 @@ router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
     }
 
     const newXp = (user.xp || 0) + xp
+    
+    // Award Gems
+    const baseGems = 15
+    let milestoneGems = 0
+    // Award 50 gems for every 7 days streak milestone
+    if (newStreak > 0 && newStreak % 7 === 0 && newStreak !== user.streak_days) {
+      milestoneGems = 50
+    }
+    const gemsAwarded = baseGems + milestoneGems
+    const newGems = (user.gems || 0) + gemsAwarded
 
     await db.transaction(async (client) => {
-      // 1. Update user progress stats
+      // 1. Update user progress stats (including gems)
       await client.query(
-        'UPDATE users SET xp = $1, streak_days = $2, last_login = $3 WHERE id = $4',
-        [newXp, newStreak, now, req.user.id]
+        'UPDATE users SET xp = $1, streak_days = $2, last_login = $3, gems = $4, previous_streak = 0 WHERE id = $5',
+        [newXp, newStreak, now, newGems, req.user.id]
       )
 
       // 2. Auto-seed lesson words into user's flashcards
@@ -114,11 +158,110 @@ router.post('/progress/lesson-complete', requireAuth, async (req, res) => {
       xp: newXp,
       streak_days: newStreak,
       last_login: now.toISOString(),
-      xp_gained: xp
+      xp_gained: xp,
+      gems: newGems,
+      gems_gained: gemsAwarded,
+      milestone_reached: milestoneGems > 0
     })
   } catch (err) {
     console.error('Lesson complete error:', err)
     res.status(500).json({ error: 'Failed to record lesson completion' })
+  }
+})
+
+router.post('/progress/buy-streak-freeze', requireAuth, async (req, res) => {
+  try {
+    const user = await db.get('SELECT gems, streak_freezes FROM users WHERE id = $1', [req.user.id])
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    if (user.gems < 200) {
+      return res.status(400).json({ error: 'Not enough gems. Streak Freeze costs 200 gems.' })
+    }
+
+    const newGems = user.gems - 200
+    const newFreezes = (user.streak_freezes || 0) + 1
+
+    await db.run('UPDATE users SET gems = $1, streak_freezes = $2 WHERE id = $3', [newGems, newFreezes, req.user.id])
+
+    res.json({
+      gems: newGems,
+      streak_freezes: newFreezes
+    })
+  } catch (err) {
+    console.error('Buy streak freeze error:', err)
+    res.status(500).json({ error: 'Failed to purchase streak freeze' })
+  }
+})
+
+router.post('/progress/streak-repair-gems', requireAuth, async (req, res) => {
+  try {
+    const user = await db.get('SELECT gems, previous_streak FROM users WHERE id = $1', [req.user.id])
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    if (user.previous_streak <= 0) {
+      return res.status(400).json({ error: 'No broken streak to repair' })
+    }
+
+    if (user.gems < 250) {
+      return res.status(400).json({ error: 'Not enough gems. Streak Repair costs 250 gems.' })
+    }
+
+    const newGems = user.gems - 250
+    const restoredStreak = user.previous_streak
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    await db.run(
+      'UPDATE users SET gems = $1, streak_days = $2, previous_streak = 0, last_login = $3 WHERE id = $4',
+      [newGems, restoredStreak, yesterday, req.user.id]
+    )
+
+    res.json({
+      gems: newGems,
+      streak_days: restoredStreak,
+      previous_streak: 0
+    })
+  } catch (err) {
+    console.error('Streak repair gems error:', err)
+    res.status(500).json({ error: 'Failed to repair streak with gems' })
+  }
+})
+
+router.post('/progress/streak-repair-challenge', requireAuth, async (req, res) => {
+  try {
+    const user = await db.get('SELECT previous_streak FROM users WHERE id = $1', [req.user.id])
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    if (user.previous_streak <= 0) {
+      return res.status(400).json({ error: 'No broken streak to repair' })
+    }
+
+    const restoredStreak = user.previous_streak
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    await db.run(
+      'UPDATE users SET streak_days = $1, previous_streak = 0, last_login = $2 WHERE id = $3',
+      [restoredStreak, yesterday, req.user.id]
+    )
+
+    res.json({
+      streak_days: restoredStreak,
+      previous_streak: 0
+    })
+  } catch (err) {
+    console.error('Streak repair challenge error:', err)
+    res.status(500).json({ error: 'Failed to repair streak via challenge' })
+  }
+})
+
+router.post('/progress/streak-repair-fail', requireAuth, async (req, res) => {
+  try {
+    await db.run('UPDATE users SET previous_streak = 0 WHERE id = $1', [req.user.id])
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Streak repair fail error:', err)
+    res.status(500).json({ error: 'Failed to record challenge failure' })
   }
 })
 

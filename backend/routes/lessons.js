@@ -2,6 +2,7 @@ import express from "express";
 import { db } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { convertNumberedPinyin } from "../utils/pinyin.js";
+import { resolveRowsBatch } from "../utils/textUtils.js";
 
 function deduplicatePinyin(pinyin) {
   const syllables = pinyin.split(" ");
@@ -64,6 +65,8 @@ router.get("/:unit", requireAuth, async (req, res) => {
       LIMIT $2 OFFSET $3
     `, [level, wordsPerUnit, offset])
 
+    await resolveRowsBatch(rows);
+
     const targetWords = rows.map((row) => ({
       ...row,
       pinyin: deduplicatePinyin(convertNumberedPinyin(row.pinyin)),
@@ -80,11 +83,13 @@ router.get("/:unit", requireAuth, async (req, res) => {
       const type = types[Math.floor(Math.random() * types.length)];
       
       const distRows = await db.all(`
-        SELECT simplified AS character, pinyin, definition AS english_definition
+        SELECT id, simplified AS character, pinyin, definition AS english_definition
         FROM cedict_words 
         WHERE hsk_level = $1 AND id != $2
         ORDER BY RANDOM() LIMIT 3
       `, [level, word.id])
+
+      await resolveRowsBatch(distRows);
 
       const distractors = distRows.map((row) => ({
         ...row,

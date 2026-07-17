@@ -110,7 +110,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -123,6 +123,7 @@ function CustomListsModal({ wordId, isOpen, onClose }) {
           <h3 className="text-lg font-bold text-text-primary">Add to Vocabulary List</h3>
           <button
             onClick={onClose}
+            aria-label="Close modal"
             className="text-text-secondary hover:text-text-primary transition-colors text-xl font-bold"
           >
             &times;

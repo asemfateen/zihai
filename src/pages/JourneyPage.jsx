@@ -33,7 +33,7 @@ function SectorCard({ id, state, spanClass, onClick }) {
   if (isCompleted) {
     bgClass = 'bg-gradient-to-br from-primary/90 to-primary/60 border-primary/50 text-white shadow-lg shadow-primary/20'
   } else if (isActive) {
-    bgClass = 'bg-surface/80 border-primary/70 text-text-primary shadow-xl shadow-primary/10 backdrop-blur-xl'
+    bgClass = 'bg-surface/80 border-primary/70 text-text-primary shadow-xl shadow-primary/10 backdrop-blur-xl animate-active-border-pulse'
   }
 
   return (
@@ -136,7 +136,7 @@ export default function JourneyPage() {
   const streak = progress?.streak_days || 0
   
   // Calculate active node (0-indexed logic, 100 XP per sector)
-  const activeSectorIndex = Math.floor(xp / 100)
+  const activeSectorIndex = Math.floor(xp / 50)
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col pb-32">

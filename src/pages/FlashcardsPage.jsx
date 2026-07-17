@@ -7,6 +7,7 @@ import { CheckIcon, SpeakerIcon, SpeakerWaveIcon, XIcon } from "../components/Ic
 import StrokeOrderSection from "../components/StrokeOrderSection";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "../utils/audio";
 
 function FlashcardsPage() {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ function FlashcardsPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [skippedIds, setSkippedIds] = useState(new Set());
-  // Removed custom drag state since framer-motion handles it
+  const [zenMode, setZenMode] = useState(false);
+  
   const transitionTimerRef = useRef(null);
   const toastTimerRef = useRef(null);
   const mountedRef = useRef(true);
@@ -81,6 +83,31 @@ function FlashcardsPage() {
       }
     };
   }, [user, navigate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (cardPhase === 'idle' && !flipped) {
+          playSound('pop');
+          setFlipped(true);
+        }
+      } else if (e.key === '1') {
+        if (flipped && cardPhase === 'idle') {
+          handleResult(0);
+        }
+      } else if (e.key === '2' || e.key === '3') {
+        if (flipped && cardPhase === 'idle') {
+          handleResult(4);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [flipped, cardPhase, animating]);
 
   const { speak: speakTTS, isSpeaking, isLoading } = useSpeechSynthesis();
 
@@ -162,19 +189,23 @@ function FlashcardsPage() {
     if (quality >= 3) {
       setCorrectCount((prev) => prev + 1);
       if (idx + 1 >= currentCards.length) {
+        playSound('ding');
         setComplete(true);
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         setAnimating(false);
       } else {
+        playSound('swipe');
         advanceToNext(null);
       }
     } else {
       setIncorrectCount((prev) => prev + 1);
       if (currentCards.length <= 1) {
+        playSound('ding');
         setComplete(true);
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         setAnimating(false);
       } else {
+        playSound('swipe');
         const reshuffled = [
           ...currentCards.slice(0, idx),
           ...currentCards.slice(idx + 1),
@@ -200,11 +231,13 @@ function FlashcardsPage() {
     setSkippedIds(newSkipped);
 
     if (newSkipped.size >= currentCards.length) {
+      playSound('ding');
       setComplete(true);
       setAnimating(false);
       return;
     }
 
+    playSound('swipe');
     const remaining = currentCards.filter((_, i) => i !== idx);
     const reshuffled = [...remaining, card];
     advanceToNext(reshuffled);
@@ -362,21 +395,34 @@ function FlashcardsPage() {
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-text-secondary">
+            <span className={`text-sm text-text-secondary transition-opacity duration-300 select-none ${zenMode ? "opacity-0" : "opacity-100"}`}>
               {currentIndex + 1} / {cards.length}
             </span>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-green-400">{correctCount} correct</span>
-              <span className="text-red-400">{incorrectCount} missed</span>
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-3 text-xs transition-opacity duration-300 ${zenMode ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+                <span className="text-green-400">{correctCount} correct</span>
+                <span className="text-red-400">{incorrectCount} missed</span>
+              </div>
+              <button
+                onClick={() => { playSound('pop'); setZenMode(!zenMode); }}
+                aria-label="Toggle Zen Mode"
+                className={`p-1.5 rounded-lg border transition-all text-xs font-semibold flex items-center gap-1 cursor-pointer select-none ${
+                  zenMode 
+                    ? "bg-primary/20 text-primary border-primary/30" 
+                    : "bg-surface/50 border-border/50 text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                🧘 {zenMode ? "Zen Mode" : "Zen"}
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={() => navigate("/")}
-              className="text-text-secondary hover:text-text-primary transition-colors"
-            >
-              <XIcon className="w-5 h-5" />
-            </button>
           </div>
-          <div className="w-full h-3 bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden">
+          <div className={`w-full bg-surface/80 backdrop-blur-xl rounded-full overflow-hidden transition-all duration-300 ${zenMode ? "h-0 opacity-0 mb-0" : "h-3 opacity-100 mb-8"}`}>
             <div
               className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
@@ -412,7 +458,10 @@ function FlashcardsPage() {
               dragConstraints={{ left: 0, right: 0 }}
               onDragEnd={handleDragEnd}
               onClick={() => {
-                if (cardPhase === "idle" && !flipped) setFlipped(true);
+                if (cardPhase === "idle" && !flipped) {
+                  playSound('pop');
+                  setFlipped(true);
+                }
               }}
               style={{ transformStyle: "preserve-3d" }}
               className={`w-full min-h-[300px] sm:min-h-[400px] group relative z-10 ${
@@ -430,8 +479,11 @@ function FlashcardsPage() {
                 <p className="text-8xl sm:text-9xl font-black text-text-primary mb-6 select-none drop-shadow-sm relative z-10 group-hover:scale-105 transition-transform duration-300">
                   {card.character || card.simplified}
                 </p>
-                <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface/50 px-4 py-2 rounded-full border border-border/50 relative z-10 shadow-sm">
+                <p className="text-sm font-bold uppercase tracking-widest text-text-secondary bg-surface/50 px-4 py-2 rounded-full border border-border/50 relative z-10 shadow-sm mb-2">
                   Tap to reveal
+                </p>
+                <p className="text-[10px] text-text-secondary opacity-60 font-medium relative z-10 select-none uppercase tracking-wider">
+                  Press Space to Flip
                 </p>
               </div>
 
@@ -537,6 +589,9 @@ function FlashcardsPage() {
                       <path d="m9 18 6-6-6-6" />
                     </svg>
                   </div>
+                  <p className="text-[10px] text-text-secondary/40 font-bold uppercase tracking-wider mt-2 select-none">
+                    Press 1 (Forgot) or 2 (Got it)
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -560,6 +615,13 @@ function FlashcardsPage() {
             >
               Got it
             </button>
+          </div>
+        )}
+
+        {/* Stroke Order Practice Panel */}
+        {flipped && card && (
+          <div className="animate-fade-in mt-6">
+            <StrokeOrderSection word={card} />
           </div>
         )}
       </div>

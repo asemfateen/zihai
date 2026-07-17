@@ -1,7 +1,12 @@
+if (import.meta.env.DEV) {
+  import("react-grab");
+}
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { Toaster } from 'sonner'
 import './index.css'
 import router from './App.jsx'
 
@@ -18,6 +23,7 @@ if (rootEl) {
   createRoot(rootEl).render(
     <StrictMode>
       <AuthProvider>
+        <Toaster richColors position="top-center" />
         <RouterProvider router={router} />
       </AuthProvider>
     </StrictMode>,

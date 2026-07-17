@@ -355,7 +355,7 @@ function WordPage() {
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                    {word.components.map((comp, i) => (
                      <div key={i} className="flex bg-surface/50 border border-border rounded-2xl p-4 gap-4 items-center">
-                       <div className="text-4xl font-black text-primary w-16 h-16 flex-shrink-0 bg-white rounded-xl flex items-center justify-center shadow-inner">
+                       <div className="text-4xl font-black text-primary w-16 h-16 flex-shrink-0 bg-surface rounded-xl flex items-center justify-center shadow-inner">
                          {comp.character}
                        </div>
                        <div className="flex-1 min-w-0">

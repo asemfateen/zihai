@@ -49,7 +49,7 @@ router.post('/register', authLimiter, async (req, res) => {
   const result = await db.run('INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id', [email, password_hash])
   const token = jwt.sign({ id: result.lastInsertRowid, email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ token, id: result.lastInsertRowid, email, display_name: null, is_admin: 0 })
+  res.json({ token, id: result.lastInsertRowid, email, display_name: null, is_admin: 0, gems: 0, streak_freezes: 0, xp: 0, streak: 0 })
 })
 
 router.post('/login', authLimiter, async (req, res) => {
@@ -61,15 +61,15 @@ router.post('/login', authLimiter, async (req, res) => {
   const email = sanitizeEmail(rawEmail)
   const user = await db.get('SELECT * FROM users WHERE email = $1', [email])
   if (!user || !user.password_hash) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    return res.status(401).json({ error: 'The email or password you entered is incorrect.' })
   }
   const valid = await bcrypt.compare(password, user.password_hash)
   if (!valid) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    return res.status(401).json({ error: 'The email or password you entered is incorrect.' })
   }
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
   res.cookie('token', token, cookieOptions)
-  res.json({ token, id: user.id, email: user.email, display_name: user.display_name, is_admin: user.is_admin })
+  res.json({ token, id: user.id, email: user.email, display_name: user.display_name, is_admin: user.is_admin, gems: user.gems || 0, streak_freezes: user.streak_freezes || 0, xp: user.xp || 0, streak: user.streak_days || 0 })
 })
 
 router.post('/logout', (req, res) => {
@@ -78,9 +78,9 @@ router.post('/logout', (req, res) => {
 })
 
 router.get('/me', requireAuth, async (req, res) => {
-  const user = await db.get('SELECT id, email, display_name, created_at, is_admin FROM users WHERE id = $1', [req.user.id])
+  const user = await db.get('SELECT id, email, display_name, created_at, is_admin, gems, streak_freezes, xp, streak_days FROM users WHERE id = $1', [req.user.id])
   if (!user) return res.status(401).json({ error: 'User not found' })
-  res.json({ id: user.id, email: user.email, display_name: user.display_name, created_at: user.created_at, is_admin: user.is_admin })
+  res.json({ id: user.id, email: user.email, display_name: user.display_name, created_at: user.created_at, is_admin: user.is_admin, gems: user.gems || 0, streak_freezes: user.streak_freezes || 0, xp: user.xp || 0, streak: user.streak_days || 0 })
 })
 
 router.get('/profile', requireAuth, async (req, res) => {

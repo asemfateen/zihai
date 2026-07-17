@@ -96,7 +96,7 @@ router.get('/favorites', requireAuth, async (req, res) => {
       WHERE f.user_id = $1
       ORDER BY f.created_at DESC
     `, [req.user.id])
-    resolveRowsBatch(rows)
+    await resolveRowsBatch(rows)
     res.json(rows)
   } catch (err) {
     console.error('Failed to fetch favorites:', err)
@@ -159,7 +159,7 @@ router.get('/lists/:id/words', requireAuth, async (req, res) => {
       WHERE clw.list_id = $1
       ORDER BY clw.added_at DESC
     `, [req.params.id])
-    resolveRowsBatch(rows)
+    await resolveRowsBatch(rows)
     res.json(rows)
   } catch (err) {
     console.error('Failed to fetch list words:', err)
@@ -310,7 +310,7 @@ router.get('/flashcards/due', requireAuth, async (req, res) => {
       WHERE fp.user_id = $1 AND fp.next_review_date <= CURRENT_TIMESTAMP
       ORDER BY fp.next_review_date ASC
     `, [req.user.id])
-    resolveRowsBatch(rows)
+    await resolveRowsBatch(rows)
     res.json(rows)
   } catch (err) {
     console.error('Failed to fetch due flashcards:', err)
@@ -434,6 +434,13 @@ router.post('/flashcards/:wordId/result', requireAuth, async (req, res) => {
       INSERT INTO review_log (user_id, word_id, correct, review_date)
       VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
     `, [req.user.id, wordId, quality >= 3 ? 1 : 0])
+
+    try {
+      const { incrementQuestProgress } = await import('./quests.js')
+      await incrementQuestProgress(req.user.id, 'flashcards', 1)
+    } catch (e) {
+      console.error('Failed to increment flashcards quest progress:', e)
+    }
 
     res.json({ message: 'Updated' })
   } catch (err) {

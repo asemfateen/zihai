@@ -86,7 +86,7 @@ function HSKPage() {
         setTotalPages(data.totalPages);
         setTotalWords(data.total);
       } else {
-        showToastMessage("Failed to load vocabulary");
+        showToastMessage("We couldn't load your vocabulary right now.");
       }
     } catch (err) {
       console.error("Fetch words failed:", err);
@@ -133,7 +133,7 @@ function HSKPage() {
           inDeck ? "Removed from flashcards" : "Added to flashcards",
         );
       } else {
-        showToastMessage("Action failed. Try again.");
+        showToastMessage("We couldn't complete that action. Please give it another try.");
       }
     } catch (err) {
       console.error("Toggle deck item failed:", err);

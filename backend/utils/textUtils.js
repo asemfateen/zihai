@@ -10,14 +10,16 @@ export function sanitizeString(str) {
   return str.replace(/[<>]/g, '').trim()
 }
 
-export function resolveDefinition(def) {
+export async function resolveDefinition(def) {
   if (!def) return def
   const match = def.trim().match(/^see\s+([^\x00-\x7F]+)(?:\|[^\x00-\x7F]+)?(?:\[[^\]]*\])?$/)
   if (match) {
     const target = match[1]
-    let targetRow = db.prepare('SELECT definition FROM cedict_words WHERE simplified = ? OR traditional = ?').get(target, target)
+    const wordRes = await db.query('SELECT definition FROM cedict_words WHERE simplified = $1 OR traditional = $2 LIMIT 1', [target, target])
+    let targetRow = wordRes.rows[0]
     if (!targetRow) {
-      targetRow = db.prepare('SELECT definition FROM characters WHERE simplified = ? OR traditional = ?').get(target, target)
+      const charRes = await db.query('SELECT definition FROM characters WHERE simplified = $1 OR traditional = $2 LIMIT 1', [target, target])
+      targetRow = charRes.rows[0]
     }
     if (targetRow && targetRow.definition && !targetRow.definition.startsWith('see ')) {
       return targetRow.definition
@@ -58,9 +60,18 @@ function processDefinition(row, defFieldName) {
 
   row.definitions = definitions
   row.classifiers = classifiers
+
+  // Clean and overwrite the source field
+  let cleaned = ''
+  if (definitions.length > 2) {
+    cleaned = definitions.slice(0, 2).join('; ') + '...'
+  } else {
+    cleaned = definitions.join('; ')
+  }
+  row[defFieldName] = cleaned
 }
 
-export function resolveRowsBatch(rows) {
+export async function resolveRowsBatch(rows) {
   if (!rows || rows.length === 0) return rows
 
   const targets = new Set()
@@ -95,12 +106,17 @@ export function resolveRowsBatch(rows) {
 
   for (let i = 0; i < targetsArr.length; i += chunkSize) {
     const chunk = targetsArr.slice(i, i + chunkSize)
-    const placeholders = chunk.map(() => '?').join(',')
 
-    const wordDefs = db.prepare(`SELECT simplified, traditional, definition FROM cedict_words WHERE simplified IN (${placeholders}) OR traditional IN (${placeholders})`).all(...chunk, ...chunk)
-    const charDefs = db.prepare(`SELECT simplified, traditional, definition FROM characters WHERE simplified IN (${placeholders}) OR traditional IN (${placeholders})`).all(...chunk, ...chunk)
+    const wordRes = await db.query(
+      `SELECT simplified, traditional, definition FROM cedict_words WHERE simplified = ANY($1) OR traditional = ANY($1)`,
+      [chunk]
+    )
+    const charRes = await db.query(
+      `SELECT simplified, traditional, definition FROM characters WHERE simplified = ANY($1) OR traditional = ANY($1)`,
+      [chunk]
+    )
 
-    for (const row of [...wordDefs, ...charDefs]) {
+    for (const row of [...wordRes.rows, ...charRes.rows]) {
       if (row.definition && !row.definition.startsWith('see ')) {
         if (row.simplified) defMap.set(row.simplified, row.definition)
         if (row.traditional) defMap.set(row.traditional, row.definition)

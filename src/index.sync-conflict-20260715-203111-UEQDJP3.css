@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #1a1c1a;
+  --color-surface: #222622;
+  --color-card: #2a2f2a;
+  --color-border: #3a413a;
+  --color-primary: #4ade80;
+  --color-primary-hover: #22c55e;
+  --color-text-primary: #f0fdf4;
+  --color-text-secondary: #bbf7d0;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+:root.light {
+  color-scheme: light;
+  --color-background: #fdfcf8;
+  --color-surface: #f5f3eb;
+  --color-card: #ffffff;
+  --color-border: #e6e2d3;
+  --color-text-primary: #2f332f;
+  --color-text-secondary: #6b726b;
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+}
+
+html {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+*, *::before, *::after {
+  transition-property: background-color, border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+input, button, svg, path, polyline, circle, rect, line {
+  transition-property: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-card) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.border-3 {
+  border-width: 3px;
+}
+
+@keyframes card-exit-left {
+  from {
+    opacity: 1;
+    transform: translateX(0) rotateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-120%) rotateY(-15deg);
+  }
+}
+
+@keyframes card-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(120%) rotateY(15deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotateY(0);
+  }
+}
+
+.animate-card-exit {
+  animation: card-exit-left 350ms ease-in forwards;
+}
+
+.animate-card-enter {
+  animation: card-enter-right 350ms ease-out forwards;
+}
+
+.flashcard-scene {
+  perspective: 1000px;
+}
+
+.flashcard-flipper {
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flashcard-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+/* Web Speech API overrides (Chrome spell-out fix) */
+.speech-hidden {
+  display: inline-block;
+  font-size: 0;
+  line-height: 0;
+}
+
+/* 
+ * ----------------------------------------------------
+ * NATIVE APP VIEW TRANSITIONS
+ * ---------------------------------------------------- 
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out, scale-down;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in, scale-up;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes scale-down {
+  from { transform: scale(1); }
+  to { transform: scale(0.98); }
+}
+
+@keyframes scale-up {
+  from { transform: scale(1.02); }
+  to { transform: scale(1); }
+}
+
+.flashcard-face--back {
+  transform: rotateY(180deg);
+}

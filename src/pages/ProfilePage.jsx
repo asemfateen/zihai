@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../hooks/useTheme'
 import API_BASE, { fetchWithTimeout } from '../api'
 import { HeartIcon, FlashcardIcon, ClockIcon, ChevronRightIcon, PencilIcon } from '../components/Icons'
 
 function ProfilePage() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { dark, toggle } = useTheme()
   const [profile, setProfile] = useState(null)
   const [profileError, setProfileError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -206,6 +208,34 @@ function ProfilePage() {
             </div>
             <ChevronRightIcon className="w-5 h-5 text-text-secondary group-hover:text-text-primary transition-colors group-hover:translate-x-1" />
           </Link>
+
+          {/* Theme Switcher */}
+          <button
+            onClick={toggle}
+            className="col-span-2 md:col-span-4 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 flex items-center justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 no-underline group animate-fade-in [animation-delay:425ms] cursor-pointer text-left w-full"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-surface flex items-center justify-center text-text-secondary group-hover:scale-110 transition-transform">
+                {dark ? (
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </div>
+            <div>
+              <span className="text-text-primary font-bold">Theme Mode</span>
+              <p className="text-xs text-text-secondary mt-1">Currently using {dark ? 'Dark' : 'Light'} Mode</p>
+            </div>
+          </div>
+          {/* Sliding Toggle Switch */}
+          <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${dark ? 'bg-primary' : 'bg-surface border border-border/50'}`}>
+            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${dark ? 'translate-x-5' : 'translate-x-0'}`} />
+          </div>
+        </button>
 
           {/* Logout Button */}
           <button

@@ -39,6 +39,18 @@ export function requireAuth(req, res, next) {
   next()
 }
 
+export function optionalAuth(req, res, next) {
+  const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '')
+  if (token) {
+    try {
+      req.user = jwt.verify(token, JWT_SECRET)
+    } catch {
+      // Ignored for optional auth
+    }
+  }
+  next()
+}
+
 export function generateCsrfToken() {
   return crypto.randomBytes(32).toString('hex')
 }

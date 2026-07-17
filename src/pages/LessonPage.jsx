@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import HanziWriter from "hanzi-writer";
 import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
 import API_BASE, { fetchWithTimeout } from "../api";
 import { XIcon, SpeakerIcon } from "../components/Icons";
 
 function ProgressBar({ current, total }) {
   const percentage = Math.round((current / total) * 100);
   return (
-    <div className="w-full bg-surface h-4 rounded-full overflow-hidden">
+    <div className="w-full bg-surface border border-border/50 h-3 rounded-full overflow-hidden p-[2px]">
       <div
-        className="bg-primary h-full transition-all duration-500 ease-out"
+        className="bg-gradient-to-r from-primary to-orange-500 h-full rounded-full transition-all duration-500 ease-out"
         style={{ width: `${percentage}%` }}
       />
     </div>
@@ -34,9 +35,7 @@ export default function LessonPage() {
   // Writing Quiz State
   const writerRef = useRef(null);
   const canvasRef = useRef(null);
-  const handleCheckRef = useRef(null);
   const [writingDone, setWritingDone] = useState(false);
-
   const [error, setError] = useState(null);
 
   const fetchLesson = () => {
@@ -69,6 +68,54 @@ export default function LessonPage() {
 
   const currentQuestion = questions[currentIndex];
 
+  const playSuccessSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = "sine";
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+      osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+      osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+      
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } catch (err) {
+      console.warn("AudioContext failed to start:", err);
+    }
+  };
+
+  const playFailureSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = "sawtooth";
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(220.00, now); // A3
+      osc.frequency.setValueAtTime(147.83, now + 0.12); // F#3
+      
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch (err) {
+      console.warn("AudioContext failed to start:", err);
+    }
+  };
+
   const finishLesson = async () => {
     setCompleted(true);
     confetti({
@@ -95,8 +142,24 @@ export default function LessonPage() {
     }
   };
 
-  const handleCheck = (forceCorrect = false) => {
-    if (isChecked) {
+  const handleSelectOption = (idx) => {
+    if (isChecked) return;
+
+    setSelectedAnswer(idx);
+    setIsChecked(true);
+
+    const option = currentQuestion.options[idx];
+    const correct = option?.isCorrect || false;
+    setIsCorrect(correct);
+
+    if (correct) {
+      playSuccessSound();
+    } else {
+      playFailureSound();
+    }
+
+    // Auto-advance after 1.25s delay
+    setTimeout(() => {
       setIsChecked(false);
       setSelectedAnswer(null);
       if (currentIndex + 1 < questions.length) {
@@ -104,21 +167,8 @@ export default function LessonPage() {
       } else {
         finishLesson();
       }
-      return;
-    }
-
-    setIsChecked(true);
-    let correct = forceCorrect;
-    if (currentQuestion.type !== "writing") {
-      const option = currentQuestion.options[selectedAnswer];
-      correct = option?.isCorrect || false;
-    }
-    setIsCorrect(correct);
+    }, 1250);
   };
-
-  useEffect(() => {
-    handleCheckRef.current = handleCheck;
-  });
 
   // Setup HanziWriter for Writing questions
   useEffect(() => {
@@ -128,24 +178,37 @@ export default function LessonPage() {
       setSelectedAnswer(null);
       setIsChecked(false);
 
-      const char = currentQuestion.targetWord.character.charAt(0); // Just test the first character for simplicity
+      const char = currentQuestion.targetWord.character.charAt(0);
 
       writerRef.current = HanziWriter.create(canvasRef.current, char, {
         width: 250,
         height: 250,
-        padding: 5,
-        strokeColor: "#ef4444", // text-red-500 or rose-500
+        padding: 15,
+        strokeColor: "#3b82f6",
         showOutline: true,
-        outlineColor: "#e5e7eb",
-        drawingColor: "#3b82f6",
+        outlineColor: "#cbd5e1",
+        drawingColor: "#10b981",
+        drawingWidth: 12,
+        strokeWidth: 10,
       });
 
       writerRef.current.quiz({
         onComplete: () => {
           setWritingDone(true);
           setSelectedAnswer("done");
-          // Auto-check for writing
-          handleCheckRef.current(true);
+          setIsChecked(true);
+          setIsCorrect(true);
+          playSuccessSound();
+
+          setTimeout(() => {
+            setIsChecked(false);
+            setSelectedAnswer(null);
+            if (currentIndex + 1 < questions.length) {
+              setCurrentIndex((curr) => curr + 1);
+            } else {
+              finishLesson();
+            }
+          }, 1250);
         },
       });
     }
@@ -215,7 +278,7 @@ export default function LessonPage() {
     return (
       <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 animate-fade-in text-center">
         <div className="w-32 h-32 bg-amber-100 rounded-full flex items-center justify-center mb-8 shadow-xl">
-          <span className="text-6xl">🔥</span>
+          <span className="text-6xl animate-bounce">🔥</span>
         </div>
         <h1 className="text-4xl font-black text-text-primary mb-4">
           Lesson Complete!
@@ -235,124 +298,112 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col justify-between">
       {/* Header */}
       <div className="p-4 flex items-center gap-4 max-w-3xl mx-auto w-full">
         <button
           onClick={() => navigate("/journey")}
-          className="p-2 text-text-secondary hover:bg-surface rounded-full"
+          className="p-2 text-text-secondary hover:bg-surface rounded-full transition-colors"
         >
           <XIcon className="w-6 h-6" />
         </button>
         <ProgressBar current={currentIndex} total={questions.length} />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center max-w-3xl mx-auto w-full px-4 py-8">
-        <h2 className="text-2xl font-bold text-text-primary mb-8 w-full text-left">
-          {currentQuestion.type === "meaning" && "Select the correct meaning"}
-          {currentQuestion.type === "pinyin" && "Select the correct pinyin"}
-          {currentQuestion.type === "listening" && "What do you hear?"}
-          {currentQuestion.type === "writing" && "Draw the character"}
-        </h2>
+      {/* Main Content Card Container */}
+      <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full px-4 py-8">
+        <div className="w-full bg-card/65 backdrop-blur-xl border border-border/50 rounded-[2rem] p-8 shadow-xl flex flex-col items-center">
+          <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 mb-6">
+            Question {currentIndex + 1} of {questions.length}
+          </span>
+          
+          <h2 className="text-2xl font-black text-text-primary mb-8 text-center leading-tight">
+            {currentQuestion.type === "meaning" && "Select the correct meaning"}
+            {currentQuestion.type === "pinyin" && "Select the correct pinyin"}
+            {currentQuestion.type === "listening" && "What do you hear?"}
+            {currentQuestion.type === "writing" && "Draw the character"}
+          </h2>
 
-        {/* Prompt Area */}
-        <div className="mb-12 flex flex-col items-center justify-center">
-          {currentQuestion.type === "listening" ? (
-            <button
-              onClick={() => playAudio(currentQuestion.targetWord.character)}
-              className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors"
-            >
-              <SpeakerIcon className="w-12 h-12 text-primary" />
-            </button>
-          ) : currentQuestion.type === "writing" ? (
-            <div className="flex flex-col items-center gap-4">
-              <div className="text-2xl text-text-secondary">
-                {currentQuestion.targetWord.pinyin} -{" "}
-                {currentQuestion.targetWord.english_definition}
+          {/* Prompt Area */}
+          <div className="mb-10 flex flex-col items-center justify-center min-h-[140px]">
+            {currentQuestion.type === "listening" ? (
+              <button
+                onClick={() => playAudio(currentQuestion.targetWord.character)}
+                className="w-28 h-28 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-105 active:scale-95 shadow-md shadow-primary/5"
+              >
+                <SpeakerIcon className="w-14 h-14 text-primary" />
+              </button>
+            ) : currentQuestion.type === "writing" ? (
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-xl text-text-secondary font-medium">
+                  {currentQuestion.targetWord.pinyin} -{" "}
+                  {currentQuestion.targetWord.english_definition}
+                </div>
+                <div
+                  ref={canvasRef}
+                  className="bg-white rounded-2xl shadow-inner border border-border/50 overflow-hidden"
+                ></div>
               </div>
-              <div
-                ref={canvasRef}
-                className="bg-white rounded-xl shadow-inner border-2 border-border overflow-hidden"
-              ></div>
-            </div>
-          ) : (
-            <div className="text-6xl font-black text-text-primary">
-              {currentQuestion.targetWord.character}
+            ) : (
+              <div className="text-7xl font-black text-text-primary tracking-tight select-none bg-gradient-to-br from-text-primary to-text-secondary bg-clip-text text-transparent">
+                {currentQuestion.targetWord.character}
+              </div>
+            )}
+          </div>
+
+          {/* Options Grid */}
+          {currentQuestion.type !== "writing" && (
+            <div className="w-full flex flex-col gap-3.5">
+              {currentQuestion.options.map((option, idx) => {
+                const isSelected = selectedAnswer === idx;
+
+                let btnClass =
+                  "w-full p-5 rounded-2xl text-base font-bold text-center shadow-sm cursor-pointer border transition-colors duration-300 ";
+                let animationProps = {
+                  whileHover: { scale: 1.02, y: -2 },
+                  whileTap: { scale: 0.98 },
+                };
+
+                if (selectedAnswer !== null) {
+                  if (option.isCorrect) {
+                    btnClass += "border-emerald-500 bg-emerald-500/10 text-emerald-500 shadow-xl shadow-emerald-500/5";
+                    animationProps = {
+                      animate: { scale: [1, 1.05, 1], rotate: [0, -1, 1, 0] },
+                      transition: { duration: 0.5 },
+                    };
+                  } else if (isSelected) {
+                    btnClass += "border-rose-500 bg-rose-500/10 text-rose-500";
+                    animationProps = {
+                      animate: { x: [-10, 10, -10, 10, 0] },
+                      transition: { duration: 0.4 },
+                    };
+                  } else {
+                    btnClass += "border-border/10 bg-card/10 text-text-secondary opacity-40";
+                    animationProps = { animate: { scale: 0.96 } };
+                  }
+                } else {
+                  btnClass += "border-border/40 bg-card/60 hover:bg-surface hover:border-border text-text-primary";
+                }
+
+                return (
+                  <motion.button
+                    key={`${currentIndex}-${idx}`}
+                    {...animationProps}
+                    disabled={selectedAnswer !== null}
+                    onClick={() => handleSelectOption(idx)}
+                    className={btnClass}
+                  >
+                    {option.text}
+                  </motion.button>
+                );
+              })}
             </div>
           )}
         </div>
-
-        {/* Options Grid */}
-        {currentQuestion.type !== "writing" && (
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
-            {currentQuestion.options.map((option, idx) => {
-              const isSelected = selectedAnswer === idx;
-
-              let btnClass =
-                "border-2 border-border bg-card text-text-primary hover:bg-surface hover:border-border-hover";
-              if (isSelected && !isChecked)
-                btnClass = "border-2 border-primary bg-primary/10 text-primary";
-              if (isChecked && option.isCorrect)
-                btnClass =
-                  "border-2 border-green-500 bg-green-50 text-green-600";
-              if (isChecked && isSelected && !option.isCorrect)
-                btnClass = "border-2 border-red-500 bg-red-50 text-red-600";
-              if (isChecked && !option.isCorrect && !isSelected)
-                btnClass =
-                  "border-2 border-border bg-card text-text-secondary opacity-50";
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => !isChecked && setSelectedAnswer(idx)}
-                  disabled={isChecked}
-                  className={`w-full p-4 rounded-2xl text-lg font-bold transition-all text-center ${btnClass}`}
-                >
-                  {option.text}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
-
-      {/* Footer */}
-      <div
-        className={`w-full border-t p-4 transition-colors ${isChecked ? (isCorrect ? "bg-green-100 border-green-200" : "bg-red-100 border-red-200") : "bg-card border-border"}`}
-      >
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {isChecked && isCorrect && (
-              <div className="text-green-600 font-bold text-2xl flex items-center gap-2">
-                <span>✅</span> Amazing!
-              </div>
-            )}
-            {isChecked && !isCorrect && (
-              <div className="text-red-600 font-bold text-2xl flex items-center gap-2">
-                <span>❌</span> Correct answer:{" "}
-                {currentQuestion.type !== "writing" &&
-                  currentQuestion.options.find((o) => o.isCorrect)?.text}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => handleCheck(false)}
-            disabled={selectedAnswer === null && !isChecked}
-            className={`py-3 px-8 rounded-2xl font-bold text-lg transition-all ${
-              selectedAnswer === null && !isChecked
-                ? "bg-surface text-text-secondary cursor-not-allowed"
-                : isChecked
-                  ? isCorrect
-                    ? "bg-green-500 text-white hover:bg-green-600"
-                    : "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-primary text-white hover:bg-primary-hover shadow-lg shadow-primary/30"
-            }`}
-          >
-            {isChecked ? "CONTINUE" : "CHECK"}
-          </button>
-        </div>
-      </div>
+      
+      {/* Bottom spacer for layout balance */}
+      <div className="h-8"></div>
     </div>
   );
 }

@@ -14,11 +14,13 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
     // Send to backend via fetch so we can see it in terminal
-    fetch('/api/log-error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: error.toString(), stack: errorInfo.componentStack })
-    }).catch(() => {})
+    import('../api').then(({ default: API_BASE }) => {
+      fetch(`${API_BASE}/api/log-error`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: error.toString(), stack: errorInfo.componentStack })
+      }).catch(() => {})
+    })
   }
 
   handleRetry = () => {

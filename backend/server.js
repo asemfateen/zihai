@@ -24,6 +24,7 @@ import lessonsRouter from "./routes/lessons.js";
 import leaderboardRouter from "./routes/leaderboard.js";
 import mockTestRouter from "./routes/mocktest.js";
 import adminRouter from "./routes/admin.js";
+import questsRouter from "./routes/quests.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -186,6 +187,7 @@ app.use("/api/lessons", lessonsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/mock-test", mockTestRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api", questsRouter);
 
 app.get("/api/settings", async (req, res) => {
   try {

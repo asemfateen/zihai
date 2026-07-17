@@ -36,7 +36,7 @@ function ExampleSentenceCard({ sentence, translation }) {
         </div>
         <button
           onClick={handleCopy}
-          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md text-text-secondary hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
+          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-md text-text-secondary hover:text-primary hover:bg-primary/10 transition-all active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={copied ? 'Copied!' : 'Copy sentence'}
           title={copied ? 'Copied!' : 'Copy sentence'}
         >

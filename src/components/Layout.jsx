@@ -8,7 +8,7 @@ export default function Layout() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 overflow-hidden">
+    <div className="h-screen bg-transparent relative z-10 overflow-hidden flex flex-col">
       <AnnouncementBanner />
 
       {/* Global Dynamic background blobs */}
@@ -18,19 +18,21 @@ export default function Layout() {
       <CommandPalette />
       <ScrollRestoration />
 
-      {/* Global Branding / Home Button */}
-      <div className="fixed top-6 left-4 md:top-8 md:left-6 z-50 animate-fade-in">
+      {/* Global Branding / Home Button - Mobile only */}
+      <div className="fixed top-6 left-4 z-50 animate-fade-in md:hidden">
         <button
           onClick={() => navigate("/")}
-          className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent drop-shadow-sm select-none cursor-pointer bg-transparent border-none p-0"
+          className="text-2xl font-black tracking-tighter bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent drop-shadow-sm select-none cursor-pointer bg-transparent border-none p-0"
         >
           字海
         </button>
       </div>
 
       {/* Main content route */}
-      <div className="pb-40 pt-10">
-        <Outlet />
+      <div className="flex-1 min-h-0 pb-36 md:pb-6 pt-4 md:pt-6 md:pl-64 transition-all duration-300 flex flex-col">
+        <div className="max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col">
+          <Outlet />
+        </div>
       </div>
 
       {/* Global Navigation Shell */}

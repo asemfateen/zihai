@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
       })
       .then((data) => {
         if (cancelled) return
-        if (data) setUser({ id: data.id, email: data.email, display_name: data.display_name, is_admin: data.is_admin === 1 })
+        if (data) setUser({ id: data.id, email: data.email, display_name: data.display_name, is_admin: data.is_admin === 1, gems: data.gems || 0, streak_freezes: data.streak_freezes || 0, xp: data.xp || 0, streak: data.streak || 0 })
       })
       .catch((err) => {
         if (cancelled) return
@@ -38,8 +38,8 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true }
   }, [])
 
-  const login = (email, id = null, display_name = null, is_admin = false) => {
-    setUser({ id, email, display_name, is_admin: is_admin === 1 || is_admin === true })
+  const login = (email, id = null, display_name = null, is_admin = false, gems = 0, streak_freezes = 0, xp = 0, streak = 0) => {
+    setUser({ id, email, display_name, is_admin: is_admin === 1 || is_admin === true, gems, streak_freezes, xp, streak })
   }
 
   const logout = async () => {

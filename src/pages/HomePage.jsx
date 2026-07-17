@@ -12,6 +12,8 @@ import {
   UserIcon,
 } from "../components/Icons";
 import { motion, AnimatePresence } from "framer-motion";
+import DailyQuests from "../components/DailyQuests";
+import ActivityHeatmap from "../components/ActivityHeatmap";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -135,14 +137,7 @@ function GuestHome() {
       <div className="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse-slow"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/5 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse-slow"></div>
 
-      {/* Header / Guest Nav */}
-      <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between animate-fade-in">
-        <button
-          onClick={() => navigate("/")}
-          className="text-xl font-black bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent cursor-pointer bg-transparent border-none p-0 hover:opacity-80 transition-opacity"
-        >
-          字海 Zihai
-        </button>
+      <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-end animate-fade-in">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/login")}
@@ -165,7 +160,7 @@ function GuestHome() {
           <span>✨</span> Introducing Zihai V2
         </div>
 
-        <h1 className="text-6.5xl sm:text-7.5xl md:text-8.5xl lg:text-9.5xl font-black bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent mb-6 tracking-tight drop-shadow-sm leading-none">
+        <h1 className="text-[5rem] sm:text-[6.5rem] md:text-[8rem] lg:text-[9.5rem] font-black bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent mb-6 tracking-tight drop-shadow-sm leading-none select-none">
           字海
         </h1>
         <p className="text-lg sm:text-xl md:text-2xl text-text-secondary mb-12 font-light max-w-xl leading-relaxed">
@@ -326,14 +321,149 @@ function AuthedHome() {
   const [seeding, setSeeding] = useState(false);
   const [wotd, setWotd] = useState(null);
   const [progress, setProgress] = useState(null);
+  const [stats, setStats] = useState(null);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const containerRef = useRef(null);
+  const debounceRef = useRef(null);
+  const abortControllerRef = useRef(null);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    setFocusedIndex(-1);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+
+    if (value.length >= 1) {
+      debounceRef.current = setTimeout(() => {
+        abortControllerRef.current = new AbortController();
+        fetchWithTimeout(
+          `${API_BASE}/api/search?q=${encodeURIComponent(value)}&limit=6`,
+          {
+            signal: abortControllerRef.current.signal,
+          },
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data) return;
+            setSuggestions(data.slice(0, 6));
+            setShowDropdown(true);
+          })
+          .catch((err) => {
+            if (err.name === "AbortError") return;
+            console.error("Search suggestion failed:", err);
+            setSuggestions([]);
+            setShowDropdown(false);
+          });
+      }, 200);
+    } else {
+      setSuggestions([]);
+      setShowDropdown(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setShowDropdown(false);
+      setFocusedIndex(-1);
+    }
+    if (showDropdown && suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : 0,
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev > 0 ? prev - 1 : suggestions.length - 1,
+        );
+      } else if (
+        e.key === "Enter" &&
+        focusedIndex >= 0 &&
+        focusedIndex < suggestions.length
+      ) {
+        e.preventDefault();
+        handleSelect(suggestions[focusedIndex]);
+        return;
+      }
+    }
+  };
+
+  const handleSelect = (suggestion) => {
+    setShowDropdown(false);
+    setFocusedIndex(-1);
+    navigate(`/word/${suggestion.id}`);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      setShowDropdown(false);
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
+  const getFlavorText = () => {
+    if (!progress) return "Ready to start your Chinese journey? 🚀";
+    const streak = progress.streak_days || 0;
+    const xp = progress.xp || 0;
+    
+    if (progress.streak_broken && progress.previous_streak > 0) {
+      return `The flashcards have missed you. Let's rebuild your broken ${progress.previous_streak}-day streak! 🕯️`;
+    }
+    if (streak >= 7) {
+      return `Unstoppable! You are on a legendary ${streak}-day streak! 🔥`;
+    }
+    if (streak >= 3) {
+      return `${streak}-day streak! Keep the fire burning! ⚡`;
+    }
+    if (xp > 500) {
+      return "Slow down, you're going to break the space-time continuum! 🚀";
+    }
+    if (xp > 200) {
+      return "You are making amazing progress! Keep it up! 💪";
+    }
+    return "Ready to start your Chinese journey? 🚀";
+  };
+
+  const speakWord = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [progRes, favRes, flashRes, histRes, wotdRes] = await Promise.all([
+      const [progRes, favRes, flashRes, histRes, wotdRes, statsRes] = await Promise.all([
         fetchWithTimeout(`${API_BASE}/api/progress`, {
           credentials: "include",
         }),
@@ -345,8 +475,9 @@ function AuthedHome() {
         }),
         fetchWithTimeout(`${API_BASE}/api/history`, { credentials: "include" }),
         fetchWithTimeout(`${API_BASE}/api/wotd`),
+        fetchWithTimeout(`${API_BASE}/api/stats`, { credentials: "include" }),
       ]);
-      if (!progRes.ok || !favRes.ok || !flashRes.ok || !histRes.ok || !wotdRes.ok) {
+      if (!progRes.ok || !favRes.ok || !flashRes.ok || !histRes.ok || !wotdRes.ok || !statsRes.ok) {
         throw new Error("Failed to load stats dashboard");
       }
       setProgress(await progRes.json());
@@ -354,6 +485,7 @@ function AuthedHome() {
       setFlashcardsDue((await flashRes.json()).length);
       setHistory((await histRes.json()).slice(0, 5));
       setWotd(await wotdRes.json());
+      setStats(await statsRes.json());
     } catch (err) {
       console.error("Failed to fetch home data:", err);
       setError("Unable to load dashboard details. Please verify backend connection.");
@@ -442,312 +574,280 @@ function AuthedHome() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent relative z-10 pb-20 overflow-hidden">
+    <div className="h-full w-full bg-transparent relative z-10 overflow-hidden flex flex-col">
       {/* Background ambient glowing details */}
       <div className="absolute top-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
 
-      <div className="max-w-4xl mx-auto px-4 pt-24 pb-8 animate-fade-in">
-        {/* Welcome & Quick Stats Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-card/45 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 sm:p-8 shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 pt-4 pb-4 animate-fade-in w-full lg:h-[calc(100vh-4.5rem)] flex flex-col min-h-0 justify-between gap-4">
+        
+        {/* Header: Greeting on left, search on right */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full px-2 py-1">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-              Explorer Dashboard
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-text-primary mt-3.5 mb-1.5">
-              Welcome back,{" "}
-              {user?.name || user?.email?.split("@")[0] || "Explorer"}!
+            <h1 className="text-lg sm:text-xl font-black text-text-primary">
+              Welcome back, {user?.name || user?.email?.split("@")[0] || "Explorer"}!
             </h1>
-            <p className="text-sm text-text-secondary leading-relaxed font-medium">
-              {!progress || progress.xp < 100
-                ? "Ready to start your Chinese journey? 🚀"
-                : "You are making amazing progress! Keep it up! 💪"}
+            <p className="text-xs text-text-secondary font-medium mt-0.5">
+              {getFlavorText()}
             </p>
           </div>
-        </div>
-
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* Journey (Expedition Map) - Giant 3-Column Bento Card */}
-          <div
-            onClick={() => navigate("/journey")}
-            className="col-span-1 md:col-span-3 bg-gradient-to-br from-primary/15 via-rose-500/5 to-transparent border border-primary/20 rounded-[2.5rem] p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer group min-h-[300px] relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10 group-hover:bg-primary/20 transition-all duration-500"></div>
-
-            <div className="flex justify-between items-start">
-              <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
-                🗺️
-              </div>
-              <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 shadow-sm animate-pulse">
-                Resume Expedition
-              </span>
-            </div>
-
-            <div className="mt-8">
-              <h2 className="text-3xl font-black text-text-primary mb-2 group-hover:text-primary transition-colors">
-                The HSK Journey
-              </h2>
-              <p className="text-sm text-text-secondary leading-relaxed max-w-sm mb-6 font-medium">
-                Your level-by-level curriculum. Learn vocabulary, practice
-                writing structures, and master syntax.
-              </p>
-
-              {/* Progress bar simulation */}
-              <div className="w-full bg-surface/50 border border-border/50 rounded-full h-3.5 overflow-hidden p-0.5">
-                <div
-                  className="bg-gradient-to-r from-primary to-orange-500 h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min(100, Math.max(15, (progress?.xp || 0) / 10))}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Flashcards Status Card - 2-Column Bento Card */}
-          <div
-            onClick={() => (flashcardsDue > 0 ? navigate("/flashcards") : null)}
-            className="col-span-1 md:col-span-2 bg-card/85 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-rose-500/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group min-h-[300px] relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-            <div className="flex justify-between items-start">
-              <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                🃏
-              </div>
-              <span className="text-xs font-bold uppercase tracking-widest text-text-secondary bg-surface px-3 py-1 rounded-full border border-border shadow-sm">
-                Spaced Repetition
-              </span>
-            </div>
-
-            <div className="mt-6 w-full">
-              {flashcardsDue === 0 ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-text-secondary leading-relaxed">
-                    Your flashcard deck is empty! Complete a lesson to auto-seed
-                    cards.
-                  </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSeedDeck();
-                    }}
-                    disabled={seeding}
-                    className="w-full py-3 bg-surface hover:bg-primary hover:text-white border border-border/50 hover:border-primary text-text-primary rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
-                  >
-                    {seeding ? "Seeding..." : "🌱 Seed HSK 1 Starter Pack"}
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-5xl font-black text-text-primary">
-                      {loading ? "..." : (flashcardsDue ?? 0)}
-                    </span>
-                    <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md">
-                      Due Today
-                    </span>
-                  </div>
-                  <p className="text-text-secondary text-xs font-medium mb-5">
-                    Cards waiting for review
-                  </p>
-                  <button className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
-                    Start Reviewing
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Tools Grid - Full Width Bento Section */}
-          <div className="col-span-1 md:col-span-5 bg-card/45 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 shadow-sm mt-2">
-            <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest mb-4 bg-surface inline-block px-3.5 py-1.5 rounded-full border border-border shadow-sm">
-              Quick Tools
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {[
-                {
-                  label: "HSK Levels",
-                  icon: "🔍",
-                  path: "/hsk",
-                  bg: "hover:bg-orange-500/5 hover:border-orange-500/30",
-                },
-                {
-                  label: "Radicals",
-                  icon: "⼭",
-                  path: "/radicals",
-                  bg: "hover:bg-blue-500/5 hover:border-blue-500/30",
-                },
-                {
-                  label: "Pinyin",
-                  icon: "🔊",
-                  path: "/pinyin",
-                  bg: "hover:bg-rose-500/5 hover:border-rose-500/30",
-                },
-                {
-                  label: "Analyzer",
-                  icon: "📝",
-                  path: "/analyzer",
-                  bg: "hover:bg-purple-500/5 hover:border-purple-500/30",
-                },
-                {
-                  label: "Achievements",
-                  icon: "🏅",
-                  path: "/achievements",
-                  bg: "hover:bg-emerald-500/5 hover:border-emerald-500/30",
-                },
-                {
-                  label: "Leaderboard",
-                  icon: "🏁",
-                  path: "/leaderboard",
-                  bg: "hover:bg-amber-500/5 hover:border-amber-500/30",
-                },
-              ].map((t) => (
-                <button
-                  key={t.label}
-                  onClick={() => navigate(t.path)}
-                  className={`flex flex-col items-center gap-3 p-4 bg-card border border-border/55 rounded-2xl text-xs font-bold text-text-primary transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-pointer ${t.bg}`}
-                >
-                  <span className="text-2xl">{t.icon}</span>
-                  <span>{t.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Graded Reading & Quiz Mode Bento Cards */}
-          <div
-            onClick={() => navigate("/reading")}
-            className="col-span-1 md:col-span-2 bg-card/85 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 flex items-center justify-between hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group mt-2"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                📖
-              </div>
-              <div>
-                <h4 className="text-base font-black text-text-primary mb-0.5">
-                  Graded Reader
-                </h4>
-                <p className="text-xs text-text-secondary">
-                  Read stories matched to your HSK level
-                </p>
-              </div>
-            </div>
-            <div className="text-purple-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate("/quiz")}
-            className="col-span-1 md:col-span-2 bg-card/85 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 flex items-center justify-between hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group mt-2"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
-                🎮
-              </div>
-              <div>
-                <h4 className="text-base font-black text-text-primary mb-0.5">
-                  Quiz Mode
-                </h4>
-                <p className="text-xs text-text-secondary">
-                  Practice vocabulary active recall quizzes
-                </p>
-              </div>
-            </div>
-            <div className="text-amber-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Stats Button */}
-          <div
-            onClick={() => navigate("/stats")}
-            className="col-span-1 md:col-span-1 bg-card/85 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 flex flex-col justify-center items-center gap-2.5 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group mt-2"
-          >
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-              📊
-            </div>
-            <span className="text-xs font-bold text-text-primary">Stats</span>
-          </div>
-
-          {/* Word of the Day Lore Banner - Full Width */}
-          {wotd && (
-            <div
-              onClick={() => navigate(`/word/${wotd.id}`)}
-              className="col-span-1 md:col-span-5 bg-card/85 backdrop-blur-xl border border-orange-500/30 rounded-[2.5rem] p-6 shadow-[0_0_15px_rgba(249,115,22,0.05)] hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] cursor-pointer hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row items-center gap-6 mt-2 relative overflow-hidden group"
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10 group-hover:bg-orange-500/20 transition-all duration-500"></div>
-              <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-4xl text-white font-black shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-500">
-                {wotd.character}
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-                    Lore Drop
-                  </span>
-                  <span className="text-xs text-text-secondary font-medium">
-                    Word of the Day
-                  </span>
-                </div>
-                <h3 className="text-xl font-black text-text-primary mb-1">
-                  {wotd.character} ({wotd.pinyin})
-                </h3>
-                <p className="text-text-secondary text-sm line-clamp-1 font-medium">
-                  {wotd.definition || wotd.english_definition}
-                </p>
-              </div>
-              <div className="hidden md:flex text-orange-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
+          
+          {/* Unified Search Box - Styled like SearchPage.jsx */}
+          <div ref={containerRef} className="relative z-20 w-full md:max-w-2xl">
+            <form onSubmit={handleSubmit} className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
+                  className="h-6 w-6 text-text-secondary group-focus-within:text-primary transition-colors"
                   fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                 >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               </div>
-            </div>
-          )}
+              <input
+                type="text"
+                placeholder="Search characters, pinyin, or English..."
+                value={query}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-surface/80 backdrop-blur-xl text-text-primary text-base sm:text-lg border-2 border-border/50 rounded-[2rem] py-3 pl-14 pr-6 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm hover:shadow-md placeholder:text-text-secondary font-medium"
+              />
+            </form>
+ 
+            {showDropdown && suggestions.length > 0 && (
+              <div
+                className="absolute top-full left-0 right-0 mt-2 bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl overflow-y-auto z-50 max-h-72 text-left"
+                role="listbox"
+              >
+                {suggestions.map((s, i) => (
+                  <div
+                    key={s.id}
+                    onClick={() => handleSelect(s)}
+                    onMouseEnter={() => setFocusedIndex(i)}
+                    role="option"
+                    aria-selected={i === focusedIndex ? "true" : "false"}
+                    className={`flex items-center gap-4 px-5 py-3.5 cursor-pointer border-b border-border/30 last:border-b-0 transition-colors ${
+                      i === focusedIndex
+                        ? "bg-primary/10 text-primary"
+                        : "text-text-primary hover:bg-surface"
+                    }`}
+                  >
+                    <span className="text-2xl font-black">{s.simplified}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-bold text-primary truncate">
+                        {s.pinyin}
+                      </span>
+                      <span className="text-xs text-text-secondary truncate">
+                        {s.definition}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Main Content Layout: Hero on Left, Side Panel on Right */}
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 mt-2">
+          
+        {/* Main Content Layout - Two Columns (Flex Split matching HTML Layout) */}
+        <div className="flex-1 px-2 pb-[20px] overflow-hidden flex flex-col lg:flex-row gap-6">
+          
+          {/* Left Column (Wide) */}
+          <div className="flex-1 flex flex-col gap-6 min-h-0">
+            {/* Continue Journey Hero Card */}
+            <div 
+              onClick={() => navigate("/journey")}
+              className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500"
+            >
+              {/* Subtle background glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+              <div className="relative z-10 flex justify-between items-start">
+                <div className="max-w-[70%]">
+                  <span className="inline-flex items-center gap-1.5 bg-primary/20 text-primary px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold mb-4 border border-primary/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    Current Focus
+                  </span>
+                  <h3 className="text-3xl font-black text-text-primary mb-3">Continue Journey</h3>
+                  <p className="text-sm text-text-secondary mb-8 leading-relaxed">
+                    Advance through your personalized HSK curriculum. Master new characters, practice writing, and perfect your tones.
+                  </p>
+                  {/* Progress Section */}
+                  <div className="space-y-2 w-full max-w-md">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="text-text-secondary">Level Progress</span>
+                      <span className="text-primary font-bold">{Math.min(100, Math.max(15, (progress?.xp || 0) % 100))}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-surface/80 rounded-full overflow-hidden border border-border/20">
+                      <div 
+                        className="h-full bg-gradient-to-r from-rose-500/80 via-primary to-primary rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(78,222,163,0.5)]"
+                        style={{
+                          width: `${Math.min(100, Math.max(15, (progress?.xp || 0) % 100))}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Map Icon / Graphic */}
+                <div className="w-24 h-24 bg-surface/50 rounded-2xl border border-border/50 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300 relative shrink-0">
+                  <div className="absolute inset-0 bg-primary/5 rounded-2xl"></div>
+                  <span className="text-5xl select-none">🗺️</span>
+                </div>
+            </div>
+            </div>
+
+            {/* Quick Stats Banner */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 shrink-0">
+              <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-2xl select-none">🔥</span>
+                <div>
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Streak</div>
+                  <div className="text-sm font-black text-text-primary">{stats?.streak || 0} Days</div>
+                </div>
+              </div>
+              <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-2xl select-none">💎</span>
+                <div>
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Gems</div>
+                  <div className="text-sm font-black text-text-primary">{progress?.gems || 0}</div>
+                </div>
+              </div>
+              <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-2xl select-none">🃏</span>
+                <div>
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Flashcards</div>
+                  <div className="text-sm font-black text-text-primary">{stats?.totalCards || 0}</div>
+                </div>
+              </div>
+              <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-2xl select-none">🏆</span>
+                <div>
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Mastered</div>
+                  <div className="text-sm font-black text-text-primary">{stats?.masteredCards || 0}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Heatmap (Simulated) */}
+            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl p-6 flex-1 flex flex-col justify-between min-h-0">
+              <div className="flex justify-between items-center mb-4 shrink-0">
+                <h4 className="text-lg font-black text-text-primary">Activity</h4>
+                <span className="text-xs text-text-secondary">Last 365 Days</span>
+              </div>
+              <div className="flex-1 min-h-0 flex items-center justify-center w-full overflow-hidden">
+                <ActivityHeatmap data={stats?.heatmap || []} />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (Narrow) */}
+          <div className="w-full lg:w-[380px] flex flex-col gap-6 shrink-0 min-h-0">
+            {/* Spaced Repetition */}
+            <div 
+              onClick={() => (flashcardsDue > 0 ? navigate("/flashcards") : null)}
+              className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl p-6 flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors shadow-sm shrink-0"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-surface/50 rounded-xl flex items-center justify-center border border-border/50 shadow-inner">
+                  <span className="text-2xl select-none">🃏</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-text-primary">Spaced Repetition</h4>
+                  {flashcardsDue > 0 ? (
+                    <p className="text-xs font-semibold text-rose-500 mt-0.5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      {flashcardsDue} reviews due
+                    </p>
+                  ) : (
+                    <p className="text-xs text-text-secondary mt-0.5">Up to date! Great job.</p>
+                  )}
+                </div>
+              </div>
+              <span className="text-text-secondary group-hover:text-primary transition-colors group-hover:translate-x-1 ml-2 select-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              </span>
+            </div>
+
+            {/* Daily Quests */}
+            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl p-6 flex-1 flex flex-col min-h-0">
+              <DailyQuests onGemsUpdated={fetchData} />
+            </div>
+
+            {/* Word of the Day */}
+            {wotd && (
+              <div 
+                onClick={() => navigate(`/word/${wotd.id}`)}
+                className="bg-card/60 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-5 flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:border-orange-500/35 transition-all shadow-sm shrink-0"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent"></div>
+                <div className={`h-14 bg-gradient-to-br from-orange-400 to-rose-500 text-white rounded-xl flex items-center justify-center font-black shadow-lg shadow-orange-500/20 relative z-10 shrink-0 ${wotd.character.length > 2 ? 'px-3 text-lg w-auto' : 'w-14 text-2xl'}`}>
+                  {wotd.character}
+                </div>
+                <div className="relative z-10 flex-1 min-w-0">
+                  <span className="text-[9px] font-bold text-orange-500 uppercase tracking-wider mb-0.5 block select-none">Word of the Day</span>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-sm font-black text-text-primary truncate">{wotd.pinyin}</h4>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        speakWord(wotd.character);
+                      }}
+                      aria-label="Pronounce word"
+                      className="text-text-secondary hover:text-primary transition-colors shrink-0 cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" /></svg>
+                    </button>
+                  </div>
+                  <p className="text-xs text-text-secondary truncate mt-0.5">{wotd.definition || wotd.english_definition}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+          
+        </div>
+
+        {/* Mac-OS Style Bottom App Drawer for Tools */}
+        <div className="mt-2 bg-surface/40 backdrop-blur-2xl border border-border/50 rounded-[2rem] py-3 px-4 flex justify-center shadow-lg mx-auto max-w-max shrink-0 relative z-20">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible hide-scrollbar">
+            {[
+              { label: "HSK Levels", icon: "🔍", path: "/hsk" },
+              { label: "Radicals", icon: "⼭", path: "/radicals" },
+              { label: "Pinyin", icon: "🔊", path: "/pinyin" },
+              { label: "Analyzer", icon: "📝", path: "/analyzer" },
+              { label: "Reader", icon: "📖", path: "/reading" },
+              { label: "Quiz", icon: "🎮", path: "/quiz" },
+              { label: "Stats", icon: "📊", path: "/stats" },
+              { label: "Achievements", icon: "🏅", path: "/achievements" },
+              { label: "Leaderboard", icon: "🏁", path: "/leaderboard" }
+            ].map((t) => (
+              <button
+                key={t.label}
+                onClick={() => navigate(t.path)}
+                className="group relative flex flex-col items-center justify-center w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-card border border-border/50 hover:bg-surface hover:border-primary/50 hover:shadow-[0_0_15px_rgba(74,222,128,0.25)] transition-all duration-300 cursor-pointer shrink-0 shadow-sm"
+              >
+                <span className="text-2xl leading-none group-hover:scale-105 transition-transform duration-300">{t.icon}</span>
+                <span className="text-[11px] font-bold text-text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 absolute -top-10 whitespace-nowrap bg-surface/90 backdrop-blur px-3 py-1.5 rounded-lg border border-border shadow-xl pointer-events-none z-50 transform origin-bottom">
+                  {t.label}
+                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface/90 border-b border-r border-border rotate-45"></div>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+    </div>
 
       {/* 3-Step Guided Tour Overlay */}
       {showTour && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div
             className="relative w-full max-w-md bg-card/60 backdrop-blur-3xl border border-primary/30 rounded-[2rem] p-8 shadow-2xl animate-fade-in transform hover:scale-[1.01] transition-transform duration-300"
             style={{ transformStyle: "preserve-3d", perspective: "1000px" }}

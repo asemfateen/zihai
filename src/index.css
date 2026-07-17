@@ -76,6 +76,11 @@ input, button, svg, path, polyline, circle, rect, line {
   border-radius: 0.5rem;
 }
 
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: -200% 50%; }
+}
+
 .perspective-1000 {
   perspective: 1000px;
 }
@@ -198,4 +203,43 @@ input, button, svg, path, polyline, circle, rect, line {
 
 .flashcard-face--back {
   transform: rotateY(180deg);
+}
+
+/* Custom Scrollbar Utilities */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+@keyframes active-border-pulse {
+  0%, 100% {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.25);
+  }
+  50% {
+    border-color: var(--color-primary-hover);
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.55);
+  }
+}
+
+.animate-active-border-pulse {
+  animation: active-border-pulse 3s infinite ease-in-out;
 }

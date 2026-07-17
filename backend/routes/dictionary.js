@@ -3,7 +3,9 @@ import { db } from '../db.js'
 import { apiLimiter } from '../middleware/rateLimiter.js'
 import { resolveRowsBatch, resolveDefinition, splitDefinition } from '../utils/textUtils.js'
 import { convertNumberedPinyin } from '../utils/pinyin.js'
-
+import { optionalAuth } from '../middleware/auth.js'
+import jwt from 'jsonwebtoken'
+import { JWT_SECRET } from '../middleware/auth.js'
 const router = express.Router()
 
 router.get('/wotd', async (req, res) => {
@@ -31,7 +33,7 @@ router.get('/wotd', async (req, res) => {
 
     if (word) {
       word.pinyin = convertNumberedPinyin(word.pinyin)
-      word.definition = resolveDefinition(word.english_definition)
+      await resolveRowsBatch([word])
       res.json(word)
     } else {
       res.status(404).json({ error: 'No word of the day found' })
@@ -95,7 +97,7 @@ router.post('/analyze', apiLimiter, async (req, res) => {
         }
 
         if (row) {
-          const resolvedDef = resolveDefinition(row.definition)
+          const resolvedDef = await resolveDefinition(row.definition)
           tokens.push({
             text: substr,
             isChinese: true,
@@ -134,6 +136,31 @@ router.post('/analyze', apiLimiter, async (req, res) => {
     }
     
     const translation = await translateText(text);
+    
+    // Increment daily quest progress if user is logged in
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    let token = req.cookies?.token;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch (err) {
+        // ignore invalid token
+      }
+    }
+    if (userId) {
+      try {
+        const { incrementQuestProgress } = await import('./quests.js');
+        await incrementQuestProgress(userId, 'analyze', 1);
+      } catch (err) {
+        console.error('Failed to increment quest progress:', err);
+      }
+    }
+
     res.json({ tokens, translation });
   } catch (err) {
     console.error('Analyzer error:', err);
@@ -234,7 +261,7 @@ router.get('/search', async (req, res) => {
   rows.forEach(r => {
     r.pinyin = convertNumberedPinyin(r.pinyin)
   })
-  resolveRowsBatch(rows)
+  await resolveRowsBatch(rows)
   res.json(rows)
 })
 
@@ -275,7 +302,7 @@ router.get('/radicals/:radical', async (req, res) => {
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
     })
-    resolveRowsBatch(words)
+    await resolveRowsBatch(words)
     res.json({ radical: radicalInfo, words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     console.error('Radical detail query failed:', err.message)
@@ -283,7 +310,7 @@ router.get('/radicals/:radical', async (req, res) => {
   }
 })
 
-router.get('/hsk/:level', async (req, res) => {
+router.get('/hsk/:level', optionalAuth, async (req, res) => {
   const level = parseInt(req.params.level, 10)
   if (isNaN(level) || level < 1 || level > 6) {
     return res.status(400).json({ error: 'Invalid HSK level' })
@@ -311,10 +338,20 @@ router.get('/hsk/:level', async (req, res) => {
       LIMIT $3 OFFSET $4
     `, [level, level, limit, offset])
 
+    let deckWordIds = new Set()
+    if (req.user) {
+      const deckRows = await db.query(
+        'SELECT word_id FROM flashcards WHERE user_id = $1',
+        [req.user.userId]
+      )
+      deckWordIds = new Set(deckRows.rows.map(r => r.word_id))
+    }
+
     words.forEach(w => {
       w.pinyin = convertNumberedPinyin(w.pinyin)
+      w.inDeck = deckWordIds.has(w.id)
     })
-    resolveRowsBatch(words)
+    await resolveRowsBatch(words)
 
     res.json({ words, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
@@ -359,7 +396,7 @@ router.get('/word/:query', async (req, res) => {
     }
 
     if (!item) return res.status(404).json({ error: 'Word not found' })
-    item = resolveRowsBatch(item)
+    item = await resolveRowsBatch(item)
     item.pinyin = convertNumberedPinyin(item.pinyin)
 
     // Add Component Breakdown
@@ -373,7 +410,7 @@ router.get('/word/:query', async (req, res) => {
           FROM characters WHERE simplified = $1
         `, [char])
         if (charData) {
-          charData = resolveRowsBatch(charData)
+          charData = await resolveRowsBatch(charData)
           charData.pinyin = convertNumberedPinyin(charData.pinyin)
           components.push(charData)
         } else {
