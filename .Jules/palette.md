@@ -1,3 +1,6 @@
 ## 2026-06-14 - Added Missing ARIA Labels to Navbar
 **Learning:** The `Navbar` component contained multiple icon-only buttons (Profile, Settings, Logout, Theme toggle) that lacked `aria-label` attributes, making them inaccessible to screen readers. Interactive toggles (like the mobile menu) also lacked `aria-expanded` state indicators.
 **Action:** Always ensure that any button whose primary content is an icon (without visible text) receives a descriptive `aria-label`. Interactive dropdown/menu toggles should utilize `aria-expanded` to dynamically communicate their open/closed state to assistive technologies.
+## 2024-05-19 - Accessible Primary Navigation
+**Learning:** Icon-only navigation buttons must always have explicit screen-reader labels (`aria-label`) since visual tooltips may not be reliably announced. Using `aria-current="page"` explicitly identifies the active route, while hidden decorative icons (`aria-hidden="true"`) prevent redundant noise for screen reader users. Also ensuring clear focus visible states aids keyboard-only users.
+**Action:** Always add `aria-label`, `aria-current`, `focus-visible` styling, and apply `aria-hidden="true"` to SVG/decorative elements on navigation item components.
