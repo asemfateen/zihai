@@ -1,3 +1,4 @@
 ## 2026-06-14 - Added Missing ARIA Labels to Navbar
 **Learning:** The `Navbar` component contained multiple icon-only buttons (Profile, Settings, Logout, Theme toggle) that lacked `aria-label` attributes, making them inaccessible to screen readers. Interactive toggles (like the mobile menu) also lacked `aria-expanded` state indicators.
 **Action:** Always ensure that any button whose primary content is an icon (without visible text) receives a descriptive `aria-label`. Interactive dropdown/menu toggles should utilize `aria-expanded` to dynamically communicate their open/closed state to assistive technologies.
+## 2024-05-24 - Accessibility aria labels\n**Learning:** Icon-only buttons often lack aria labels in Zihai app.\n**Action:** Add aria labels to icon-only buttons to improve screen reader accessibility.

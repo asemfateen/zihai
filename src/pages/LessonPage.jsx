@@ -304,6 +304,7 @@ export default function LessonPage() {
         <button
           onClick={() => navigate("/journey")}
           className="p-2 text-text-secondary hover:bg-surface rounded-full transition-colors"
+          aria-label="Exit lesson"
         >
           <XIcon className="w-6 h-6" />
         </button>
@@ -330,6 +331,7 @@ export default function LessonPage() {
               <button
                 onClick={() => playAudio(currentQuestion.targetWord.character)}
                 className="w-28 h-28 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-105 active:scale-95 shadow-md shadow-primary/5"
+                aria-label="Play pronunciation"
               >
                 <SpeakerIcon className="w-14 h-14 text-primary" />
               </button>
