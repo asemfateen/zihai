@@ -8,6 +8,7 @@ function DockItem({ icon: Icon, label, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
+      aria-label={label}
       className={`group relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 ${
         isActive 
           ? 'bg-primary/20 text-primary scale-110 shadow-lg shadow-primary/20' 
