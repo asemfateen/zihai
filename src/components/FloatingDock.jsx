@@ -8,7 +8,9 @@ function DockItem({ icon: Icon, label, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 ${
+      aria-label={label}
+      title={label}
+      className={`group relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         isActive 
           ? 'bg-primary/20 text-primary scale-110 shadow-lg shadow-primary/20' 
           : 'text-text-secondary hover:bg-surface/50 hover:text-text-primary hover:scale-105'
@@ -17,7 +19,7 @@ function DockItem({ icon: Icon, label, isActive, onClick }) {
       <Icon className={`w-6 h-6 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
       
       {/* Tooltip on Desktop */}
-      <span className="absolute -top-10 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-surface border border-border px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-xl">
+      <span aria-hidden="true" className="absolute -top-10 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-surface border border-border px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-xl">
         {label}
       </span>
     </button>
@@ -28,7 +30,7 @@ function SidebarItem({ icon: Icon, label, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer border ${
+      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         isActive 
           ? 'bg-primary/10 text-primary border-primary/20 shadow-md shadow-primary/5 font-bold scale-[1.02]' 
           : 'text-text-secondary border-transparent hover:bg-surface/50 hover:text-text-primary hover:scale-[1.01]'
@@ -124,7 +126,7 @@ export default function FloatingDock() {
         <div className="mb-10 px-4">
           <button
             onClick={() => navigate("/")}
-            className="text-3xl font-black tracking-tighter bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent drop-shadow-sm select-none cursor-pointer bg-transparent border-none p-0 hover:opacity-85 transition-opacity"
+            className="text-3xl font-black tracking-tighter bg-gradient-to-r from-primary via-rose-500 to-orange-500 bg-clip-text text-transparent drop-shadow-sm select-none cursor-pointer bg-transparent border-none p-0 hover:opacity-85 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
           >
             字海
           </button>
@@ -187,9 +189,10 @@ export default function FloatingDock() {
 
         {/* Compact User Profile Box at Sidebar Bottom */}
         {user && (
-          <div 
+          <button
             onClick={() => navigate('/profile')}
-            className="mt-auto p-4 bg-surface/30 border border-border/30 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-surface/50 transition-colors duration-200"
+            className="mt-auto w-full text-left p-4 bg-surface/30 border border-border/30 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-surface/50 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label={`View profile for ${user.email}`}
           >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-black text-primary border border-primary/20 select-none">
               {user.email?.[0].toUpperCase()}
@@ -202,7 +205,7 @@ export default function FloatingDock() {
                 {user.email}
               </p>
             </div>
-          </div>
+          </button>
         )}
       </aside>
     </>
