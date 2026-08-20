@@ -1,3 +1,6 @@
 ## 2026-06-14 - Added Missing ARIA Labels to Navbar
 **Learning:** The `Navbar` component contained multiple icon-only buttons (Profile, Settings, Logout, Theme toggle) that lacked `aria-label` attributes, making them inaccessible to screen readers. Interactive toggles (like the mobile menu) also lacked `aria-expanded` state indicators.
 **Action:** Always ensure that any button whose primary content is an icon (without visible text) receives a descriptive `aria-label`. Interactive dropdown/menu toggles should utilize `aria-expanded` to dynamically communicate their open/closed state to assistive technologies.
+## 2024-05-24 - Interactive Divs and Icon Buttons
+**Learning:** Some components in this app use generic interactive `div` elements for things that act as buttons (e.g., the user profile in the sidebar), and icon-only buttons with visual tooltips lack proper screen reader labels.
+**Action:** When working on navigation or custom controls, verify that interactive elements use semantic `<button>` tags where appropriate, add `focus-visible` styles for keyboard navigation, and ensure icon-only buttons use `aria-label` while hiding their visual tooltips from screen readers using `aria-hidden="true"`.
