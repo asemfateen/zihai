@@ -1,3 +1,3 @@
-## 2026-06-14 - Added Missing ARIA Labels to Navbar
-**Learning:** The `Navbar` component contained multiple icon-only buttons (Profile, Settings, Logout, Theme toggle) that lacked `aria-label` attributes, making them inaccessible to screen readers. Interactive toggles (like the mobile menu) also lacked `aria-expanded` state indicators.
-**Action:** Always ensure that any button whose primary content is an icon (without visible text) receives a descriptive `aria-label`. Interactive dropdown/menu toggles should utilize `aria-expanded` to dynamically communicate their open/closed state to assistive technologies.
+## 2024-05-18 - [Missing aria-labels on icon-only buttons]
+**Learning:** Icon-only buttons often rely on `title` attributes, but screen readers might not always read `title` reliably. It's better to provide an explicit `aria-label` on icon-only buttons. I found a few buttons in `src/pages/WordPage.jsx` (Favorites, Add to Deck, Add to List, Listen to pronunciation) that have `title` but lack `aria-label`.
+**Action:** Add explicit `aria-label` attributes to these icon-only buttons to improve screen reader accessibility.
